@@ -1,0 +1,380 @@
+﻿@page "/Register"
+@using GUI.Components.Layout
+@using ENTITY.Usuarios
+@using BLL.Interfaces
+@layout AuthLayout
+@inject NavigationManager NavigationManager
+@inject IUsuarioService UsuarioService
+
+<div class="register-container">
+    <div class="register-card">
+        <h1 class="logo-title text-center">JOSSAN</h1>
+
+        <div style="text-align: center; margin-bottom: 24px">
+            <p style="font-size: 13px; color: #6b7280">Completa tus datos para registrarte</p>
+        </div>
+
+        <div class="progress-steps">
+            <div class="step @(paso == 1 ? "active" : paso > 1 ? "completed" : "")">
+                <div class="step-circle">1</div>
+                <span style="font-size: 11px;">Datos Personales</span>
+            </div>
+            <div class="step-line @(paso > 1 ? "completed" : "")"></div>
+            <div class="step @(paso == 2 ? "active" : paso > 2 ? "completed" : "")">
+                <div class="step-circle">2</div>
+                <span class="step-label">Dirección</span>
+            </div>
+            <div class="step-line @(paso > 2 ? "completed" : "")"></div>
+            <div class="step @(paso == 3 ? "active" : paso > 3 ? "completed" : "")">
+                <div class="step-circle">3</div>
+                <span class="step-label">Seguridad</span>
+            </div>
+        </div>
+
+        <form @onsubmit="HandleSubmit">
+
+            @if (paso == 1)
+            {
+                <div class="form-section">
+                    <h3 class="section-title">Información Personal</h3>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Primer Nombre *</label>
+                            <input type="text" class="form-input" placeholder="Juan" @bind="primerNombre" required />
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Segundo Nombre</label>
+                            <input type="text" class="form-input" placeholder="Carlos (opcional)" @bind="segundoNombre" />
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Apellido Paterno *</label>
+                            <input type="text" class="form-input" placeholder="Pérez" @bind="apellidoPaterno" required />
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Apellido Materno</label>
+                            <input type="text" class="form-input" placeholder="García (opcional)" @bind="apellidoMaterno" />
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Cédula *</label>
+                        <input type="text" class="form-input" placeholder="1234567890" @bind="cedula" required />
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Teléfono Principal *</label>
+                            <input type="tel" class="form-input" placeholder="300 123 4567" @bind="telefonoPrincipal" required />
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Teléfono Secundario</label>
+                            <input type="tel" class="form-input" placeholder="310 123 4567 (opcional)" @bind="telefonoSecundario" />
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Correo Electrónico *</label>
+                        <input type="email" class="form-input" placeholder="correo@ejemplo.com" @bind="email" required />
+                    </div>
+                </div>
+            }
+
+            @if (paso == 2)
+            {
+                <div class="form-section">
+                    <h3 class="section-title">Dirección de Residencia</h3>
+
+                    <div class="form-group">
+                        <label class="form-label">Ciudad *</label>
+                        <select class="form-select" @bind="ciudadSeleccionada" required>
+                            <option value="">Selecciona una ciudad</option>
+                            @foreach (var ciudad in ciudades)
+                            {
+                                <option value="@ciudad">@ciudad</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Dirección *</label>
+                        <input type="text" class="form-input" placeholder="Calle 45 #12-34" @bind="direccion" required />
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Barrio *</label>
+                        <input type="text" class="form-input" placeholder="Centro" @bind="barrio" required />
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Código Postal</label>
+                            <input type="text" class="form-input" placeholder="200001 (opcional)" @bind="codigoPostal" />
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Referencia</label>
+                            <input type="text" class="form-input" placeholder="Frente al parque (opcional)" @bind="referencia" />
+                        </div>
+                    </div>
+                </div>
+            }
+
+            @if (paso == 3)
+            {
+                <div>
+                    <h3 class="section-title">Seguridad de la Cuenta</h3>
+
+                    <div class="form-group">
+                        <label class="form-label">Contraseña *</label>
+                        <div style="display:flex;">
+                            <input type="@(mostrarPassword ? "text" : "password")" class="form-input" placeholder="Mínimo 8 caracteres" @bind="password" required />
+                            <button type="button" class="toggle-password" @onclick="TogglePassword">👁️‍🗨️ </button>
+                        </div>
+                        <div class="password-strength">
+                            <div class="strength-bar @GetPasswordStrength()"></div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Confirmar Contraseña *</label>
+                        <div style="display:flex;">
+                            <input type="@(mostrarConfirmPassword ? "text" : "password")" class="form-input" placeholder="Repite tu contraseña" @bind="confirmPassword" required />
+                            <button type="button" class="toggle-password" @onclick="ToggleConfirmPassword">👁️‍🗨️ </button>
+                        </div>
+                    </div>
+
+                    <label class="checkbox-label">
+                        <input type="checkbox" @bind="aceptaTerminos" required />
+                        <span style="display:flex; gap:5px">
+                            Acepto los <p class="link-text">términos y condiciones</p> y la
+                            <p class="link-text">política de privacidad</p>
+                        </span>
+                    </label>
+                </div>
+            }
+
+            @if (!string.IsNullOrEmpty(mensajeError))
+            {
+                <div class="error-message">
+                    <span>⚠️</span>
+                    <span>@mensajeError</span>
+                </div>
+            }
+
+            @if (!string.IsNullOrEmpty(mensajeExito))
+            {
+                <div class="success-message">
+                    <span>✅</span>
+                    <span>@mensajeExito</span>
+                </div>
+            }
+
+            <!-- Navigation Buttons -->
+            <div class="form-actions">
+                @if (paso > 1)
+                {
+                    <button type="button" class="btn-back" @onclick="PasoAnterior">
+                        <span>← Anterior</span>
+                    </button>
+                }
+
+                @if (paso < 3)
+                {
+                    <button type="button" class="btn-next" @onclick="PasoSiguiente">
+                        <span>Siguiente →</span>
+                    </button>
+                }
+                else
+                {
+                    <button type="submit" class="btn-register" disabled="@cargando">
+                        @if (cargando)
+                        {
+                            <span>Creando cuenta...</span>
+                        }
+                        else
+                        {
+                            <span>Crear Cuenta</span>
+                        }
+                    </button>
+                }
+            </div>
+        </form>
+
+        <div class="footer-text">
+            ¿Ya tienes cuenta? <a href="/" class="link-text">Inicia sesión aquí</a>
+        </div>
+    </div>
+
+    <div style="position: absolute; width: 100%;">
+        <div class="circle circle-1"></div>
+        <div class="circle circle-2"></div>
+        <div class="circle circle-3"></div>
+    </div>
+</div>
+
+@code {
+    private int paso = 1;
+
+    // Datos Personales
+    private string primerNombre = "";
+    private string segundoNombre = "";
+    private string apellidoPaterno = "";
+    private string apellidoMaterno = "";
+    private string cedula = "";
+    private string telefonoPrincipal = "";
+    private string telefonoSecundario = "";
+    private string email = "";
+
+    // Paso 2: Dirección
+    private string ciudadSeleccionada = "";
+    private string direccion = "";
+    private string barrio = "";
+    private string codigoPostal = "";
+    private string referencia = "";
+
+    private List<string> ciudades = new()
+    {
+        "Valledupar",
+        "Bogotá",
+        "Medellín",
+        "Cali",
+        "Barranquilla",
+        "Cartagena",
+        "Bucaramanga",
+        "Santa Marta",
+        "Cúcuta",
+        "Pereira"
+    };
+
+    // Contraseña
+    private string password = "";
+    private string confirmPassword = "";
+    private bool aceptaTerminos = false;
+    private bool mostrarPassword = false;
+    private bool mostrarConfirmPassword = false;
+
+    private bool cargando = false;
+    private string mensajeError = "";
+    private string mensajeExito = "";
+
+    private void PasoSiguiente()
+    {
+        mensajeError = "";
+
+        // Validar paso 1
+        if (paso == 1)
+        {
+            if (string.IsNullOrWhiteSpace(primerNombre) || string.IsNullOrWhiteSpace(apellidoPaterno) ||
+                string.IsNullOrWhiteSpace(cedula) || string.IsNullOrWhiteSpace(telefonoPrincipal) ||
+                string.IsNullOrWhiteSpace(email))
+            {
+                mensajeError = "Por favor completa todos los campos obligatorios";
+                return;
+            }
+        }
+
+        paso++;
+    }
+
+    private void PasoAnterior()
+    {
+        mensajeError = "";
+        paso--;
+    }
+
+    private void TogglePassword()
+    {
+        mostrarPassword = !mostrarPassword;
+    }
+
+    private void ToggleConfirmPassword()
+    {
+        mostrarConfirmPassword = !mostrarConfirmPassword;
+    }
+
+    private string GetPasswordStrength()
+    {
+        if (string.IsNullOrEmpty(password)) return "";
+        if (password.Length < 6) return "weak";
+        if (password.Length < 10) return "medium";
+        return "strong";
+    }
+
+    private async Task HandleSubmit()
+    {
+        mensajeError = "";
+        mensajeExito = "";
+
+        try
+        {
+            // Validaciones
+            if (password != confirmPassword)
+            {
+                mensajeError = "Las contraseñas no coinciden";
+                return;
+            }
+
+            if (password.Length < 8)
+            {
+                mensajeError = "La contraseña debe tener al menos 8 caracteres";
+                return;
+            }
+
+            if (!aceptaTerminos)
+            {
+                mensajeError = "Debes aceptar los términos y condiciones";
+                return;
+            }
+
+            cargando = true;
+
+            // Crear el DTO de usuario
+            var nuevoUsuario = new UsuarioDTO
+            {
+                Cedula = cedula,
+                PrimerNombre = primerNombre,
+                SegundoNombre = string.IsNullOrWhiteSpace(segundoNombre) ? null : segundoNombre,
+                ApellidoPaterno = apellidoPaterno,
+                ApellidoMaterno = string.IsNullOrWhiteSpace(apellidoMaterno) ? null : apellidoMaterno,
+                TelefonoPrincipal = telefonoPrincipal,
+                TelefonoSecundario = string.IsNullOrWhiteSpace(telefonoSecundario) ? null : telefonoSecundario,
+                Correo = email,
+                Contrasena = password,
+                RolId = 2, // Cliente por defecto
+                DireccionId = null // Sin dirección por ahora
+            };
+
+            // Llamar al servicio para registrar
+            var resultado = await UsuarioService.RegistrarUsuario(nuevoUsuario);
+
+            if (resultado.IsSuccess)
+            {
+                mensajeExito = "¡Cuenta creada exitosamente! Redirigiendo...";
+                StateHasChanged();
+
+                await Task.Delay(1500);
+                NavigationManager.NavigateTo("/");
+            }
+            else
+            {
+                mensajeError = resultado.Message;
+            }
+        }
+        catch (Exception ex)
+        {
+            mensajeError = $"Error inesperado: {ex.Message}";
+            Console.WriteLine($"Error en registro: {ex}");
+        }
+        finally
+        {
+            cargando = false;
+        }
+    }
+}

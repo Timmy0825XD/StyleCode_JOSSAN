@@ -1,0 +1,66 @@
+﻿<aside>
+    <div class="sidebar-logo">
+        <div class="logo-circle">V</div>
+        <div class="logo-text">
+            <div class="logo-title">JOSSAN</div>
+            <div style="color:grey">Admin Panel</div>
+        </div>
+    </div>
+
+    <nav class="sidebar-nav">
+        <NavLink class="nav-item" href="AdminDashboard">
+            <span style="font-size: 22px">📊</span>
+            <span>Dashboard</span>
+        </NavLink>
+
+        <NavLink class="nav-item" href="AdminProductos">
+            <span style="font-size: 22px">📦</span>
+            <span>Productos</span>
+        </NavLink>
+
+        <NavLink class="nav-item" href="AdminPedidos">
+            <span style="font-size: 22px">🛒</span>
+            <span>Pedidos</span>
+        </NavLink>
+
+        <NavLink class="nav-item" href="AdminClientes">
+            <span style="font-size: 22px">👥</span>
+            <span>Clientes</span>
+        </NavLink>
+
+        <NavLink class="nav-item" href="AdminFacturas">
+            <span style="font-size: 22px">📈</span>
+            <span>Facturas</span>
+        </NavLink>
+    </nav>
+
+
+    <div class="sidebar-footer">
+        <a href="logout" class="logout-btn">
+            <span>Cerrar Sesión</span>
+        </a>
+    </div>
+</aside>
+
+<style>
+
+    .nav-item {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        padding: 14px 20px;
+        border-radius: 12px;
+        color: #6b7280;
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+        .nav-item:hover {
+            background-color: #f3f4f6;
+            transform: translateX(5px);
+        }
+
+        .nav-item.active {
+            background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
+            color: white;
+        }
+</style>

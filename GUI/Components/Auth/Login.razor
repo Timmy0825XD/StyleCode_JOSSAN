@@ -1,0 +1,117 @@
+﻿@page "/"
+@using GUI.Components.Layout
+@using ENTITY.Usuarios
+@using ENTITY.Utilidades
+@using BLL.Interfaces
+@layout AuthLayout
+@inject NavigationManager NavigationManager
+@inject IUsuarioService UsuarioService
+
+<div class="login-container">
+    <div class="login-card">
+        <h1 class="logo-title text-center mb-4">JOSSAN</h1>
+        <div style="text-align: center; margin-bottom: 32px">
+            <h2 style="font-size: 24px; color: #1f2937">Bienvenido de nuevo!!</h2>
+            <p style="font-size: 14px; color: #6b7280">Ingresa tus credenciales para acceder</p>
+        </div>
+        <form class="login-form" @onsubmit="HandleLogin">
+            <div>
+                <label style="font-size: 14px; font-weight:600">Correo Electrónico</label>
+                <input type="email" class="form-input" placeholder="correo@ejemplo.com" @bind="email" required />
+            </div>
+            <div>
+                <label style="font-size: 14px; font-weight:600">Contraseña</label>
+                <div class="input-contraseña">
+                    <input type="@(mostrarPassword ? "text" : "password")" class="form-input" placeholder="••••••••" @bind="password" required />
+                    <button type="button" style="cursor: pointer; right: 16px; position: absolute;" @onclick="TogglePassword"> 👁️‍🗨️ </button>
+                </div>
+            </div>
+            <a href="#" class="link-text">¿Olvidaste tu contraseña?</a>
+            @if (!string.IsNullOrEmpty(mensajeError))
+            {
+                <div style="color: #991b1b; background-color: #fee2e2; padding: 12px; border-radius: 6px; margin: 16px 0;">
+                    @mensajeError
+                </div>
+            }
+            <button type="submit" class="btn-login" disabled="@cargando">
+                @if (cargando)
+                {
+                    <span>Iniciando sesión...</span>
+                }
+                else
+                {
+                    <span>Iniciar Sesión</span>
+                }
+            </button>
+        </form>
+        <div class="footer-text">
+            ¿No tienes cuenta?
+            <NavLink href="Register">
+                <span>Registrarme</span>
+            </NavLink>
+        </div>
+    </div>
+    <div class="circle circle-1"></div>
+    <div class="circle circle-2"></div>
+    <div class="circle circle-3"></div>
+</div>
+
+@code {
+    private string email = "";
+    private string password = "";
+    private bool mostrarPassword = false;
+    private bool cargando = false;
+    private string mensajeError = "";
+
+    private void TogglePassword()
+    {
+        mostrarPassword = !mostrarPassword;
+    }
+
+    private async Task HandleLogin()
+    {
+        mensajeError = "";
+        cargando = true;
+
+        try
+        {
+            // Crear el DTO de request
+            var loginRequest = new LoginRequestDTO
+            {
+                Correo = email,
+                Contrasena = password
+            };
+
+            // Llamar al servicio de login (ahora se llama Login, no LoginUsuarioAsync)
+            var resultado = await UsuarioService.Login(loginRequest);
+            Console.WriteLine(resultado.Message);
+
+            if (resultado.IsSuccess)
+            {
+                // Redirigir según el rol
+                // IdRol = 1 -> Admin, IdRol = 2 -> Cliente
+                if (resultado.Object.IdRol == 1)
+                {
+                    NavigationManager.NavigateTo("/AdminDashboard");
+                }
+                else
+                {
+                    NavigationManager.NavigateTo("/ClienteDashboard");
+                }
+            }
+            else
+            {
+                mensajeError = resultado.Message;
+            }
+        }
+        catch (Exception ex)
+        {
+            mensajeError = $"Error inesperado: {ex.Message}";
+            Console.WriteLine($"Error en login: {ex}");
+        }
+        finally
+        {
+            cargando = false;
+        }
+    }
+}

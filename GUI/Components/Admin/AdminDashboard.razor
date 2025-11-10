@@ -1,0 +1,413 @@
+﻿@page "/AdminDashboard"
+@layout AdminLayout
+@using Blazorise.Charts
+@using System.Collections.Generic
+@using GUI.Components.Layout
+
+<section style="padding: 24px">
+
+    <div class="stats-grid">
+        @foreach (var stat in stats)
+        {
+            <div class="stat-card">
+                <div class="stat-content">
+                    <div class="stat-info">
+                        <p style="color: grey;">@stat.Title</p>
+                        <h3 style="font-weight:bold">@stat.Value</h3>
+                    </div>
+                    <div class="stat-icon @stat.ColorClass">
+                        <span>@stat.IconText</span>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <div class="charts-grid">
+        <!-- Sales Chart -->
+        <div class="chart-card">
+            <div class="chart-header">
+                <h3>Ventas Mensuales</h3>
+                <button class="view-more-btn">Ver más</button>
+            </div>
+            <div class="chart-content">
+                <LineChart @ref="lineChart" TItem="double" />
+            </div>
+        </div>
+
+        <!-- Category Chart -->
+        <div class="chart-card">
+            <div class="chart-header">
+                <h3>Ventas por Categoría</h3>
+                <button class="view-more-btn">Ver más</button>
+            </div>
+            <div class="chart-content">
+                <DoughnutChart @ref="doughnutChart" TItem="int" style="width:50%" />
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Orders -->
+    <div class="orders-card">
+        <h3 class="orders-title">Pedidos Recientes</h3>
+        <div class="table-container">
+            <table class="orders-table">
+                <thead>
+                    <tr>
+                        <th>ID Pedido</th>
+                        <th>Cliente</th>
+                        <th>Total</th>
+                        <th>Estado</th>
+                        <th>Fecha</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var order in orders.Take(5))
+                    {
+                        <tr>
+                            <td class="order-id">@order.Id</td>
+                            <td>@order.Customer</td>
+                            <td class="order-total">$@order.Total</td>
+                            <td>
+                                <span class="status-badge @GetStatusClass(order.Status)">
+                                    @GetStatusText(order.Status)
+                                </span>
+                            </td>
+                            <td class="order-date">@order.Date</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+
+<style>
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 24px;
+        margin-bottom: 24px;
+    }
+
+    .stat-card {
+        background: white;
+        border-radius: 16px;
+        padding: 24px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 12px rgba(0, 0, 0, 0.15);
+        }
+
+    .stat-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .stat-info h3 {
+        font-size: 32px;
+        margin: 8px 0 0 0;
+        color: #1f2937;
+    }
+
+    .stat-info p {
+        margin: 0;
+        font-size: 14px;
+        font-weight: 500;
+    }
+
+    .stat-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 28px;
+    }
+
+        .stat-icon.purple {
+            background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
+        }
+
+        .stat-icon.blue {
+            background: linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%);
+        }
+
+        .stat-icon.green {
+            background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+        }
+
+        .stat-icon.orange {
+            background: linear-gradient(135deg, #f59e0b 0%, #fb923c 100%);
+        }
+
+    /* Charts Grid */
+    .charts-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+        gap: 24px;
+        margin-bottom: 24px;
+    }
+
+    .chart-card {
+        background: white;
+        border-radius: 16px;
+        padding: 24px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .chart-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+    }
+
+        .chart-header h3 {
+            font-size: 20px;
+            font-weight: bold;
+            color: #1f2937;
+            margin: 0;
+        }
+
+    .view-more-btn {
+        background: none;
+        border: none;
+        color: #8b5cf6;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        padding: 4px 8px;
+        transition: color 0.2s ease;
+    }
+
+        .view-more-btn:hover {
+            color: #7c3aed;
+        }
+
+    .chart-content {
+        height: 300px;
+        display:flex;
+        justify-content:center;
+    }
+
+    /* Orders Table */
+    .orders-card {
+        background: white;
+        border-radius: 16px;
+        padding: 24px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .orders-title {
+        font-size: 20px;
+        font-weight: bold;
+        color: #1f2937;
+        margin: 0 0 16px 0;
+    }
+
+    .table-container {
+        overflow-x: auto;
+    }
+
+    .orders-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+        .orders-table thead tr {
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .orders-table th {
+            text-align: left;
+            padding: 12px;
+            color: #6b7280;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .orders-table tbody tr {
+            border-bottom: 1px solid #e5e7eb;
+            transition: background-color 0.2s ease;
+        }
+
+            .orders-table tbody tr:hover {
+                background-color: #f9fafb;
+            }
+
+        .orders-table td {
+            padding: 12px;
+            font-size: 14px;
+        }
+
+    .order-id {
+        font-weight: 500;
+        color: #8b5cf6;
+    }
+
+    .order-total {
+        font-weight: 600;
+    }
+
+    .order-date {
+        color: #6b7280;
+    }
+
+    .status-badge {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 9999px;
+        font-size: 12px;
+        font-weight: 500;
+    }
+
+        .status-badge.pending {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+
+        .status-badge.completed {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+
+        .status-badge.processing {
+            background-color: #dbeafe;
+            color: #1e40af;
+        }
+
+        .status-badge.cancelled {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
+</style>
+
+@code {
+    private LineChart<double> lineChart;
+    private DoughnutChart<int> doughnutChart;
+
+    public class StatCard
+    {
+        public string Title { get; set; }
+        public string Value { get; set; }
+        public string ColorClass { get; set; }
+        public string IconText { get; set; }
+    }
+
+    public class Order
+    {
+        public string Id { get; set; }
+        public string Customer { get; set; }
+        public decimal Total { get; set; }
+        public string Status { get; set; }
+        public string Date { get; set; }
+    }
+
+    private List<StatCard> stats = new List<StatCard>
+    {
+        new StatCard { Title = "Ventas Totales", Value = "$45,231", ColorClass = "purple", IconText = "💰" },
+        new StatCard { Title = "Pedidos", Value = "1,234", ColorClass = "blue", IconText = "📦" },
+        new StatCard { Title = "Clientes", Value = "823", ColorClass = "green", IconText = "👥" },
+        new StatCard { Title = "Productos", Value = "456", ColorClass = "orange", IconText = "📊" }
+    };
+
+    private List<Order> orders = new List<Order>
+    {
+        new Order { Id = "#ORD-001", Customer = "Juan Pérez", Total = 250.00m, Status = "completed", Date = "2025-11-07" },
+        new Order { Id = "#ORD-002", Customer = "María García", Total = 180.50m, Status = "processing", Date = "2025-11-06" },
+        new Order { Id = "#ORD-003", Customer = "Carlos López", Total = 420.00m, Status = "pending", Date = "2025-11-06" },
+        new Order { Id = "#ORD-004", Customer = "Ana Martínez", Total = 95.00m, Status = "completed", Date = "2025-11-05" },
+        new Order { Id = "#ORD-005", Customer = "Luis Rodríguez", Total = 310.75m, Status = "cancelled", Date = "2025-11-05" }
+    };
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await HandleRedraw();
+        }
+    }
+
+    private async Task HandleRedraw()
+    {
+        // Configurar gráfico de líneas (Ventas Mensuales)
+        await lineChart.Clear();
+
+        await lineChart.AddLabelsDatasetsAndUpdate(
+            new[] { "Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov" },
+            GetLineChartDataset()
+        );
+
+        // Configurar gráfico de dona (Categorías)
+        await doughnutChart.Clear();
+
+        await doughnutChart.AddLabelsDatasetsAndUpdate(
+            new[] { "Electrónica", "Ropa", "Alimentos", "Otros" },
+            GetDoughnutChartDataset()
+        );
+    }
+
+    private LineChartDataset<double> GetLineChartDataset()
+    {
+        return new LineChartDataset<double>
+        {
+            Label = "Ventas ($)",
+            Data = new List<double> { 12500, 15200, 18900, 22300, 19800, 25400, 28900, 32100, 29500, 35200, 38900 },
+            BackgroundColor = new List<string> { "rgba(168, 85, 247, 0.2)" },
+            BorderColor = new List<string> { "rgba(168, 85, 247, 1)" },
+            Fill = true,
+            PointRadius = 3,
+            BorderWidth = 2,
+            Tension = 4,
+        };
+    }
+
+    private DoughnutChartDataset<int> GetDoughnutChartDataset()
+    {
+        return new DoughnutChartDataset<int>
+        {
+            Label = "Ventas por Categoría",
+            Data = new List<int> { 35, 28, 22, 15 },
+            BackgroundColor = new List<string>
+            {
+                "rgba(168, 85, 247, 0.8)",  // Púrpura
+                "rgba(59, 130, 246, 0.8)",   // Azul
+                "rgba(16, 185, 129, 0.8)",   // Verde
+                "rgba(245, 158, 11, 0.8)"    // Naranja
+            },
+            BorderColor = new List<string> { "#fff" },
+            BorderWidth = 2
+        };
+    }
+
+    private string GetStatusClass(string status)
+    {
+        return status switch
+        {
+            "completed" => "completed",
+            "processing" => "processing",
+            "pending" => "pending",
+            "cancelled" => "cancelled",
+            _ => "pending"
+        };
+    }
+
+    private string GetStatusText(string status)
+    {
+        return status switch
+        {
+            "completed" => "Completado",
+            "processing" => "En Proceso",
+            "pending" => "Pendiente",
+            "cancelled" => "Cancelado",
+            _ => "Desconocido"
+        };
+    }
+}

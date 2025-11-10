@@ -1,0 +1,239 @@
+﻿@page "/AdminClientes"
+@using ENTITY.Usuarios
+@using BLL.Interfaces
+@inject IUsuarioService UsuarioService
+
+<div class="container">
+
+    <h2 class="page-title">Gestión de Usuarios</h2>
+
+    <div class="content-card">
+        <div class="filters-row">
+
+            <div class="search-box">
+                <span class="search-icon">🔍</span>
+                <input type="text" placeholder="Buscar por nombre, email o cédula..." class="search-input" @bind="searchTerm" @bind:event="oninput" />
+            </div>
+
+            <select class="filter-select" @bind="filterEstado">
+                <option value="">Todos los estados</option>
+                <option value="A">Activos</option>
+                <option value="I">Inactivos</option>
+            </select>
+
+            <button class="btn-secondary">
+                <span class="icon">📥</span>
+                Exportar
+            </button>
+
+        </div>
+
+        <div class="stats-row">
+            <div class="stat-item">
+                <span class="stat-value">@usuarios.Count</span>
+                <span class="stat-label">Total Usuarios</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-value">@usuarios.Count(u => u.Estado == "A")</span>
+                <span class="stat-label">Activos</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-value">@usuarios.Count(u => u.Estado == "I")</span>
+                <span class="stat-label">Inactivos</span>
+            </div>
+        </div>
+
+        @if (cargando)
+        {
+            <div class="empty-state">
+                <span class="empty-icon">⏳</span>
+                <p>Cargando usuarios...</p>
+            </div>
+        }
+        else
+        {
+            <div class="table-wrapper">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Usuario</th>
+                            <th>Correo Electrónico</th>
+                            <th>Celular</th>
+                            <th>Estado</th>
+                            <th>Fecha Registro</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var usuario in UsuariosFiltrados)
+                        {
+                            <tr class="table-row">
+
+                                <td class="user-info">
+                                    <div class="user-avatar">
+                                        @GetIniciales(usuario.NombreCompleto)
+                                    </div>
+                                    <div class="user-details">
+                                        <div style="font-weight: 600; color: #1f2937;"> @usuario.NombreCompleto</div>
+                                        <div style="font-size: 12px;color: #9ca3af;">Cédula: @usuario.Cedula</div>
+                                    </div>
+                                </td>
+
+                                <td style="color: #6b7280">@usuario.Correo</td>
+                                <td style="color: #6b7280;">@usuario.TelefonoPrincipal</td>
+
+                                <td>
+                                    <span class="status-badge @GetStatusClass(usuario.Estado)">
+                                        @GetEstadoText(usuario.Estado)
+                                    </span>
+                                </td>
+
+                                <td style="color: #6b7280;font-size: 13px;">@usuario.FechaRegistro.ToString("dd/MM/yyyy")</td>
+
+                                <td>
+                                    <button class="btn-action btn-toggle" @onclick="() => CambiarEstado(usuario)" title="@(usuario.Estado == "A" ? "Desactivar" : "Activar")">
+                                        <span>@(usuario.Estado == "A" ? "🔒" : "🔓")</span>
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            @if (!UsuariosFiltrados.Any())
+            {
+                <div class="empty-state">
+                    <span class="empty-icon">👥</span>
+                    <p>No se encontraron usuarios</p>
+                </div>
+            }
+        }
+    </div>
+</div>
+
+@code {
+    // Modelo interno para la vista
+    public class UsuarioVista
+    {
+        public int Id { get; set; }
+        public string NombreCompleto { get; set; }
+        public string Correo { get; set; }
+        public string Cedula { get; set; }
+        public string TelefonoPrincipal { get; set; }
+        public string Estado { get; set; }
+        public DateTime FechaRegistro { get; set; }
+    }
+
+    private List<UsuarioVista> usuarios = new();
+    private string searchTerm = "";
+    private string filterEstado = "";
+    private bool cargando = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarUsuarios();
+    }
+
+    private async Task CargarUsuarios()
+    {
+        try
+        {
+            cargando = true;
+            var resultado = await UsuarioService.ObtenerTodosLosUsuarios();
+
+            if (resultado.IsSuccess && resultado.ListObject != null)
+            {
+                // Mapear los DTOs a nuestro modelo de vista
+                usuarios = resultado.ListObject.Select(u => new UsuarioVista
+                {
+                    Id = u.Id,
+                    NombreCompleto = $"{u.PrimerNombre} {u.SegundoNombre} {u.ApellidoPaterno} {u.ApellidoMaterno}".Replace("  ", " ").Trim(),
+                    Correo = u.Correo,
+                    Cedula = u.Cedula,
+                    TelefonoPrincipal = u.TelefonoPrincipal,
+                    Estado = u.Estado,
+                    FechaRegistro = u.FechaRegistro
+                }).ToList();
+            }
+            else
+            {
+                Console.WriteLine($"Error al cargar usuarios: {resultado.Message}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al cargar usuarios: {ex.Message}");
+        }
+        finally
+        {
+            cargando = false;
+        }
+    }
+
+    private IEnumerable<UsuarioVista> UsuariosFiltrados
+    {
+        get
+        {
+            var resultado = usuarios.AsEnumerable();
+
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+            {
+                resultado = resultado.Where(u =>
+                    u.NombreCompleto.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                    u.Correo.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                    u.Cedula.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                    u.TelefonoPrincipal.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)
+                );
+            }
+
+            if (!string.IsNullOrWhiteSpace(filterEstado))
+            {
+                resultado = resultado.Where(u => u.Estado == filterEstado);
+            }
+
+            return resultado.OrderByDescending(u => u.FechaRegistro);
+        }
+    }
+
+    private string GetIniciales(string nombreCompleto)
+    {
+        var palabras = nombreCompleto.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (palabras.Length >= 2)
+        {
+            return $"{palabras[0][0]}{palabras[1][0]}".ToUpper();
+        }
+        return palabras[0].Substring(0, Math.Min(2, palabras[0].Length)).ToUpper();
+    }
+
+    private async Task CambiarEstado(UsuarioVista usuario)
+    {
+        try
+        {
+            // Cambiar el estado localmente
+            usuario.Estado = usuario.Estado == "A" ? "I" : "A";
+
+            // Aquí podrías llamar al servicio para actualizar en BD
+            // await UsuarioService.ActualizarUsuario(...);
+
+            Console.WriteLine($"Usuario {usuario.NombreCompleto} - Estado cambiado a: {GetEstadoText(usuario.Estado)}");
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al cambiar estado: {ex.Message}");
+            // Revertir el cambio si hay error
+            usuario.Estado = usuario.Estado == "A" ? "I" : "A";
+        }
+    }
+
+    private string GetStatusClass(string estado)
+    {
+        return estado == "A" ? "activo" : "inactivo";
+    }
+
+    private string GetEstadoText(string estado)
+    {
+        return estado == "A" ? "Activo" : "Inactivo";
+    }
+}

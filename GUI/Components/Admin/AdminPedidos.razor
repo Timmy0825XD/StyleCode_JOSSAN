@@ -1,0 +1,836 @@
+﻿@page "/AdminPedidos"
+@using System.Collections.Generic
+
+<div class="container">
+    <div class="header-section">
+        <h2 class="page-title">Gestión de Pedidos</h2>
+        <button class="btn-primary" @onclick="NuevoPedido">
+            <span class="icon">➕</span>
+            Nuevo Pedido
+        </button>
+    </div>
+
+    <div class="content-card">
+        <div class="filters-row">
+            <div class="search-box">
+                <span class="search-icon">🔍</span>
+                <input type="text"
+                       placeholder="Buscar pedidos..."
+                       class="search-input"
+                       @bind="searchTerm"
+                       @bind:event="oninput" />
+            </div>
+            <div class="filter-group">
+                <select class="filter-select" @bind="filterStatus">
+                    <option value="">Todos los estados</option>
+                    <option value="pending">Pendiente</option>
+                    <option value="processing">En Proceso</option>
+                    <option value="shipped">Enviado</option>
+                    <option value="delivered">Entregado</option>
+                    <option value="cancelled">Cancelado</option>
+                </select>
+                <input type="date" class="filter-date" />
+            </div>
+            <button class="btn-secondary">
+                <span class="icon">📥</span>
+                Exportar
+            </button>
+        </div>
+
+        <div class="table-wrapper">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>ID Pedido</th>
+                        <th>Cliente</th>
+                        <th>Fecha</th>
+                        <th>Total</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var pedido in PedidosFiltrados)
+                    {
+                        <tr class="table-row">
+                            <td class="order-id">@pedido.Id</td>
+                            <td class="customer-info">
+                                <div class="customer-name">@pedido.NombreCliente</div>
+                                <div class="customer-email">@pedido.EmailCliente</div>
+                            </td>
+                            <td class="order-date">@pedido.Fecha.ToString("dd/MM/yyyy")</td>
+                            <td class="order-total">$@pedido.Total.ToString("N2")</td>
+                            <td>
+                                <select class="status-select @GetStatusClass(pedido.Estado)"
+                                        @onchange="@((e) => CambiarEstado(pedido, e.Value.ToString()))">
+                                    <option value="pending" selected="@(pedido.Estado == "pending")">Pendiente</option>
+                                    <option value="processing" selected="@(pedido.Estado == "processing")">En Proceso</option>
+                                    <option value="shipped" selected="@(pedido.Estado == "shipped")">Enviado</option>
+                                    <option value="delivered" selected="@(pedido.Estado == "delivered")">Entregado</option>
+                                    <option value="cancelled" selected="@(pedido.Estado == "cancelled")">Cancelado</option>
+                                </select>
+                            </td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button class="btn-action btn-view" @onclick="() => VerDetalles(pedido)" title="Ver Detalles">
+                                        <span>👁️</span>
+                                    </button>
+                                    <button class="btn-action btn-edit" @onclick="() => EditarPedido(pedido)" title="Editar">
+                                        <span>✏️</span>
+                                    </button>
+                                    <button class="btn-action btn-invoice" @onclick="() => GenerarFactura(pedido)" title="Generar Factura">
+                                        <span>📄</span>
+                                    </button>
+                                    <button class="btn-action btn-delete" @onclick="() => EliminarPedido(pedido)" title="Eliminar">
+                                        <span>🗑️</span>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        @if (!PedidosFiltrados.Any())
+        {
+            <div class="empty-state">
+                <span class="empty-icon">📦</span>
+                <p>No se encontraron pedidos</p>
+            </div>
+        }
+    </div>
+
+    @if (mostrarDetalles && pedidoSeleccionado != null)
+    {
+        <div class="modal-overlay" @onclick="CerrarDetalles">
+            <div class="modal-content" @onclick:stopPropagation>
+                <div class="modal-header">
+                    <h3>Detalles del Pedido @pedidoSeleccionado.Id</h3>
+                    <button class="btn-close" @onclick="CerrarDetalles">✕</button>
+                </div>
+                <div class="modal-body">
+                    <div class="detail-section">
+                        <h4>Información del Cliente</h4>
+                        <div class="detail-grid">
+                            <div class="detail-item">
+                                <span class="detail-label">Nombre:</span>
+                                <span class="detail-value">@pedidoSeleccionado.NombreCliente</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Email:</span>
+                                <span class="detail-value">@pedidoSeleccionado.EmailCliente</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Teléfono:</span>
+                                <span class="detail-value">@pedidoSeleccionado.TelefonoCliente</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="detail-section">
+                        <h4>Información del Pedido</h4>
+                        <div class="detail-grid">
+                            <div class="detail-item">
+                                <span class="detail-label">ID:</span>
+                                <span class="detail-value">@pedidoSeleccionado.Id</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Fecha:</span>
+                                <span class="detail-value">@pedidoSeleccionado.Fecha.ToString("dd/MM/yyyy HH:mm")</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Estado:</span>
+                                <span class="detail-value status-badge @GetStatusClass(pedidoSeleccionado.Estado)">
+                                    @GetStatusText(pedidoSeleccionado.Estado)
+                                </span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Total:</span>
+                                <span class="detail-value total-amount">$@pedidoSeleccionado.Total.ToString("N2")</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="detail-section">
+                        <h4>Productos</h4>
+                        <div class="products-list">
+                            @foreach (var item in pedidoSeleccionado.Items)
+                            {
+                                <div class="product-item">
+                                    <div class="product-info">
+                                        <span class="product-name">@item.ProductoNombre</span>
+                                        <span class="product-quantity">x@item.Cantidad</span>
+                                    </div>
+                                    <span class="product-price">$@item.PrecioUnitario.ToString("N2")</span>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<style>
+    .container {
+        padding: 24px;
+    }
+
+    .header-section {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+
+    @@media (min-width: 640px) {
+        .header-section {
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+        }
+    }
+
+    .page-title {
+        font-size: 28px;
+        font-weight: bold;
+        color: #1f2937;
+        margin: 0;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
+        color: white;
+        padding: 12px 24px;
+        border-radius: 12px;
+        border: none;
+        font-weight: 500;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 6px rgba(168, 85, 247, 0.2);
+    }
+
+        .btn-primary:hover {
+            box-shadow: 0 6px 12px rgba(168, 85, 247, 0.3);
+            transform: translateY(-2px);
+        }
+
+    .btn-secondary {
+        padding: 12px 24px;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        background: white;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.2s ease;
+    }
+
+        .btn-secondary:hover {
+            background: #f9fafb;
+        }
+
+    .content-card {
+        background: white;
+        border-radius: 16px;
+        padding: 24px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .filters-row {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+
+    @@media (min-width: 640px) {
+        .filters-row {
+            flex-direction: row;
+            align-items: center;
+        }
+    }
+
+    .search-box {
+        flex: 1;
+        position: relative;
+    }
+
+    .search-icon {
+        position: absolute;
+        left: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #9ca3af;
+    }
+
+    .search-input {
+        width: 100%;
+        padding: 12px 12px 12px 40px;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        font-size: 14px;
+        transition: all 0.2s ease;
+    }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #a855f7;
+            box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.1);
+        }
+
+    .filter-group {
+        display: flex;
+        gap: 12px;
+    }
+
+    .filter-select, .filter-date {
+        padding: 12px 16px;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        font-size: 14px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+        .filter-select:focus, .filter-date:focus {
+            outline: none;
+            border-color: #a855f7;
+            box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.1);
+        }
+
+    .table-wrapper {
+        overflow-x: auto;
+    }
+
+    .data-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+        .data-table thead tr {
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        .data-table th {
+            text-align: left;
+            padding: 12px;
+            color: #6b7280;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+    .table-row {
+        border-bottom: 1px solid #e5e7eb;
+        transition: background-color 0.2s ease;
+    }
+
+        .table-row:hover {
+            background-color: #f9fafb;
+        }
+
+        .table-row td {
+            padding: 16px 12px;
+            font-size: 14px;
+        }
+
+    .order-id {
+        font-weight: 600;
+        color: #a855f7;
+    }
+
+    .customer-info {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .customer-name {
+        font-weight: 500;
+        color: #1f2937;
+    }
+
+    .customer-email {
+        font-size: 12px;
+        color: #6b7280;
+    }
+
+    .order-date {
+        color: #6b7280;
+    }
+
+    .order-total {
+        font-weight: 600;
+        color: #1f2937;
+        font-size: 16px;
+    }
+
+    .status-select {
+        padding: 6px 12px;
+        border-radius: 20px;
+        border: none;
+        font-size: 12px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+        .status-select.pending {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+
+        .status-select.processing {
+            background-color: #dbeafe;
+            color: #1e40af;
+        }
+
+        .status-select.shipped {
+            background-color: #e0e7ff;
+            color: #4338ca;
+        }
+
+        .status-select.delivered {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+
+        .status-select.cancelled {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
+
+    .action-buttons {
+        display: flex;
+        gap: 8px;
+    }
+
+    .btn-action {
+        padding: 8px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-size: 16px;
+    }
+
+    .btn-view {
+        background: #f3e8ff;
+        color: #7c3aed;
+    }
+
+        .btn-view:hover {
+            background: #e9d5ff;
+        }
+
+    .btn-edit {
+        background: #dbeafe;
+        color: #2563eb;
+    }
+
+        .btn-edit:hover {
+            background: #bfdbfe;
+        }
+
+    .btn-invoice {
+        background: #fef3c7;
+        color: #d97706;
+    }
+
+        .btn-invoice:hover {
+            background: #fde68a;
+        }
+
+    .btn-delete {
+        background: #fee2e2;
+        color: #dc2626;
+    }
+
+        .btn-delete:hover {
+            background: #fecaca;
+        }
+
+    .empty-state {
+        text-align: center;
+        padding: 48px 24px;
+        color: #9ca3af;
+    }
+
+    .empty-icon {
+        font-size: 48px;
+        display: block;
+        margin-bottom: 16px;
+    }
+
+    /* Modal Styles */
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        padding: 20px;
+    }
+
+    .modal-content {
+        background: white;
+        border-radius: 16px;
+        max-width: 700px;
+        width: 100%;
+        max-height: 90vh;
+        overflow-y: auto;
+        box-shadow: 0 20px 25px rgba(0, 0, 0, 0.2);
+    }
+
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 24px;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+        .modal-header h3 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: bold;
+            color: #1f2937;
+        }
+
+    .btn-close {
+        background: none;
+        border: none;
+        font-size: 24px;
+        cursor: pointer;
+        color: #6b7280;
+        padding: 4px 8px;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+    }
+
+        .btn-close:hover {
+            background: #f3f4f6;
+            color: #1f2937;
+        }
+
+    .modal-body {
+        padding: 24px;
+    }
+
+    .detail-section {
+        margin-bottom: 24px;
+    }
+
+        .detail-section h4 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1f2937;
+            margin: 0 0 16px 0;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+    .detail-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 16px;
+    }
+
+    .detail-item {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .detail-label {
+        font-size: 12px;
+        font-weight: 500;
+        color: #6b7280;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .detail-value {
+        font-size: 14px;
+        color: #1f2937;
+        font-weight: 500;
+    }
+
+    .status-badge {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 500;
+    }
+
+    .total-amount {
+        font-size: 20px;
+        font-weight: bold;
+        color: #a855f7;
+    }
+
+    .products-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .product-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px;
+        background: #f9fafb;
+        border-radius: 8px;
+    }
+
+    .product-info {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+    }
+
+    .product-name {
+        font-weight: 500;
+        color: #1f2937;
+    }
+
+    .product-quantity {
+        font-size: 12px;
+        color: #6b7280;
+        background: white;
+        padding: 2px 8px;
+        border-radius: 4px;
+    }
+
+    .product-price {
+        font-weight: 600;
+        color: #a855f7;
+    }
+
+    .icon {
+        font-size: 18px;
+    }
+</style>
+
+@code {
+    public class Pedido
+    {
+        public string Id { get; set; }
+        public string NombreCliente { get; set; }
+        public string EmailCliente { get; set; }
+        public string TelefonoCliente { get; set; }
+        public DateTime Fecha { get; set; }
+        public decimal Total { get; set; }
+        public string Estado { get; set; }
+        public List<ItemPedido> Items { get; set; } = new();
+    }
+
+    public class ItemPedido
+    {
+        public string ProductoNombre { get; set; }
+        public int Cantidad { get; set; }
+        public decimal PrecioUnitario { get; set; }
+    }
+
+    private List<Pedido> pedidos = new();
+    private string searchTerm = "";
+    private string filterStatus = "";
+    private string filterDate = "";
+    private bool mostrarDetalles = false;
+    private Pedido pedidoSeleccionado;
+
+    protected override void OnInitialized()
+    {
+        CargarPedidosDePrueba();
+    }
+
+    private void CargarPedidosDePrueba()
+    {
+        pedidos = new List<Pedido>
+        {
+            new Pedido
+            {
+                Id = "#PED-001",
+                NombreCliente = "Juan Pérez",
+                EmailCliente = "juan@example.com",
+                TelefonoCliente = "+57 300 123 4567",
+                Fecha = DateTime.Now.AddDays(-2),
+                Total = 450.00m,
+                Estado = "delivered",
+                Items = new List<ItemPedido>
+                {
+                    new ItemPedido { ProductoNombre = "Laptop HP", Cantidad = 1, PrecioUnitario = 450.00m }
+                }
+            },
+            new Pedido
+            {
+                Id = "#PED-002",
+                NombreCliente = "María García",
+                EmailCliente = "maria@example.com",
+                TelefonoCliente = "+57 310 234 5678",
+                Fecha = DateTime.Now.AddDays(-1),
+                Total = 280.50m,
+                Estado = "shipped",
+                Items = new List<ItemPedido>
+                {
+                    new ItemPedido { ProductoNombre = "Mouse Logitech", Cantidad = 2, PrecioUnitario = 140.25m }
+                }
+            },
+            new Pedido
+            {
+                Id = "#PED-003",
+                NombreCliente = "Carlos López",
+                EmailCliente = "carlos@example.com",
+                TelefonoCliente = "+57 320 345 6789",
+                Fecha = DateTime.Now,
+                Total = 820.00m,
+                Estado = "processing",
+                Items = new List<ItemPedido>
+                {
+                    new ItemPedido { ProductoNombre = "Monitor Samsung 27\"", Cantidad = 1, PrecioUnitario = 820.00m }
+                }
+            },
+            new Pedido
+            {
+                Id = "#PED-004",
+                NombreCliente = "Ana Martínez",
+                EmailCliente = "ana@example.com",
+                TelefonoCliente = "+57 315 456 7890",
+                Fecha = DateTime.Now.AddHours(-5),
+                Total = 195.00m,
+                Estado = "pending",
+                Items = new List<ItemPedido>
+                {
+                    new ItemPedido { ProductoNombre = "Teclado Mecánico", Cantidad = 1, PrecioUnitario = 195.00m }
+                }
+            }
+        };
+    }
+
+    private IEnumerable<Pedido> PedidosFiltrados
+    {
+        get
+        {
+            var resultado = pedidos.AsEnumerable();
+
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+            {
+                resultado = resultado.Where(p =>
+                    p.Id.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                    p.NombreCliente.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                    p.EmailCliente.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)
+                );
+            }
+
+            if (!string.IsNullOrWhiteSpace(filterStatus))
+            {
+                resultado = resultado.Where(p => p.Estado == filterStatus);
+            }
+
+            if (!string.IsNullOrWhiteSpace(filterDate))
+            {
+                var fecha = DateTime.Parse(filterDate);
+                resultado = resultado.Where(p => p.Fecha.Date == fecha.Date);
+            }
+
+            return resultado.OrderByDescending(p => p.Fecha);
+        }
+    }
+
+    private void CambiarEstado(Pedido pedido, string nuevoEstado)
+    {
+        var estadoAnterior = pedido.Estado;
+        pedido.Estado = nuevoEstado;
+
+        // Si cambia a "Enviado", generar factura automáticamente
+        if (nuevoEstado == "shipped" && estadoAnterior != "shipped")
+        {
+            GenerarFacturaAutomatica(pedido);
+        }
+
+        StateHasChanged();
+    }
+
+    private void GenerarFacturaAutomatica(Pedido pedido)
+    {
+        // Lógica para generar factura electrónica
+        Console.WriteLine($"Generando factura automática para el pedido {pedido.Id}");
+        // Aquí iría la integración con el sistema de facturación
+    }
+
+    private void VerDetalles(Pedido pedido)
+    {
+        pedidoSeleccionado = pedido;
+        mostrarDetalles = true;
+    }
+
+    private void CerrarDetalles()
+    {
+        mostrarDetalles = false;
+        pedidoSeleccionado = null;
+    }
+
+    private void EditarPedido(Pedido pedido)
+    {
+        Console.WriteLine($"Editando pedido: {pedido.Id}");
+        // Implementar lógica de edición
+    }
+
+    private void GenerarFactura(Pedido pedido)
+    {
+        Console.WriteLine($"Generando factura para pedido: {pedido.Id}");
+        // Implementar generación manual de factura
+    }
+
+    private void EliminarPedido(Pedido pedido)
+    {
+        if (confirm($"¿Está seguro de eliminar el pedido {pedido.Id}?"))
+        {
+            pedidos.Remove(pedido);
+            StateHasChanged();
+        }
+    }
+
+    private void NuevoPedido()
+    {
+        Console.WriteLine("Crear nuevo pedido");
+        // Implementar formulario de nuevo pedido
+    }
+
+    private string GetStatusClass(string status)
+    {
+        return status;
+    }
+
+    private string GetStatusText(string status)
+    {
+        return status switch
+        {
+            "pending" => "Pendiente",
+            "processing" => "En Proceso",
+            "shipped" => "Enviado",
+            "delivered" => "Entregado",
+            "cancelled" => "Cancelado",
+            _ => "Desconocido"
+        };
+    }
+
+    private bool confirm(string message)
+    {
+        // En producción, usar un componente de confirmación modal
+        return true;
+    }
+}

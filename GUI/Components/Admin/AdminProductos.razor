@@ -1,0 +1,2265 @@
+﻿@page "/AdminProductos"
+@using System.Collections.Generic
+
+<!-- Modal Nuevo Producto -->
+@if (mostrarModal)
+{
+    <div class="modal-overlay" @onclick="CerrarModal">
+        <div class="modal-content modal-large" @onclick:stopPropagation>
+            <div class="modal-header">
+                <h3>@(productoEditando != null ? "Editar Producto" : "Nuevo Producto")</h3>
+                <button class="btn-close" @onclick="CerrarModal">✕</button>
+            </div>
+            
+            <div class="modal-body">
+                <!-- Indicador de pasos -->
+                <div class="modal-steps">
+                    <div class="step @(pasoModal == 1 ? "active" : pasoModal > 1 ? "completed" : "")">
+                        <div class="step-number">1</div>
+                        <span>Información</span>
+                    </div>
+                    <div class="step-line @(pasoModal > 1 ? "completed" : "")"></div>
+                    <div class="step @(pasoModal == 2 ? "active" : pasoModal > 2 ? "completed" : "")">
+                        <div class="step-number">2</div>
+                        <span>Variantes</span>
+                    </div>
+                    <div class="step-line @(pasoModal > 2 ? "completed" : "")"></div>
+                    <div class="step @(pasoModal == 3 ? "active" : "")">
+                        <div class="step-number">3</div>
+                        <span>Imágenes</span>
+                    </div>
+                </div>
+
+                <form @onsubmit="GuardarProducto">
+                    <!-- PASO 1: Información Básica -->
+                    @if (pasoModal == 1)
+                    {
+                        <div class="form-section">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Nombre del Producto *</label>
+                                    <input type="text" class="form-input" @bind="nuevoProducto.Nombre" required />
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Marca *</label>
+                                    <input type="text" class="form-input" @bind="nuevoProducto.Marca" required />
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Descripción *</label>
+                                <textarea class="form-textarea" rows="3" @bind="nuevoProducto.Descripcion" required></textarea>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Categoría Tipo *</label>
+                                    <select class="form-select" @bind="nuevoProducto.IdCategoriaTipo" required>
+                                        <option value="0">Seleccionar...</option>
+                                        @foreach (var cat in categoriasTipo)
+                                        {
+                                            <option value="@cat.Id">@cat.Nombre</option>
+                                        }
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Categoría Ocasión *</label>
+                                    <select class="form-select" @bind="nuevoProducto.IdCategoriaOcasion" required>
+                                        <option value="0">Seleccionar...</option>
+                                        @foreach (var cat in categoriasOcasion)
+                                        {
+                                            <option value="@cat.Id">@cat.Nombre</option>
+                                        }
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Género *</label>
+                                    <select class="form-select" @bind="nuevoProducto.Genero" required>
+                                        <option value="">Seleccionar...</option>
+                                        <option value="Hombre">Hombre</option>
+                                        <option value="Mujer">Mujer</option>
+                                        <option value="Unisex">Unisex</option>
+                                        <option value="Niño">Niño</option>
+                                        <option value="Niña">Niña</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Material</label>
+                                    <input type="text" class="form-input" @bind="nuevoProducto.Material" placeholder="Algodón, Poliéster..." />
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Precio Base *</label>
+                                    <input type="number" class="form-input" @bind="nuevoProducto.PrecioBase" min="0" step="0.01" required />
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Descuento (%)</label>
+                                    <input type="number" class="form-input" @bind="nuevoProducto.Descuento" min="0" max="100" />
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                    <!-- PASO 2: Variantes -->
+                    @if (pasoModal == 2)
+                    {
+                        <div class="form-section">
+                            <div class="variantes-header">
+                                <h4>Configurar Variantes (Talla y Color)</h4>
+                                <button type="button" class="btn-add-variant" @onclick="AgregarVariante">
+                                    ➕ Agregar Variante
+                                </button>
+                            </div>
+
+                            <div class="variantes-list">
+                                @foreach (var (variante, index) in nuevoProducto.Variantes.Select((v, i) => (v, i)))
+                                {
+                                    <div class="variante-item">
+                                        <div class="variante-number">@(index + 1)</div>
+                                        <div class="variante-fields">
+                                            <div class="form-group-inline">
+                                                <label>Talla</label>
+                                                <select class="form-select-sm" @bind="variante.Talla">
+                                                    <option value="XS">XS</option>
+                                                    <option value="S">S</option>
+                                                    <option value="M">M</option>
+                                                    <option value="L">L</option>
+                                                    <option value="XL">XL</option>
+                                                    <option value="XXL">XXL</option>
+                                                </select>
+                                            </div>
+                                            <div class="form-group-inline">
+                                                <label>Color</label>
+                                                <input type="text" class="form-input-sm" @bind="variante.Color" placeholder="Rojo, Azul..." />
+                                            </div>
+                                            <div class="form-group-inline">
+                                                <label>Stock</label>
+                                                <input type="number" class="form-input-sm" @bind="variante.Stock" min="0" />
+                                            </div>
+                                        </div>
+                                        <button type="button" class="btn-remove-variant" @onclick="() => EliminarVariante(index)">
+                                            🗑️
+                                        </button>
+                                    </div>
+                                }
+                            </div>
+
+                            @if (!nuevoProducto.Variantes.Any())
+                            {
+                                <div class="empty-variants">
+                                    <span>📦</span>
+                                    <p>No hay variantes. Agrega al menos una.</p>
+                                </div>
+                            }
+                        </div>
+                    }
+
+                    <!-- PASO 3: Imágenes -->
+                    @if (pasoModal == 3)
+                    {
+                        <div class="form-section">
+                            <h4>Imágenes del Producto</h4>
+                            
+                            <div class="image-upload-area">
+                                <div class="upload-box">
+                                    <span class="upload-icon">📸</span>
+                                    <p>Arrastra imágenes aquí o haz clic para seleccionar</p>
+                                    <button type="button" class="btn-upload" @onclick="SeleccionarImagenes">
+                                        Seleccionar Imágenes
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="images-grid">
+                                @foreach (var (imagen, index) in nuevoProducto.Imagenes.Select((img, i) => (img, i)))
+                                {
+                                    <div class="image-preview">
+                                        <img src="@imagen.Url" alt="Imagen @(index + 1)" />
+                                        <div class="image-controls">
+                                            <label class="image-principal">
+                                                <input type="radio" name="principal" checked="@imagen.EsPrincipal" @onchange="() => MarcarComoPrincipal(index)" />
+                                                <span>Principal</span>
+                                            </label>
+                                            <button type="button" class="btn-remove-image" @onclick="() => EliminarImagen(index)">
+                                                ✕
+                                            </button>
+                                        </div>
+                                        <div class="image-order">
+                                            <input type="number" class="form-input-xs" @bind="imagen.Orden" min="1" placeholder="Orden" />
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+
+                            @if (!nuevoProducto.Imagenes.Any())
+                            {
+                                <div class="empty-images">
+                                    <span>🖼️</span>
+                                    <p>No se han agregado imágenes</p>
+                                </div>
+                            }
+                        </div>
+                    }
+
+                    @if (!string.IsNullOrEmpty(mensajeErrorModal))
+                    {
+                        <div class="error-message-modal">
+                            <span>⚠️</span>
+                            <span>@mensajeErrorModal</span>
+                        </div>
+                    }
+
+                    <!-- Botones de navegación -->
+                    <div class="modal-actions">
+                        @if (pasoModal > 1)
+                        {
+                            <button type="button" class="btn-modal-back" @onclick="PasoAnteriorModal">
+                                ← Anterior
+                            </button>
+                        }
+                        @if (pasoModal < 3)
+                        {
+                            <button type="button" class="btn-modal-next" @onclick="PasoSiguienteModal">
+                                Siguiente →
+                            </button>
+                        }
+                        else
+                        {
+                            <button type="submit" class="btn-modal-save" disabled="@guardandoProducto">
+                                @if (guardandoProducto)
+                                {
+                                    <span class="spinner-small"></span>
+                                    <span>Guardando...</span>
+                                }
+                                else
+                                {
+                                    <span>💾 Guardar Producto</span>
+                                }
+                            </button>
+                        }
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+}
+
+<div class="products-page">
+    <div class="page-header">
+        <h2 class="page-title">Gestión de Productos</h2>
+        <button class="btn-primary" @onclick="AbrirModalNuevoProducto">
+            <span class="btn-icon">➕</span>
+            Nuevo Producto
+        </button>
+    </div>
+
+    <div class="products-card">
+        <div class="toolbar">
+            <div class="search-container">
+                <span class="search-icon">🔍</span>
+                <input type="text"
+                       placeholder="Buscar productos..."
+                       class="search-input"
+                       @bind="searchText"
+                       @bind:event="oninput" />
+            </div>
+            <button class="btn-secondary">
+                <span class="btn-icon">🔽</span>
+                Filtros
+            </button>
+            <button class="btn-secondary" @onclick="ExportarProductos">
+                <span class="btn-icon">📥</span>
+                Exportar
+            </button>
+        </div>
+
+        <div class="table-container">
+            <table class="products-table">
+                <thead>
+                    <tr>
+                        <th>Producto</th>
+                        <th>Categoría</th>
+                        <th>Precio</th>
+                        <th>Stock</th>
+                        <th>Ventas</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var product in ProductosFiltrados)
+                    {
+                        <tr>
+                            <td class="product-name">@product.Name</td>
+                            <td class="product-category">@product.Category</td>
+                            <td class="product-price">$@product.Price.ToString("F2")</td>
+                            <td>
+                                <span class="@GetStockClass(product.Stock)">
+                                    @product.Stock
+                                </span>
+                            </td>
+                            <td class="product-sales">@product.Sales</td>
+                            <td>
+                                <span class="badge @GetStatusBadgeClass(product.Status)">
+                                    @GetStatusText(product.Status)
+                                </span>
+                            </td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button class="btn-action btn-view" @onclick="() => VerProducto(product.Id)" title="Ver">
+                                        <span>👁️</span>
+                                    </button>
+                                    <button class="btn-action btn-edit" @onclick="() => EditarProducto(product.Id)" title="Editar">
+                                        <span>✏️</span>
+                                    </button>
+                                    <button class="btn-action btn-delete" @onclick="() => EliminarProducto(product.Id)" title="Eliminar">
+                                        <span>🗑️</span>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+
+            @if (!ProductosFiltrados.Any())
+            {
+                <div class="empty-state">
+                    <span class="empty-icon">📦</span>
+                    <p>No se encontraron productos</p>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+    <div class="header-section">
+        <h2 class="page-title">Gestión de Usuarios</h2>
+        <button class="btn-primary" @onclick="NuevoUsuario">
+            <span class="icon">➕</span>
+            Nuevo Usuario
+        </button>
+    </div>
+
+    <div class="content-card">
+        <div class="filters-row">
+            <div class="search-box">
+                <span class="search-icon">🔍</span>
+                <input type="text" 
+                       placeholder="Buscar por nombre, email o cédula..." 
+                       class="search-input"
+                       @bind="searchTerm"
+                       @bind:event="oninput" />
+            </div>
+            <div class="filter-group">
+                <select class="filter-select" @bind="filterEstado">
+                    <option value="">Todos los estados</option>
+                    <option value="activo">Activos</option>
+                    <option value="inactivo">Inactivos</option>
+                    <option value="suspendido">Suspendidos</option>
+                </select>
+                <select class="filter-select" @bind="filterTipo">
+                    <option value="">Todos los tipos</option>
+                    <option value="cliente">Clientes</option>
+                    <option value="premium">Premium</option>
+                    <option value="administrador">Administradores</option>
+                </select>
+            </div>
+            <button class="btn-secondary">
+                <span class="icon">📥</span>
+                Exportar
+            </button>
+        </div>
+
+        <div class="stats-row">
+            <div class="stat-item">
+                <span class="stat-value">@usuarios.Count</span>
+                <span class="stat-label">Total Usuarios</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-value">@usuarios.Count(u => u.Estado == "activo")</span>
+                <span class="stat-label">Activos</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-value">@usuarios.Count(u => u.TipoUsuario == "premium")</span>
+                <span class="stat-label">Premium</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-value">@usuarios.Count(u => u.FechaRegistro.Month == DateTime.Now.Month)</span>
+                <span class="stat-label">Nuevos (mes)</span>
+            </div>
+        </div>
+
+        <div class="table-wrapper">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Usuario</th>
+                        <th>Correo Electrónico</th>
+                        <th>Celular</th>
+                        <th>Cédula</th>
+                        <th>Tipo</th>
+                        <th>Estado</th>
+                        <th>Fecha Registro</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var usuario in UsuariosFiltrados)
+                    {
+                        <tr class="table-row">
+                            <td class="user-info">
+                                <div class="user-avatar">
+                                    @GetIniciales(usuario.NombreCompleto)
+                                </div>
+                                <div class="user-details">
+                                    <div class="user-name">@usuario.NombreCompleto</div>
+                                    <div class="user-id">ID: @usuario.Id</div>
+                                </div>
+                            </td>
+                            <td class="email">@usuario.Email</td>
+                            <td class="phone">@usuario.Celular</td>
+                            <td class="cedula">@usuario.Cedula</td>
+                            <td>
+                                <span class="type-badge @GetTypeBadgeClass(usuario.TipoUsuario)">
+                                    @GetTipoText(usuario.TipoUsuario)
+                                </span>
+                            </td>
+                            <td>
+                                <span class="status-badge @GetStatusClass(usuario.Estado)">
+                                    @GetEstadoText(usuario.Estado)
+                                </span>
+                            </td>
+                            <td class="date">@usuario.FechaRegistro.ToString("dd/MM/yyyy")</td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button class="btn-action btn-view" @onclick="() => VerDetalles(usuario)" title="Ver Detalles">
+                                        <span>👁️</span>
+                                    </button>
+                                    <button class="btn-action btn-edit" @onclick="() => EditarUsuario(usuario)" title="Editar">
+                                        <span>✏️</span>
+                                    </button>
+                                    <button class="btn-action btn-toggle" @onclick="() => CambiarEstado(usuario)" title="@(usuario.Estado == "activo" ? "Desactivar" : "Activar")">
+                                        <span>@(usuario.Estado == "activo" ? "🔒" : "🔓")</span>
+                                    </button>
+                                    <button class="btn-action btn-delete" @onclick="() => EliminarUsuario(usuario)" title="Eliminar">
+                                        <span>🗑️</span>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        @if (!UsuariosFiltrados.Any())
+        {
+            <div class="empty-state">
+                <span class="empty-icon">👥</span>
+                <p>No se encontraron usuarios</p>
+            </div>
+        }
+    </div>
+
+    @if (mostrarDetalles && usuarioSeleccionado != null)
+    {
+        <div class="modal-overlay" @onclick="CerrarDetalles">
+            <div class="modal-content" @onclick:stopPropagation>
+                <div class="modal-header">
+                    <h3>Perfil de Usuario</h3>
+                    <button class="btn-close" @onclick="CerrarDetalles">✕</button>
+                </div>
+                <div class="modal-body">
+                    <div class="profile-header">
+                        <div class="profile-avatar-large">
+                            @GetIniciales(usuarioSeleccionado.NombreCompleto)
+                        </div>
+                        <div class="profile-info">
+                            <h4>@usuarioSeleccionado.NombreCompleto</h4>
+                            <p>@usuarioSeleccionado.Email</p>
+                            <div class="profile-badges">
+                                <span class="type-badge @GetTypeBadgeClass(usuarioSeleccionado.TipoUsuario)">
+                                    @GetTipoText(usuarioSeleccionado.TipoUsuario)
+                                </span>
+                                <span class="status-badge @GetStatusClass(usuarioSeleccionado.Estado)">
+                                    @GetEstadoText(usuarioSeleccionado.Estado)
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="detail-section">
+                        <h4>Información Personal</h4>
+                        <div class="detail-grid">
+                            <div class="detail-item">
+                                <span class="detail-label">Nombre Completo:</span>
+                                <span class="detail-value">@usuarioSeleccionado.NombreCompleto</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Cédula:</span>
+                                <span class="detail-value">@usuarioSeleccionado.Cedula</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Celular:</span>
+                                <span class="detail-value">@usuarioSeleccionado.Celular</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Correo Electrónico:</span>
+                                <span class="detail-value">@usuarioSeleccionado.Email</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Dirección:</span>
+                                <span class="detail-value">@usuarioSeleccionado.Direccion</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Ciudad:</span>
+                                <span class="detail-value">@usuarioSeleccionado.Ciudad</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="detail-section">
+                        <h4>Información de Cuenta</h4>
+                        <div class="detail-grid">
+                            <div class="detail-item">
+                                <span class="detail-label">ID Usuario:</span>
+                                <span class="detail-value">@usuarioSeleccionado.Id</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Fecha de Registro:</span>
+                                <span class="detail-value">@usuarioSeleccionado.FechaRegistro.ToString("dd/MM/yyyy HH:mm")</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Último Acceso:</span>
+                                <span class="detail-value">@usuarioSeleccionado.UltimoAcceso.ToString("dd/MM/yyyy HH:mm")</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Total Pedidos:</span>
+                                <span class="detail-value total-orders">@usuarioSeleccionado.TotalPedidos</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Total Gastado:</span>
+                                <span class="detail-value total-spent">$@usuarioSeleccionado.TotalGastado.ToString("N2")</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="detail-section">
+                        <h4>Actividad Reciente</h4>
+                        <div class="activity-list">
+                            @foreach (var actividad in usuarioSeleccionado.ActividadReciente)
+                            {
+                                <div class="activity-item">
+                                    <span class="activity-icon">@actividad.Icono</span>
+                                    <div class="activity-content">
+                                        <div class="activity-text">@actividad.Descripcion</div>
+                                        <div class="activity-date">@actividad.Fecha.ToString("dd/MM/yyyy HH:mm")</div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+<style>
+    /* Estilos existentes del container */
+    .container {
+        padding: 24px;
+    }
+
+    /* Modal Styles */
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.6);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 2000;
+        padding: 20px;
+    }
+
+    .modal-content {
+        background: white;
+        border-radius: 16px;
+        max-width: 700px;
+        width: 100%;
+        max-height: 90vh;
+        overflow-y: auto;
+        box-shadow: 0 20px 25px rgba(0, 0, 0, 0.2);
+    }
+
+    .modal-large {
+        max-width: 900px;
+    }
+
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 24px;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+        .modal-header h3 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: bold;
+            color: #1f2937;
+        }
+
+    .btn-close {
+        background: none;
+        border: none;
+        font-size: 24px;
+        cursor: pointer;
+        color: #6b7280;
+        padding: 4px 8px;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+    }
+
+        .btn-close:hover {
+            background: #f3f4f6;
+            color: #1f2937;
+        }
+
+    .modal-body {
+        padding: 24px;
+    }
+
+    .modal-steps {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 32px;
+        padding: 0 20px;
+    }
+
+    .step {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        flex: 0 0 auto;
+    }
+
+    .step-number {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: #e5e7eb;
+        color: #9ca3af;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        font-size: 16px;
+        transition: all 0.3s ease;
+    }
+
+    .step.active .step-number {
+        background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
+        color: white;
+        box-shadow: 0 4px 12px rgba(168, 85, 247, 0.3);
+    }
+
+    .step.completed .step-number {
+        background: #10b981;
+        color: white;
+    }
+
+    .step span {
+        font-size: 12px;
+        color: #6b7280;
+        font-weight: 500;
+    }
+
+    .step.active span {
+        color: #a855f7;
+        font-weight: 600;
+    }
+
+    .step-line {
+        flex: 1;
+        height: 2px;
+        background: #e5e7eb;
+        margin: 0 8px;
+        transition: all 0.3s ease;
+    }
+
+    .step-line.completed {
+        background: #10b981;
+    }
+
+    .form-section {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .form-label {
+        color: #374151;
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    .form-input, .form-select, .form-textarea {
+        width: 100%;
+        padding: 10px 12px;
+        border: 2px solid #e5e7eb;
+        border-radius: 10px;
+        font-size: 14px;
+        transition: all 0.2s ease;
+    }
+
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            outline: none;
+            border-color: #a855f7;
+            box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.1);
+        }
+
+    .form-textarea {
+        resize: vertical;
+        font-family: inherit;
+    }
+
+    .variantes-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+    }
+
+        .variantes-header h4 {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 600;
+            color: #1f2937;
+        }
+
+    .btn-add-variant {
+        padding: 8px 16px;
+        background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+        .btn-add-variant:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(168, 85, 247, 0.3);
+        }
+
+    .variantes-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .variante-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px;
+        background: #f9fafb;
+        border-radius: 10px;
+        border: 1px solid #e5e7eb;
+    }
+
+    .variante-number {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: #a855f7;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        font-size: 14px;
+        flex-shrink: 0;
+    }
+
+    .variante-fields {
+        flex: 1;
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .form-group-inline {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        flex: 1;
+        min-width: 120px;
+    }
+
+        .form-group-inline label {
+            font-size: 11px;
+            font-weight: 600;
+            color: #6b7280;
+            text-transform: uppercase;
+        }
+
+    .form-select-sm, .form-input-sm {
+        padding: 6px 10px;
+        border: 1px solid #e5e7eb;
+        border-radius: 6px;
+        font-size: 13px;
+    }
+
+    .btn-remove-variant {
+        padding: 6px;
+        background: #fee2e2;
+        color: #dc2626;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 16px;
+        transition: all 0.2s ease;
+    }
+
+        .btn-remove-variant:hover {
+            background: #fecaca;
+        }
+
+    .empty-variants, .empty-images {
+        text-align: center;
+        padding: 32px;
+        color: #9ca3af;
+        background: #f9fafb;
+        border-radius: 10px;
+        border: 2px dashed #e5e7eb;
+    }
+
+        .empty-variants span, .empty-images span {
+            font-size: 48px;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .empty-variants p, .empty-images p {
+            margin: 0;
+            font-size: 14px;
+        }
+
+    .image-upload-area {
+        margin-bottom: 20px;
+    }
+
+    .upload-box {
+        text-align: center;
+        padding: 40px 20px;
+        border: 2px dashed #d1d5db;
+        border-radius: 12px;
+        background: #f9fafb;
+        transition: all 0.2s ease;
+    }
+
+        .upload-box:hover {
+            border-color: #a855f7;
+            background: #faf5ff;
+        }
+
+    .upload-icon {
+        font-size: 48px;
+        display: block;
+        margin-bottom: 12px;
+    }
+
+    .upload-box p {
+        margin: 0 0 16px 0;
+        color: #6b7280;
+        font-size: 14px;
+    }
+
+    .btn-upload {
+        padding: 10px 24px;
+        background: #a855f7;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+        .btn-upload:hover {
+            background: #9333ea;
+        }
+
+    .images-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 16px;
+        margin-top: 20px;
+    }
+
+    .image-preview {
+        position: relative;
+        border-radius: 10px;
+        overflow: hidden;
+        border: 2px solid #e5e7eb;
+        background: white;
+    }
+
+        .image-preview img {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+        }
+
+    .image-controls {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        display: flex;
+        gap: 4px;
+        align-items: center;
+    }
+
+    .image-principal {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        padding: 4px 8px;
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 6px;
+        font-size: 11px;
+        font-weight: 500;
+        cursor: pointer;
+    }
+
+        .image-principal input {
+            cursor: pointer;
+        }
+
+    .btn-remove-image {
+        width: 24px;
+        height: 24px;
+        padding: 0;
+        background: rgba(239, 68, 68, 0.9);
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+        .btn-remove-image:hover {
+            background: #dc2626;
+        }
+
+    .image-order {
+        padding: 8px;
+        background: #f9fafb;
+        border-top: 1px solid #e5e7eb;
+    }
+
+    .form-input-xs {
+        width: 100%;
+        padding: 4px 8px;
+        border: 1px solid #e5e7eb;
+        border-radius: 4px;
+        font-size: 12px;
+        text-align: center;
+    }
+
+    .error-message-modal {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px;
+        background: #fee2e2;
+        border: 1px solid #fecaca;
+        border-radius: 8px;
+        color: #991b1b;
+        font-size: 13px;
+        margin-top: 16px;
+    }
+
+    .modal-actions {
+        display: flex;
+        gap: 12px;
+        margin-top: 24px;
+        padding-top: 24px;
+        border-top: 1px solid #e5e7eb;
+    }
+
+    .btn-modal-back, .btn-modal-next, .btn-modal-save {
+        flex: 1;
+        padding: 12px;
+        border-radius: 10px;
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        border: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+
+    .btn-modal-back {
+        background: #f3f4f6;
+        color: #374151;
+    }
+
+        .btn-modal-back:hover {
+            background: #e5e7eb;
+        }
+
+    .btn-modal-next {
+        background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
+        color: white;
+        box-shadow: 0 4px 12px rgba(168, 85, 247, 0.3);
+    }
+
+        .btn-modal-next:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(168, 85, 247, 0.4);
+        }
+
+    .btn-modal-save {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    }
+
+        .btn-modal-save:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
+        }
+
+        .btn-modal-save:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+    .spinner-small {
+        width: 14px;
+        height: 14px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-top-color: white;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+    }
+
+    @@keyframes spin {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    /* Products Page Styles */
+    .products-page {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+
+    @@media (min-width: 640px) {
+        .header-section {
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+        }
+    }
+
+    .page-title {
+        font-size: 28px;
+        font-weight: bold;
+        color: #1f2937;
+        margin: 0;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
+        color: white;
+        padding: 12px 24px;
+        border-radius: 12px;
+        border: none;
+        font-weight: 500;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 6px rgba(168, 85, 247, 0.2);
+    }
+
+        .btn-primary:hover {
+            box-shadow: 0 6px 12px rgba(168, 85, 247, 0.3);
+            transform: translateY(-2px);
+        }
+
+    .btn-secondary {
+        padding: 12px 24px;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        background: white;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.2s ease;
+    }
+
+        .btn-secondary:hover {
+            background: #f9fafb;
+        }
+
+    .content-card {
+        background: white;
+        border-radius: 16px;
+        padding: 24px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .filters-row {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+
+    @@media (min-width: 640px) {
+        .filters-row {
+            flex-direction: row;
+            align-items: center;
+        }
+    }
+
+    .search-box {
+        flex: 1;
+        position: relative;
+    }
+
+    .search-icon {
+        position: absolute;
+        left: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #9ca3af;
+    }
+
+    .search-input {
+        width: 100%;
+        padding: 12px 12px 12px 40px;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        font-size: 14px;
+        transition: all 0.2s ease;
+    }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #a855f7;
+            box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.1);
+        }
+
+    .filter-group {
+        display: flex;
+        gap: 12px;
+    }
+
+    .filter-select {
+        padding: 12px 16px;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        font-size: 14px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+        .filter-select:focus {
+            outline: none;
+            border-color: #a855f7;
+            box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.1);
+        }
+
+    .stats-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+
+    .stat-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 16px;
+        background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+        border-radius: 12px;
+    }
+
+    .stat-value {
+        font-size: 28px;
+        font-weight: bold;
+        color: #a855f7;
+    }
+
+    .stat-label {
+        font-size: 12px;
+        color: #6b7280;
+        font-weight: 500;
+        text-transform: uppercase;
+        margin-top: 4px;
+    }
+
+    .table-wrapper {
+        overflow-x: auto;
+    }
+
+    .data-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+        .data-table thead tr {
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        .data-table th {
+            text-align: left;
+            padding: 12px;
+            color: #6b7280;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+    .table-row {
+        border-bottom: 1px solid #e5e7eb;
+        transition: background-color 0.2s ease;
+    }
+
+        .table-row:hover {
+            background-color: #f9fafb;
+        }
+
+        .table-row td {
+            padding: 16px 12px;
+            font-size: 14px;
+        }
+
+    .user-info {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .user-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+        font-size: 14px;
+        flex-shrink: 0;
+    }
+
+    .user-details {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+
+    .user-name {
+        font-weight: 600;
+        color: #1f2937;
+    }
+
+    .user-id {
+        font-size: 12px;
+        color: #9ca3af;
+    }
+
+    .email {
+        color: #6b7280;
+    }
+
+    .phone {
+        color: #6b7280;
+        font-weight: 500;
+    }
+
+    .cedula {
+        color: #1f2937;
+        font-weight: 600;
+    }
+
+    .date {
+        color: #6b7280;
+        font-size: 13px;
+    }
+
+    .type-badge {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+        .type-badge.cliente {
+            background-color: #dbeafe;
+            color: #1e40af;
+        }
+
+        .type-badge.premium {
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            color: white;
+        }
+
+        .type-badge.administrador {
+            background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
+            color: white;
+        }
+
+    .status-badge {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+
+        .status-badge.activo {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+
+        .status-badge.inactivo {
+            background-color: #f3f4f6;
+            color: #6b7280;
+        }
+
+        .status-badge.suspendido {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
+
+    .action-buttons {
+        display: flex;
+        gap: 8px;
+    }
+
+    .btn-action {
+        padding: 8px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-size: 16px;
+    }
+
+    .btn-view {
+        background: #f3e8ff;
+        color: #7c3aed;
+    }
+
+        .btn-view:hover {
+            background: #e9d5ff;
+        }
+
+    .btn-edit {
+        background: #dbeafe;
+        color: #2563eb;
+    }
+
+        .btn-edit:hover {
+            background: #bfdbfe;
+        }
+
+    .btn-toggle {
+        background: #fef3c7;
+        color: #d97706;
+    }
+
+        .btn-toggle:hover {
+            background: #fde68a;
+        }
+
+    .btn-delete {
+        background: #fee2e2;
+        color: #dc2626;
+    }
+
+        .btn-delete:hover {
+            background: #fecaca;
+        }
+
+    .empty-state {
+        text-align: center;
+        padding: 48px 24px;
+        color: #9ca3af;
+    }
+
+    .empty-icon {
+        font-size: 48px;
+        display: block;
+        margin-bottom: 16px;
+    }
+
+    /* Modal Styles */
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        padding: 20px;
+    }
+
+    .modal-content {
+        background: white;
+        border-radius: 16px;
+        max-width: 800px;
+        width: 100%;
+        max-height: 90vh;
+        overflow-y: auto;
+        box-shadow: 0 20px 25px rgba(0, 0, 0, 0.2);
+    }
+
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 24px;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+        .modal-header h3 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: bold;
+            color: #1f2937;
+        }
+
+    .btn-close {
+        background: none;
+        border: none;
+        font-size: 24px;
+        cursor: pointer;
+        color: #6b7280;
+        padding: 4px 8px;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+    }
+
+        .btn-close:hover {
+            background: #f3f4f6;
+            color: #1f2937;
+        }
+
+    .modal-body {
+        padding: 24px;
+    }
+
+    .profile-header {
+        display: flex;
+        align-items: center;
+        gap: 24px;
+        padding: 24px;
+        background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+        border-radius: 12px;
+        margin-bottom: 24px;
+    }
+
+    .profile-avatar-large {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+        font-size: 32px;
+        flex-shrink: 0;
+        box-shadow: 0 4px 6px rgba(168, 85, 247, 0.3);
+    }
+
+    .profile-info h4 {
+        margin: 0 0 8px 0;
+        font-size: 24px;
+        color: #1f2937;
+    }
+
+    .profile-info p {
+        margin: 0 0 12px 0;
+        color: #6b7280;
+    }
+
+    .profile-badges {
+        display: flex;
+        gap: 8px;
+    }
+
+    .detail-section {
+        margin-bottom: 24px;
+    }
+
+        .detail-section h4 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1f2937;
+            margin: 0 0 16px 0;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+    .detail-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 16px;
+    }
+
+    .detail-item {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .detail-label {
+        font-size: 12px;
+        font-weight: 500;
+        color: #6b7280;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .detail-value {
+        font-size: 14px;
+        color: #1f2937;
+        font-weight: 500;
+    }
+
+    .total-orders {
+        font-size: 18px;
+        font-weight: bold;
+        color: #2563eb;
+    }
+
+    .total-spent {
+        font-size: 18px;
+        font-weight: bold;
+        color: #a855f7;
+    }
+
+    .activity-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .activity-item {
+        display: flex;
+        gap: 12px;
+        padding: 12px;
+        background: #f9fafb;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+    }
+
+        .activity-item:hover {
+            background: #f3f4f6;
+        }
+
+    .activity-icon {
+        font-size: 24px;
+        flex-shrink: 0;
+    }
+
+    .activity-content {
+        flex: 1;
+    }
+
+    .activity-text {
+        font-size: 14px;
+        color: #1f2937;
+        margin-bottom: 4px;
+    }
+
+    .activity-date {
+        font-size: 12px;
+        color: #9ca3af;
+    }
+
+    .icon {
+        font-size: 18px;
+    }
+</style>
+
+@code {
+    // Models
+    public class Product
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = "";
+        public string Category { get; set; } = "";
+        public decimal Price { get; set; }
+        public int Stock { get; set; }
+        public int Sales { get; set; }
+        public string Status { get; set; } = "";
+    }
+
+    public class Categoria
+    {
+        public int Id { get; set; }
+        public string Nombre { get; set; } = "";
+    }
+
+    public class ProductoNuevo
+    {
+        public string Nombre { get; set; } = "";
+        public string Descripcion { get; set; } = "";
+        public string Marca { get; set; } = "";
+        public int IdCategoriaTipo { get; set; }
+        public int IdCategoriaOcasion { get; set; }
+        public string Genero { get; set; } = "";
+        public string Material { get; set; } = "";
+        public decimal PrecioBase { get; set; }
+        public decimal Descuento { get; set; } = 0;
+        public List<Variante> Variantes { get; set; } = new();
+        public List<ImagenProducto> Imagenes { get; set; } = new();
+    }
+
+    public class Variante
+    {
+        public string Talla { get; set; } = "M";
+        public string Color { get; set; } = "";
+        public int Stock { get; set; } = 0;
+    }
+
+    public class ImagenProducto
+    {
+        public string Url { get; set; } = "";
+        public int Orden { get; set; } = 1;
+        public bool EsPrincipal { get; set; } = false;
+    }
+
+    // State
+    private string searchText = "";
+    private List<Product> products = new();
+    private bool mostrarModal = false;
+    private int pasoModal = 1;
+    private ProductoNuevo nuevoProducto = new();
+    private Product? productoEditando = null;
+    private bool guardandoProducto = false;
+    private string mensajeErrorModal = "";
+    
+    private List<Categoria> categoriasTipo = new();
+    private List<Categoria> categoriasOcasion = new();
+
+    protected override void OnInitialized()
+    {
+        CargarProductos();
+        CargarCategorias();
+    }
+
+    private void CargarProductos()
+    {
+        products = new List<Product>
+        {
+            new Product { Id = 1, Name = "Chaqueta Denim Premium", Category = "Chaquetas", Price = 89.99m, Stock = 45, Sales = 124, Status = "active" },
+            new Product { Id = 2, Name = "Camiseta Oversized", Category = "Camisetas", Price = 34.99m, Stock = 89, Sales = 256, Status = "active" },
+            new Product { Id = 3, Name = "Pantalón Cargo Negro", Category = "Pantalones", Price = 64.99m, Stock = 12, Sales = 178, Status = "low" },
+            new Product { Id = 4, Name = "Sudadera Hoodie", Category = "Sudaderas", Price = 54.99m, Stock = 67, Sales = 203, Status = "active" },
+            new Product { Id = 5, Name = "Jeans Slim Fit", Category = "Pantalones", Price = 74.99m, Stock = 0, Sales = 312, Status = "out" }
+        };
+    }
+
+    private void CargarCategorias()
+    {
+        categoriasTipo = new List<Categoria>
+        {
+            new Categoria { Id = 1, Nombre = "Camisetas" },
+            new Categoria { Id = 2, Nombre = "Pantalones" },
+            new Categoria { Id = 3, Nombre = "Chaquetas" },
+            new Categoria { Id = 4, Nombre = "Vestidos" },
+            new Categoria { Id = 5, Nombre = "Zapatos" },
+            new Categoria { Id = 6, Nombre = "Accesorios" }
+        };
+
+        categoriasOcasion = new List<Categoria>
+        {
+            new Categoria { Id = 1, Nombre = "Casual" },
+            new Categoria { Id = 2, Nombre = "Deportivo" },
+            new Categoria { Id = 3, Nombre = "Formal" },
+            new Categoria { Id = 4, Nombre = "Fiesta" },
+            new Categoria { Id = 5, Nombre = "Playa" },
+            new Categoria { Id = 6, Nombre = "Oficina" }
+        };
+    }
+
+    private IEnumerable<Product> ProductosFiltrados
+    {
+        get
+        {
+            if (string.IsNullOrWhiteSpace(searchText))
+                return products;
+
+            return products.Where(p =>
+                p.Name.Contains(searchText, StringComparison.OrdinalIgnoreCase) ||
+                p.Category.Contains(searchText, StringComparison.OrdinalIgnoreCase)
+            );
+        }
+    }
+
+    // Modal Methods
+    private void AbrirModalNuevoProducto()
+    {
+        nuevoProducto = new ProductoNuevo();
+        productoEditando = null;
+        pasoModal = 1;
+        mensajeErrorModal = "";
+        mostrarModal = true;
+    }
+
+    private void CerrarModal()
+    {
+        mostrarModal = false;
+        pasoModal = 1;
+        nuevoProducto = new();
+        mensajeErrorModal = "";
+    }
+
+    private void PasoSiguienteModal()
+    {
+        mensajeErrorModal = "";
+
+        if (pasoModal == 1)
+        {
+            if (string.IsNullOrWhiteSpace(nuevoProducto.Nombre) || nuevoProducto.IdCategoriaTipo == 0 ||
+                nuevoProducto.IdCategoriaOcasion == 0 || nuevoProducto.PrecioBase <= 0)
+            {
+                mensajeErrorModal = "Por favor completa todos los campos obligatorios";
+                return;
+            }
+        }
+        else if (pasoModal == 2 && !nuevoProducto.Variantes.Any())
+        {
+            mensajeErrorModal = "Debes agregar al menos una variante";
+            return;
+        }
+
+        pasoModal++;
+    }
+
+    private void PasoAnteriorModal()
+    {
+        mensajeErrorModal = "";
+        pasoModal--;
+    }
+
+    private void AgregarVariante()
+    {
+        nuevoProducto.Variantes.Add(new Variante());
+    }
+
+    private void EliminarVariante(int index)
+    {
+        nuevoProducto.Variantes.RemoveAt(index);
+    }
+
+    private void SeleccionarImagenes()
+    {
+        // Simulación - En producción usarías InputFile
+        var urlsSimuladas = new[] {
+            "https://via.placeholder.com/300x400/a855f7/ffffff?text=Producto+1",
+            "https://via.placeholder.com/300x400/ec4899/ffffff?text=Producto+2"
+        };
+
+        foreach (var url in urlsSimuladas)
+        {
+            nuevoProducto.Imagenes.Add(new ImagenProducto
+            {
+                Url = url,
+                Orden = nuevoProducto.Imagenes.Count + 1,
+                EsPrincipal = !nuevoProducto.Imagenes.Any()
+            });
+        }
+    }
+
+    private void EliminarImagen(int index)
+    {
+        var imagen = nuevoProducto.Imagenes[index];
+        nuevoProducto.Imagenes.RemoveAt(index);
+
+        if (imagen.EsPrincipal && nuevoProducto.Imagenes.Any())
+        {
+            nuevoProducto.Imagenes[0].EsPrincipal = true;
+        }
+    }
+
+    private void MarcarComoPrincipal(int index)
+    {
+        foreach (var img in nuevoProducto.Imagenes)
+        {
+            img.EsPrincipal = false;
+        }
+        nuevoProducto.Imagenes[index].EsPrincipal = true;
+    }
+
+    private async Task GuardarProducto()
+    {
+        mensajeErrorModal = "";
+
+        if (!nuevoProducto.Imagenes.Any())
+        {
+            mensajeErrorModal = "Debes agregar al menos una imagen";
+            return;
+        }
+
+        guardandoProducto = true;
+        StateHasChanged();
+
+        await Task.Delay(1500); // Simular guardado
+
+        Console.WriteLine($"Producto guardado: {nuevoProducto.Nombre}");
+        // Aquí llamarías al package PL/SQL: pkg_articulos.registrar_articulo
+
+        guardandoProducto = false;
+        CerrarModal();
+        StateHasChanged();
+    }
+
+    // Product Actions
+    private void VerProducto(int id)
+    {
+        Console.WriteLine($"Ver producto: {id}");
+    }
+
+    private void EditarProducto(int id)
+    {
+        Console.WriteLine($"Editar producto: {id}");
+        // Cargar producto y abrir modal
+    }
+
+    private void EliminarProducto(int id)
+    {
+        var product = products.FirstOrDefault(p => p.Id == id);
+        if (product != null)
+        {
+            products.Remove(product);
+            StateHasChanged();
+        }
+    }
+
+    private void ExportarProductos()
+    {
+        Console.WriteLine("Exportar productos");
+    }
+
+    private string GetStockClass(int stock)
+    {
+        return stock < 20 ? "stock-low" : "stock-normal";
+    }
+
+    private string GetStatusBadgeClass(string status)
+    {
+        return status switch
+        {
+            "active" => "badge-active",
+            "low" => "badge-low",
+            "out" => "badge-out",
+            _ => "badge-default"
+        };
+    }
+
+    private string GetStatusText(string status)
+    {
+        return status switch
+        {
+            "active" => "Activo",
+            "low" => "Stock Bajo",
+            "out" => "Agotado",
+            _ => status
+        };
+    }
+
+    public class Usuario
+    {
+        public string Id { get; set; }
+        public string NombreCompleto { get; set; }
+        public string Email { get; set; }
+        public string Celular { get; set; }
+        public string Cedula { get; set; }
+        public string TipoUsuario { get; set; }
+        public string Estado { get; set; }
+        public DateTime FechaRegistro { get; set; }
+        public DateTime UltimoAcceso { get; set; }
+        public string Direccion { get; set; }
+        public string Ciudad { get; set; }
+        public int TotalPedidos { get; set; }
+        public decimal TotalGastado { get; set; }
+        public List<Actividad> ActividadReciente { get; set; } = new();
+    }
+
+    public class Actividad
+    {
+        public string Icono { get; set; }
+        public string Descripcion { get; set; }
+        public DateTime Fecha { get; set; }
+    }
+
+    private List<Usuario> usuarios = new();
+    private string searchTerm = "";
+    private string filterEstado = "";
+    private string filterTipo = "";
+    private bool mostrarDetalles = false;
+    private Usuario usuarioSeleccionado;
+
+    private void CargarUsuariosDePrueba()
+    {
+        usuarios = new List<Usuario>
+        {
+            new Usuario
+            {
+                Id = "USR-001",
+                NombreCompleto = "Juan Carlos Pérez",
+                Email = "juan.perez@example.com",
+                Celular = "+57 300 123 4567",
+                Cedula = "1234567890",
+                TipoUsuario = "cliente",
+                Estado = "activo",
+                FechaRegistro = DateTime.Now.AddMonths(-6),
+                UltimoAcceso = DateTime.Now.AddHours(-2),
+                Direccion = "Calle 45 #12-34",
+                Ciudad = "Valledupar",
+                TotalPedidos = 15,
+                TotalGastado = 2450.50m,
+                ActividadReciente = new List<Actividad>
+                {
+                    new Actividad { Icono = "🛒", Descripcion = "Realizó una compra de $250.00", Fecha = DateTime.Now.AddHours(-2) },
+                    new Actividad { Icono = "👁️", Descripcion = "Visualizó 5 productos", Fecha = DateTime.Now.AddHours(-5) },
+                    new Actividad { Icono = "🔐", Descripcion = "Inició sesión", Fecha = DateTime.Now.AddDays(-1) }
+                }
+            },
+            new Usuario
+            {
+                Id = "USR-002",
+                NombreCompleto = "María Gabriela García",
+                Email = "maria.garcia@example.com",
+                Celular = "+57 310 234 5678",
+                Cedula = "9876543210",
+                TipoUsuario = "premium",
+                Estado = "activo",
+                FechaRegistro = DateTime.Now.AddMonths(-12),
+                UltimoAcceso = DateTime.Now.AddMinutes(-30),
+                Direccion = "Avenida Siempre Viva 742",
+                Ciudad = "Valledupar",
+                TotalPedidos = 45,
+                TotalGastado = 8920.75m,
+                ActividadReciente = new List<Actividad>
+                {
+                    new Actividad { Icono = "⭐", Descripcion = "Dejó una reseña", Fecha = DateTime.Now.AddMinutes(-30) },
+                    new Actividad { Icono = "🛒", Descripcion = "Añadió productos al carrito", Fecha = DateTime.Now.AddHours(-1) }
+                }
+            },
+            new Usuario
+            {
+                Id = "USR-003",
+                NombreCompleto = "Carlos Alberto López",
+                Email = "carlos.lopez@example.com",
+                Celular = "+57 320 345 6789",
+                Cedula = "5555555555",
+                TipoUsuario = "cliente",
+                Estado = "activo",
+                FechaRegistro = DateTime.Now.AddDays(-15),
+                UltimoAcceso = DateTime.Now.AddDays(-1),
+                Direccion = "Carrera 20 #30-40",
+                Ciudad = "Valledupar",
+                TotalPedidos = 3,
+                TotalGastado = 680.00m,
+                ActividadReciente = new List<Actividad>
+                {
+                    new Actividad { Icono = "🔐", Descripcion = "Inició sesión", Fecha = DateTime.Now.AddDays(-1) },
+                    new Actividad { Icono = "🛒", Descripcion = "Realizó una compra", Fecha = DateTime.Now.AddDays(-2) }
+                }
+            },
+            new Usuario
+            {
+                Id = "USR-004",
+                NombreCompleto = "Ana María Martínez",
+                Email = "ana.martinez@example.com",
+                Celular = "+57 315 456 7890",
+                Cedula = "3333333333",
+                TipoUsuario = "administrador",
+                Estado = "activo",
+                FechaRegistro = DateTime.Now.AddYears(-2),
+                UltimoAcceso = DateTime.Now.AddMinutes(-15),
+                Direccion = "Calle Principal #1-10",
+                Ciudad = "Valledupar",
+                TotalPedidos = 0,
+                TotalGastado = 0m,
+                ActividadReciente = new List<Actividad>
+                {
+                    new Actividad { Icono = "⚙️", Descripcion = "Configuró el sistema", Fecha = DateTime.Now.AddMinutes(-15) },
+                    new Actividad { Icono = "👥", Descripcion = "Gestionó usuarios", Fecha = DateTime.Now.AddHours(-3) }
+                }
+            },
+            new Usuario
+            {
+                Id = "USR-005",
+                NombreCompleto = "Luis Fernando Rodríguez",
+                Email = "luis.rodriguez@example.com",
+                Celular = "+57 325 567 8901",
+                Cedula = "7777777777",
+                TipoUsuario = "cliente",
+                Estado = "inactivo",
+                FechaRegistro = DateTime.Now.AddMonths(-18),
+                UltimoAcceso = DateTime.Now.AddMonths(-3),
+                Direccion = "Diagonal 15 #8-22",
+                Ciudad = "Valledupar",
+                TotalPedidos = 8,
+                TotalGastado = 1250.30m,
+                ActividadReciente = new List<Actividad>
+                {
+                    new Actividad { Icono = "🔐", Descripcion = "Último inicio de sesión", Fecha = DateTime.Now.AddMonths(-3) }
+                }
+            },
+            new Usuario
+            {
+                Id = "USR-006",
+                NombreCompleto = "Patricia Isabel Gómez",
+                Email = "patricia.gomez@example.com",
+                Celular = "+57 318 678 9012",
+                Cedula = "8888888888",
+                TipoUsuario = "premium",
+                Estado = "activo",
+                FechaRegistro = DateTime.Now.AddMonths(-8),
+                UltimoAcceso = DateTime.Now.AddHours(-4),
+                Direccion = "Transversal 30 #45-12",
+                Ciudad = "Valledupar",
+                TotalPedidos = 28,
+                TotalGastado = 5640.90m,
+                ActividadReciente = new List<Actividad>
+                {
+                    new Actividad { Icono = "💳", Descripcion = "Actualizó método de pago", Fecha = DateTime.Now.AddHours(-4) },
+                    new Actividad { Icono = "🛒", Descripcion = "Compró productos premium", Fecha = DateTime.Now.AddDays(-1) }
+                }
+            },
+            new Usuario
+            {
+                Id = "USR-007",
+                NombreCompleto = "Roberto Carlos Díaz",
+                Email = "roberto.diaz@example.com",
+                Celular = "+57 312 789 0123",
+                Cedula = "4444444444",
+                TipoUsuario = "cliente",
+                Estado = "suspendido",
+                FechaRegistro = DateTime.Now.AddMonths(-4),
+                UltimoAcceso = DateTime.Now.AddDays(-10),
+                Direccion = "Calle 80 #90-100",
+                Ciudad = "Valledupar",
+                TotalPedidos = 5,
+                TotalGastado = 890.00m,
+                ActividadReciente = new List<Actividad>
+                {
+                    new Actividad { Icono = "⚠️", Descripcion = "Cuenta suspendida por incumplimiento", Fecha = DateTime.Now.AddDays(-10) },
+                    new Actividad { Icono = "❌", Descripcion = "Pago rechazado", Fecha = DateTime.Now.AddDays(-12) }
+                }
+            },
+            new Usuario
+            {
+                Id = "USR-008",
+                NombreCompleto = "Sandra Milena Torres",
+                Email = "sandra.torres@example.com",
+                Celular = "+57 305 890 1234",
+                Cedula = "6666666666",
+                TipoUsuario = "cliente",
+                Estado = "activo",
+                FechaRegistro = DateTime.Now.AddDays(-5),
+                UltimoAcceso = DateTime.Now.AddHours(-6),
+                Direccion = "Avenida Central #55-33",
+                Ciudad = "Valledupar",
+                TotalPedidos = 1,
+                TotalGastado = 120.00m,
+                ActividadReciente = new List<Actividad>
+                {
+                    new Actividad { Icono = "🎉", Descripcion = "Primera compra realizada", Fecha = DateTime.Now.AddHours(-6) },
+                    new Actividad { Icono = "📝", Descripcion = "Completó su perfil", Fecha = DateTime.Now.AddDays(-2) },
+                    new Actividad { Icono = "✅", Descripcion = "Verificó su email", Fecha = DateTime.Now.AddDays(-5) }
+                }
+            }
+        };
+    }
+
+    private IEnumerable<Usuario> UsuariosFiltrados
+    {
+        get
+        {
+            var resultado = usuarios.AsEnumerable();
+
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+            {
+                resultado = resultado.Where(u =>
+                    u.NombreCompleto.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                    u.Email.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                    u.Cedula.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                    u.Celular.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                    u.Id.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)
+                );
+            }
+
+            if (!string.IsNullOrWhiteSpace(filterEstado))
+            {
+                resultado = resultado.Where(u => u.Estado == filterEstado);
+            }
+
+            if (!string.IsNullOrWhiteSpace(filterTipo))
+            {
+                resultado = resultado.Where(u => u.TipoUsuario == filterTipo);
+            }
+
+            return resultado.OrderByDescending(u => u.FechaRegistro);
+        }
+    }
+
+    private string GetIniciales(string nombreCompleto)
+    {
+        var palabras = nombreCompleto.Split(' ');
+        if (palabras.Length >= 2)
+        {
+            return $"{palabras[0][0]}{palabras[1][0]}".ToUpper();
+        }
+        return palabras[0].Substring(0, Math.Min(2, palabras[0].Length)).ToUpper();
+    }
+
+    private void VerDetalles(Usuario usuario)
+    {
+        usuarioSeleccionado = usuario;
+        mostrarDetalles = true;
+    }
+
+    private void CerrarDetalles()
+    {
+        mostrarDetalles = false;
+        usuarioSeleccionado = null;
+    }
+
+    private void EditarUsuario(Usuario usuario)
+    {
+        Console.WriteLine($"Editando usuario: {usuario.NombreCompleto}");
+        // Implementar lógica de edición
+    }
+
+    private void CambiarEstado(Usuario usuario)
+    {
+        if (usuario.Estado == "activo")
+        {
+            usuario.Estado = "inactivo";
+            Console.WriteLine($"Usuario {usuario.NombreCompleto} desactivado");
+        }
+        else if (usuario.Estado == "inactivo" || usuario.Estado == "suspendido")
+        {
+            usuario.Estado = "activo";
+            Console.WriteLine($"Usuario {usuario.NombreCompleto} activado");
+        }
+        StateHasChanged();
+    }
+
+    private void EliminarUsuario(Usuario usuario)
+    {
+        if (confirm($"¿Está seguro de eliminar al usuario {usuario.NombreCompleto}?"))
+        {
+            usuarios.Remove(usuario);
+            Console.WriteLine($"Usuario {usuario.NombreCompleto} eliminado");
+            StateHasChanged();
+        }
+    }
+
+    private void NuevoUsuario()
+    {
+        Console.WriteLine("Crear nuevo usuario");
+        // Implementar formulario de nuevo usuario
+    }
+
+    private string GetStatusClass(string estado)
+    {
+        return estado;
+    }
+
+    private string GetEstadoText(string estado)
+    {
+        return estado switch
+        {
+            "activo" => "Activo",
+            "inactivo" => "Inactivo",
+            "suspendido" => "Suspendido",
+            _ => "Desconocido"
+        };
+    }
+
+    private string GetTypeBadgeClass(string tipo)
+    {
+        return tipo;
+    }
+
+    private string GetTipoText(string tipo)
+    {
+        return tipo switch
+        {
+            "cliente" => "Cliente",
+            "premium" => "Premium",
+            "administrador" => "Admin",
+            _ => "Usuario"
+        };
+    }
+
+    private bool confirm(string message)
+    {
+        // En producción, usar un componente de confirmación modal
+        return true;
+    }
+}
