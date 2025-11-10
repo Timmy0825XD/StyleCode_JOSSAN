@@ -1,10 +1,14 @@
 ﻿@page "/AdminProductos"
+@using ENTITY.Articulos
+@using BLL.Interfaces
+@inject IArticuloServices ArticuloService
+@inject ICategoriaServices CategoriaService
 
-<div class="products-page container">
+<div class="container">
     <div class="page-header">
-        <h2 class="page-title">Gestión de Productos</h2>
-        <button class="btn-primary" @onclick="OpenNewProductModal">
-            <span class="btn-icon">➕</span>
+        <h2 style="font-size: 28px; font-weight: 700;"> Gestión de Productos </h2>
+        <button class="btn-primary" @onclick="AbrirModalNuevoProducto">
+            <span>➕</span>
             Nuevo Producto
         </button>
     </div>
@@ -12,7 +16,7 @@
     <div class="products-card">
         <div class="toolbar">
             <div class="search-container">
-                <span class="search-icon">🔍</span>
+                <span style="position: absolute;">🔍</span>
                 <input type="text"
                        placeholder="Buscar productos..."
                        class="search-input"
@@ -20,172 +24,412 @@
                        @bind:event="oninput" />
             </div>
             <button class="btn-secondary">
-                <span class="btn-icon">🔽</span>
+                <span>🔽</span>
                 Filtros
             </button>
-            <button class="btn-secondary" @onclick="ExportProducts">
-                <span class="btn-icon">📥</span>
+            <button class="btn-secondary" @onclick="ExportarProductos">
+                <span>📥</span>
                 Exportar
             </button>
         </div>
 
-        <div class="table-container">
-            <table class="products-table">
-                <thead>
-                    <tr>
-                        <th>Producto</th>
-                        <th>Categoría</th>
-                        <th>Precio</th>
-                        <th>Stock</th>
-                        <th>Ventas</th>
-                        <th>Estado</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var product in FilteredProducts)
-                    {
-                        <tr>
-                            <td class="product-name">@product.Name</td>
-                            <td class="product-category">@product.Category</td>
-                            <td class="product-price">$@product.Price.ToString("F2")</td>
-                            <td>
-                                <span class="@GetStockClass(product.Stock)">
-                                    @product.Stock
-                                </span>
-                            </td>
-                            <td class="product-sales">@product.Sales</td>
-                            <td>
-                                <span class="badge @GetStatusBadgeClass(product.Status)">
-                                    @GetStatusText(product.Status)
-                                </span>
-                            </td>
-                            <td>
-                                <div class="action-buttons">
-                                    <button class="btn-action btn-view" @onclick="() => ViewProduct(product.Id)" title="Ver">
-                                        <span>👁️</span>
-                                    </button>
-                                    <button class="btn-action btn-edit" @onclick="() => EditProduct(product.Id)" title="Editar">
-                                        <span>✏️</span>
-                                    </button>
-                                    <button class="btn-action btn-delete" @onclick="() => DeleteProduct(product.Id)" title="Eliminar">
-                                        <span>🗑️</span>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-
-            @if (!FilteredProducts.Any())
-            {
-                <div class="empty-state">
-                    <span class="empty-icon">📦</span>
-                    <p>No se encontraron productos</p>
-                </div>
-            }
-        </div>
-    </div>
-</div>
-
-<!-- Modal Agregar/Editar Producto -->
-@if (showModal)
-{
-    <div class="modal-overlay" @onclick="CloseModal">
-        <div class="modal-container" @onclick:stopPropagation="true">
-            <div class="modal-header">
-                <h3 class="modal-title">@(isEditMode ? "Editar Producto" : "Nuevo Producto")</h3>
-                <button class="modal-close" @onclick="CloseModal">✕</button>
+        @if (cargando)
+        {
+            <div class="empty-state">
+                <span class="empty-icon">⏳</span>
+                <p>Cargando productos...</p>
             </div>
+        }
+        else
+        {
+            <div class="table-container">
+                <table class="products-table">
+                    <thead>
+                        <tr>
+                            <th>Producto</th>
+                            <th>Categoría</th>
+                            <th>Precio</th>
+                            <th>Variantes</th>
+                            <th>Marca</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var product in ProductosFiltrados)
+                        {
+                            <tr>
+                                <td class="product-name">
+                                    <div style="display: flex; align-items: center; gap: 12px;">
+                                        @if (!string.IsNullOrEmpty(product.ImagenPrincipal))
+                                        {
+                                            <img src="@product.ImagenPrincipal" alt="@product.Nombre" style="width: 50px; height: 50px; object-fit: cover; border-radius: 8px;" />
+                                        }
+                                        <span>@product.Nombre</span>
+                                    </div>
+                                </td>
+                                <td class="product-category">
+                                    <div>
+                                        <span style="display: block; font-weight: 600;">@product.CategoriaTipo</span>
+                                        <span style="font-size: 12px; color: #6b7280;">@product.CategoriaOcasion</span>
+                                    </div>
+                                </td>
+                                <td class="product-price">$@product.PrecioBase.ToString("F2")</td>
+                                <td>
+                                    <span class="@GetVariantesClass(product.TotalVariantes)">
+                                        @product.TotalVariantes
+                                    </span>
+                                </td>
+                                <td class="product-sales">@product.Marca</td>
+                                <td>
+                                    <span class="badge @GetStatusBadgeClass(product.Estado)">
+                                        @GetStatusText(product.Estado)
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="btn-action btn-view" @onclick="() => VerProducto(product.IdArticulo)" title="Ver">
+                                            <span>👁️</span>
+                                        </button>
+                                        <button class="btn-action btn-edit" @onclick="() => EditarProducto(product.IdArticulo)" title="Editar">
+                                            <span>✏️</span>
+                                        </button>
+                                        <button class="btn-action btn-delete" @onclick="() => EliminarProducto(product.IdArticulo)" title="Eliminar">
+                                            <span>🗑️</span>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
 
-            <div class="modal-body">
-                <div class="form-group">
-                    <label>Nombre del Producto</label>
-                    <input type="text" class="form-input" @bind="newProduct.Name" placeholder="Ej: Chaqueta Denim Premium" />
-                </div>
-
-                <div class="form-group">
-                    <label>Categoría</label>
-                    <select class="form-input" @bind="newProduct.Category">
-                        <option value="">Seleccionar categoría</option>
-                        <option value="Chaquetas">Chaquetas</option>
-                        <option value="Camisetas">Camisetas</option>
-                        <option value="Pantalones">Pantalones</option>
-                        <option value="Sudaderas">Sudaderas</option>
-                        <option value="Camisas">Camisas</option>
-                        <option value="Accesorios">Accesorios</option>
-                    </select>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Precio ($)</label>
-                        <input type="number" step="0.01" class="form-input" @bind="newProduct.Price" placeholder="0.00" />
-                    </div>
-
-                    <div class="form-group">
-                        <label>Stock</label>
-                        <input type="number" class="form-input" @bind="newProduct.Stock" placeholder="0" />
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label>Estado</label>
-                    <select class="form-input" @bind="newProduct.Status">
-                        <option value="active">Activo</option>
-                        <option value="low">Stock Bajo</option>
-                        <option value="out">Agotado</option>
-                    </select>
-                </div>
-
-                @if (!string.IsNullOrEmpty(errorMessage))
+                @if (!ProductosFiltrados.Any())
                 {
-                    <div class="error-message">
-                        ⚠️ @errorMessage
+                    <div class="empty-state">
+                        <span class="empty-icon">📦</span>
+                        <p>No se encontraron productos</p>
                     </div>
                 }
             </div>
+        }
+    </div>
+</div>
 
-            <div class="modal-footer">
-                <button class="btn-cancel" @onclick="CloseModal">Cancelar</button>
-                <button class="btn-save" @onclick="SaveProduct">
-                    @(isEditMode ? "Guardar Cambios" : "Crear Producto")
-                </button>
+@if (mostrarModal)
+{
+    <div class="modal-overlay" @onclick="CerrarModal">
+        <div class="modal-content modal-large" @onclick:stopPropagation>
+            <div class="modal-header">
+                <h3>@(productoEditando != null ? "Editar Producto" : "Nuevo Producto")</h3>
+                <button class="btn-close" @onclick="CerrarModal">✕</button>
+            </div>
+
+            <div class="modal-body">
+
+                <div class="modal-steps">
+                    <div class="step @(pasoModal == 1 ? "active" : pasoModal > 1 ? "completed" : "")">
+                        <div class="step-number">1</div>
+                        <span>Información</span>
+                    </div>
+                    <div class="step-line @(pasoModal > 1 ? "completed" : "")"></div>
+                    <div class="step @(pasoModal == 2 ? "active" : pasoModal > 2 ? "completed" : "")">
+                        <div class="step-number">2</div>
+                        <span>Variantes</span>
+                    </div>
+                    <div class="step-line @(pasoModal > 2 ? "completed" : "")"></div>
+                    <div class="step @(pasoModal == 3 ? "active" : "")">
+                        <div class="step-number">3</div>
+                        <span>Imágenes</span>
+                    </div>
+                </div>
+
+                <form @onsubmit="GuardarProducto" @onsubmit:preventDefault>
+
+                    @if (pasoModal == 1)
+                    {
+                        <div class="form-section">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Nombre del Producto *</label>
+                                    <input type="text" class="form-input" @bind="nuevoProducto.Nombre" required />
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Marca *</label>
+                                    <input type="text" class="form-input" @bind="nuevoProducto.Marca" required />
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Descripción *</label>
+                                <textarea class="form-textarea" rows="3" @bind="nuevoProducto.Descripcion" required></textarea>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Categoría Tipo *</label>
+                                    <select class="form-select" @bind="nuevoProducto.CategoriaTipoId" required>
+                                        <option value="0">Seleccionar...</option>
+                                        @foreach (var cat in categoriasTipo)
+                                        {
+                                            <option value="@cat.Id">@cat.Nombre</option>
+                                        }
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Categoría Ocasión *</label>
+                                    <select class="form-select" @bind="nuevoProducto.CategoriaOcasionId" required>
+                                        <option value="0">Seleccionar...</option>
+                                        @foreach (var cat in categoriasOcasion)
+                                        {
+                                            <option value="@cat.Id">@cat.Nombre</option>
+                                        }
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Género *</label>
+                                    <select class="form-select" @bind="nuevoProducto.Genero" required>
+                                        <option value="">Seleccionar...</option>
+                                        <option value="Hombre">Hombre</option>
+                                        <option value="Mujer">Mujer</option>
+                                        <option value="Unisex">Unisex</option>
+                                        <option value="Niño">Niño</option>
+                                        <option value="Niña">Niña</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Material</label>
+                                    <input type="text" class="form-input" @bind="nuevoProducto.Material" placeholder="Algodón, Poliéster..." />
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Precio Base *</label>
+                                    <input type="number" class="form-input" @bind="nuevoProducto.PrecioBase" min="0" step="0.01" required />
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                    @if (pasoModal == 2)
+                    {
+                        <div class="form-section">
+                            <div class="variantes-header">
+                                <h4>Configurar Variantes (Talla y Color)</h4>
+                                <button type="button" class="btn-add-variant" @onclick="AgregarVariante">
+                                    ➕ Agregar Variante
+                                </button>
+                            </div>
+
+                            <div class="variantes-list">
+                                @foreach (var (variante, index) in nuevoProducto.Variantes.Select((v, i) => (v, i)))
+                                {
+                                    <div class="variante-item">
+                                        <div class="variante-number">@(index + 1)</div>
+                                        <div class="variante-fields">
+                                            <div class="form-group-inline">
+                                                <label>Talla</label>
+                                                <select class="form-select-sm" @bind="variante.Talla">
+                                                    <option value="XS">XS</option>
+                                                    <option value="S">S</option>
+                                                    <option value="M">M</option>
+                                                    <option value="L">L</option>
+                                                    <option value="XL">XL</option>
+                                                    <option value="XXL">XXL</option>
+                                                </select>
+                                            </div>
+                                            <div class="form-group-inline">
+                                                <label>Color</label>
+                                                <input type="text" class="form-input-sm" @bind="variante.Color" placeholder="Rojo, Azul..." />
+                                            </div>
+                                            <div class="form-group-inline">
+                                                <label>Stock</label>
+                                                <input type="number" class="form-input-sm" @bind="variante.Stock" min="0" />
+                                            </div>
+                                        </div>
+                                        <button type="button" class="btn-remove-variant" @onclick="() => EliminarVariante(index)">
+                                            🗑️
+                                        </button>
+                                    </div>
+                                }
+                            </div>
+
+                            @if (!nuevoProducto.Variantes.Any())
+                            {
+                                <div class="empty-variants">
+                                    <span>📦</span>
+                                    <p>No hay variantes. Agrega al menos una.</p>
+                                </div>
+                            }
+                        </div>
+                    }
+
+                    @if (pasoModal == 3)
+                    {
+                        <div class="form-section">
+                            <h4>Imágenes del Producto</h4>
+
+                            <div class="image-upload-area">
+                                <div class="upload-box">
+                                    <span class="upload-icon">📸</span>
+                                    <p>Arrastra imágenes aquí o haz clic para seleccionar</p>
+                                    <button type="button" class="btn-upload" @onclick="SeleccionarImagenes">
+                                        Seleccionar Imágenes
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="images-grid">
+                                @foreach (var (imagen, index) in nuevoProducto.Imagenes.Select((img, i) => (img, i)))
+                                {
+                                    <div class="image-preview">
+                                        <img src="@imagen.Url" alt="Imagen @(index + 1)" />
+                                        <div class="image-controls">
+                                            <label class="image-principal">
+                                                <input type="radio" name="principal" checked="@(imagen.EsPrincipal == 'S')" @onchange="() => MarcarComoPrincipal(index)" />
+                                                <span>Principal</span>
+                                            </label>
+                                            <button type="button" class="btn-remove-image" @onclick="() => EliminarImagen(index)">
+                                                ✕
+                                            </button>
+                                        </div>
+                                        <div class="image-order">
+                                            <input type="number" class="form-input-xs" @bind="imagen.Orden" min="1" placeholder="Orden" />
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+
+                            @if (!nuevoProducto.Imagenes.Any())
+                            {
+                                <div class="empty-images">
+                                    <span>🖼️</span>
+                                    <p>No se han agregado imágenes</p>
+                                </div>
+                            }
+                        </div>
+                    }
+
+                    @if (!string.IsNullOrEmpty(mensajeErrorModal))
+                    {
+                        <div class="error-message-modal">
+                            <span>⚠️</span>
+                            <span>@mensajeErrorModal</span>
+                        </div>
+                    }
+
+                    <div class="modal-actions">
+                        @if (pasoModal > 1)
+                        {
+                            <button type="button" class="btn-modal-back" @onclick="PasoAnteriorModal">
+                                ← Anterior
+                            </button>
+                        }
+                        @if (pasoModal < 3)
+                        {
+                            <button type="button" class="btn-modal-next" @onclick="PasoSiguienteModal">
+                                Siguiente →
+                            </button>
+                        }
+                        else
+                        {
+                            <button type="submit" class="btn-modal-save" disabled="@guardandoProducto">
+                                @if (guardandoProducto)
+                                {
+                                    <span>Guardando...</span>
+                                }
+                                else
+                                {
+                                    <span>💾 Guardar Producto</span>
+                                }
+                            </button>
+                        }
+                    </div>
+                </form>
             </div>
         </div>
     </div>
 }
 
 @code {
+    // State
     private string searchText = "";
-    private List<Product> products = new();
-    private bool showModal = false;
-    private bool isEditMode = false;
-    private Product newProduct = new();
-    private string errorMessage = "";
+    private List<ArticuloListaDTO> products = new();
+    private bool mostrarModal = false;
+    private int pasoModal = 1;
+    private ArticuloCreacionDTO nuevoProducto = new();
+    private ArticuloListaDTO? productoEditando = null;
+    private bool guardandoProducto = false;
+    private string mensajeErrorModal = "";
+    private bool cargando = true;
 
-    protected override void OnInitialized()
+    private List<CategoriaTipoDTO> categoriasTipo = new();
+    private List<CategoriaOcasionDTO> categoriasOcasion = new();
+
+    protected override async Task OnInitializedAsync()
     {
-        LoadProducts();
+        await CargarDatosIniciales();
     }
 
-    private void LoadProducts()
+    private async Task CargarDatosIniciales()
     {
-        products = new List<Product>
+        cargando = true;
+        await Task.WhenAll(
+            CargarProductos(),
+            CargarCategorias()
+        );
+        cargando = false;
+    }
+
+    private async Task CargarProductos()
+    {
+        try
         {
-            new Product { Id = 1, Name = "Chaqueta Denim Premium", Category = "Chaquetas", Price = 89.99m, Stock = 45, Sales = 124, Status = "active" },
-            new Product { Id = 2, Name = "Camiseta Oversized", Category = "Camisetas", Price = 34.99m, Stock = 89, Sales = 256, Status = "active" },
-            new Product { Id = 3, Name = "Pantalón Cargo Negro", Category = "Pantalones", Price = 64.99m, Stock = 12, Sales = 178, Status = "low" },
-            new Product { Id = 4, Name = "Sudadera Hoodie", Category = "Sudaderas", Price = 54.99m, Stock = 67, Sales = 203, Status = "active" },
-            new Product { Id = 5, Name = "Jeans Slim Fit", Category = "Pantalones", Price = 74.99m, Stock = 0, Sales = 312, Status = "out" },
-            new Product { Id = 6, Name = "Bomber Jacket", Category = "Chaquetas", Price = 94.99m, Stock = 23, Sales = 145, Status = "active" },
-            new Product { Id = 7, Name = "Polo Classic", Category = "Camisetas", Price = 39.99m, Stock = 54, Sales = 92, Status = "active" },
-            new Product { Id = 8, Name = "Camisa Lino Blanca", Category = "Camisas", Price = 49.99m, Stock = 15, Sales = 67, Status = "low" },
-        };
+            var resultado = await ArticuloService.ObtenerArticulosActivos();
+
+            if (resultado.IsSuccess && resultado.ListObject != null)
+            {
+                products = resultado.ListObject.ToList();
+            }
+            else
+            {
+                Console.WriteLine($"Error al cargar productos: {resultado.Message}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al cargar productos: {ex.Message}");
+        }
     }
 
-    private IEnumerable<Product> FilteredProducts
+    private async Task CargarCategorias()
+    {
+        try
+        {
+            var resultadoTipo = await CategoriaService.ObtenerCategoriasTipo();
+            var resultadoOcasion = await CategoriaService.ObtenerCategoriasOcasion();
+
+            if (resultadoTipo.IsSuccess && resultadoTipo.ListObject != null)
+            {
+                categoriasTipo = resultadoTipo.ListObject.ToList();
+            }
+
+            if (resultadoOcasion.IsSuccess && resultadoOcasion.ListObject != null)
+            {
+                categoriasOcasion = resultadoOcasion.ListObject.ToList();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al cargar categorías: {ex.Message}");
+        }
+    }
+
+    private IEnumerable<ArticuloListaDTO> ProductosFiltrados
     {
         get
         {
@@ -193,638 +437,196 @@
                 return products;
 
             return products.Where(p =>
-                p.Name.Contains(searchText, StringComparison.OrdinalIgnoreCase) ||
-                p.Category.Contains(searchText, StringComparison.OrdinalIgnoreCase)
+                p.Nombre.Contains(searchText, StringComparison.OrdinalIgnoreCase) ||
+                p.CategoriaTipo.Contains(searchText, StringComparison.OrdinalIgnoreCase) ||
+                p.Marca.Contains(searchText, StringComparison.OrdinalIgnoreCase)
             );
         }
     }
 
-    private string GetStockClass(int stock)
+    // Modal Methods
+    private void AbrirModalNuevoProducto()
     {
-        return stock < 20 ? "stock-low" : "stock-normal";
+        nuevoProducto = new ArticuloCreacionDTO();
+        productoEditando = null;
+        pasoModal = 1;
+        mensajeErrorModal = "";
+        mostrarModal = true;
     }
 
-    private string GetStatusBadgeClass(string status)
+    private void CerrarModal()
     {
-        return status switch
-        {
-            "active" => "badge-active",
-            "low" => "badge-low",
-            "out" => "badge-out",
-            _ => "badge-default"
-        };
+        mostrarModal = false;
+        pasoModal = 1;
+        nuevoProducto = new();
+        mensajeErrorModal = "";
     }
 
-    private string GetStatusText(string status)
+    private void PasoSiguienteModal()
     {
-        return status switch
+        mensajeErrorModal = "";
+
+        if (pasoModal == 1)
         {
-            "active" => "Activo",
-            "low" => "Stock Bajo",
-            "out" => "Agotado",
-            _ => status
-        };
-    }
-
-    private void OpenNewProductModal()
-    {
-        isEditMode = false;
-        newProduct = new Product { Status = "active" };
-        errorMessage = "";
-        showModal = true;
-    }
-
-    private void CloseModal()
-    {
-        showModal = false;
-        newProduct = new Product();
-        errorMessage = "";
-    }
-
-    private void SaveProduct()
-    {
-        // Validaciones
-        if (string.IsNullOrWhiteSpace(newProduct.Name))
-        {
-            errorMessage = "El nombre del producto es obligatorio";
-            return;
-        }
-
-        if (string.IsNullOrWhiteSpace(newProduct.Category))
-        {
-            errorMessage = "La categoría es obligatoria";
-            return;
-        }
-
-        if (newProduct.Price <= 0)
-        {
-            errorMessage = "El precio debe ser mayor a 0";
-            return;
-        }
-
-        if (newProduct.Stock < 0)
-        {
-            errorMessage = "El stock no puede ser negativo";
-            return;
-        }
-
-        if (isEditMode)
-        {
-            // Actualizar producto existente
-            var existingProduct = products.FirstOrDefault(p => p.Id == newProduct.Id);
-            if (existingProduct != null)
+            if (string.IsNullOrWhiteSpace(nuevoProducto.Nombre) || nuevoProducto.CategoriaTipoId == 0 ||
+                nuevoProducto.CategoriaOcasionId == 0 || nuevoProducto.PrecioBase <= 0)
             {
-                existingProduct.Name = newProduct.Name;
-                existingProduct.Category = newProduct.Category;
-                existingProduct.Price = newProduct.Price;
-                existingProduct.Stock = newProduct.Stock;
-                existingProduct.Status = newProduct.Status;
+                mensajeErrorModal = "Por favor completa todos los campos obligatorios";
+                return;
             }
         }
-        else
+        else if (pasoModal == 2 && !nuevoProducto.Variantes.Any())
         {
-            // Crear nuevo producto
-            newProduct.Id = products.Any() ? products.Max(p => p.Id) + 1 : 1;
-            newProduct.Sales = 0;
-            products.Add(newProduct);
+            mensajeErrorModal = "Debes agregar al menos una variante";
+            return;
         }
 
-        CloseModal();
-        StateHasChanged();
+        pasoModal++;
     }
 
-    private void ViewProduct(int id)
+    private void PasoAnteriorModal()
+    {
+        mensajeErrorModal = "";
+        pasoModal--;
+    }
+
+    private void AgregarVariante()
+    {
+        nuevoProducto.Variantes.Add(new VarianteArticuloDTO());
+    }
+
+    private void EliminarVariante(int index)
+    {
+        nuevoProducto.Variantes.RemoveAt(index);
+    }
+
+    private void SeleccionarImagenes()
+    {
+        // Simulación - En producción usarías InputFile
+        var urlsSimuladas = new[] {
+            "https://via.placeholder.com/300x400/a855f7/ffffff?text=Producto+1",
+            "https://via.placeholder.com/300x400/ec4899/ffffff?text=Producto+2"
+        };
+
+        foreach (var url in urlsSimuladas)
+        {
+            nuevoProducto.Imagenes.Add(new ImagenArticuloDTO
+            {
+                Url = url,
+                Orden = nuevoProducto.Imagenes.Count + 1,
+                EsPrincipal = !nuevoProducto.Imagenes.Any() ? 'S' : 'N'
+            });
+        }
+    }
+
+    private void EliminarImagen(int index)
+    {
+        var imagen = nuevoProducto.Imagenes[index];
+        nuevoProducto.Imagenes.RemoveAt(index);
+
+        if (imagen.EsPrincipal == 'S' && nuevoProducto.Imagenes.Any())
+        {
+            nuevoProducto.Imagenes[0].EsPrincipal = 'S';
+        }
+    }
+
+    private void MarcarComoPrincipal(int index)
+    {
+        foreach (var img in nuevoProducto.Imagenes)
+        {
+            img.EsPrincipal = 'N';
+        }
+        nuevoProducto.Imagenes[index].EsPrincipal = 'S';
+    }
+
+    private async Task GuardarProducto()
+    {
+        mensajeErrorModal = "";
+
+        if (!nuevoProducto.Imagenes.Any())
+        {
+            mensajeErrorModal = "Debes agregar al menos una imagen";
+            return;
+        }
+
+        try
+        {
+            guardandoProducto = true;
+
+            var resultado = await ArticuloService.RegistrarArticuloCompleto(nuevoProducto);
+
+            if (resultado.IsSuccess)
+            {
+                Console.WriteLine($"Producto guardado con ID: {resultado.Object}");
+                await CargarProductos();
+                CerrarModal();
+            }
+            else
+            {
+                mensajeErrorModal = resultado.Message;
+            }
+        }
+        catch (Exception ex)
+        {
+            mensajeErrorModal = $"Error: {ex.Message}";
+        }
+        finally
+        {
+            guardandoProducto = false;
+        }
+    }
+
+    // Product Actions
+    private async Task VerProducto(int id)
     {
         Console.WriteLine($"Ver producto: {id}");
+        // Aquí podrías abrir un modal de detalle
     }
 
-    private void EditProduct(int id)
+    private void EditarProducto(int id)
     {
-        var product = products.FirstOrDefault(p => p.Id == id);
-        if (product != null)
+        Console.WriteLine($"Editar producto: {id}");
+        // Cargar producto y abrir modal
+    }
+
+    private async Task EliminarProducto(int id)
+    {
+        try
         {
-            isEditMode = true;
-            newProduct = new Product
+            var resultado = await ArticuloService.EliminarArticulo(id);
+
+            if (resultado.IsSuccess)
             {
-                Id = product.Id,
-                Name = product.Name,
-                Category = product.Category,
-                Price = product.Price,
-                Stock = product.Stock,
-                Sales = product.Sales,
-                Status = product.Status
-            };
-            errorMessage = "";
-            showModal = true;
+                await CargarProductos();
+            }
+            else
+            {
+                Console.WriteLine($"Error al eliminar: {resultado.Message}");
+            }
         }
-    }
-
-    private void DeleteProduct(int id)
-    {
-        var product = products.FirstOrDefault(p => p.Id == id);
-        if (product != null)
+        catch (Exception ex)
         {
-            products.Remove(product);
-            StateHasChanged();
+            Console.WriteLine($"Error: {ex.Message}");
         }
     }
 
-    private void ExportProducts()
+    private void ExportarProductos()
     {
         Console.WriteLine("Exportar productos");
     }
 
-    public class Product
+    private string GetVariantesClass(int total)
     {
-        public int Id { get; set; }
-        public string Name { get; set; } = "";
-        public string Category { get; set; } = "";
-        public decimal Price { get; set; }
-        public int Stock { get; set; }
-        public int Sales { get; set; }
-        public string Status { get; set; } = "";
+        return total > 0 ? "stock-normal" : "stock-low";
+    }
+
+    private string GetStatusBadgeClass(string estado)
+    {
+        return estado == "A" ? "badge-active" : "badge-out";
+    }
+
+    private string GetStatusText(string estado)
+    {
+        return estado == "A" ? "Activo" : "Inactivo";
     }
 }
-
-<style>
-    .products-page {
-        display: flex;
-        flex-direction: column;
-        gap: 24px;
-    }
-
-    .page-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        flex-wrap: wrap;
-        gap: 16px;
-    }
-
-    .page-title {
-        font-size: 28px;
-        font-weight: 700;
-        color: #1f2937;
-        margin: 0;
-    }
-
-    .btn-primary {
-        background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
-        color: white;
-        padding: 12px 24px;
-        border: none;
-        border-radius: 12px;
-        font-weight: 600;
-        font-size: 15px;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        transition: all 0.3s;
-        box-shadow: 0 4px 12px rgba(168, 85, 247, 0.2);
-    }
-
-        .btn-primary:hover {
-            box-shadow: 0 6px 20px rgba(168, 85, 247, 0.4);
-            transform: translateY(-2px);
-        }
-
-        .btn-primary:active {
-            transform: translateY(0);
-        }
-
-    .products-card {
-        background: white;
-        border-radius: 16px;
-        padding: 24px;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    }
-
-    .toolbar {
-        display: flex;
-        gap: 12px;
-        margin-bottom: 24px;
-        flex-wrap: wrap;
-    }
-
-    .search-container {
-        flex: 1;
-        min-width: 250px;
-        position: relative;
-        display: flex;
-        align-items: center;
-    }
-
-    .search-icon {
-        position: absolute;
-        left: 12px;
-        font-size: 18px;
-        color: #9ca3af;
-    }
-
-    .search-input {
-        width: 100%;
-        padding: 12px 12px 12px 40px;
-        border: 1px solid #e5e7eb;
-        border-radius: 12px;
-        font-size: 14px;
-        transition: all 0.2s;
-    }
-
-        .search-input:focus {
-            outline: none;
-            border-color: #a855f7;
-            box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.1);
-        }
-
-    .btn-secondary {
-        padding: 12px 20px;
-        border: 1px solid #e5e7eb;
-        border-radius: 12px;
-        background: white;
-        color: #4b5563;
-        font-weight: 500;
-        font-size: 14px;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        transition: all 0.2s;
-    }
-
-        .btn-secondary:hover {
-            background: #f9fafb;
-            border-color: #d1d5db;
-        }
-
-    .btn-icon {
-        font-size: 16px;
-    }
-
-    .table-container {
-        overflow-x: auto;
-    }
-
-    .products-table {
-        width: 100%;
-        border-collapse: collapse;
-    }
-
-        .products-table thead tr {
-            border-bottom: 2px solid #e5e7eb;
-        }
-
-        .products-table th {
-            text-align: left;
-            padding: 12px;
-            font-weight: 600;
-            color: #6b7280;
-            font-size: 14px;
-            white-space: nowrap;
-        }
-
-        .products-table tbody tr {
-            border-bottom: 1px solid #f3f4f6;
-            transition: background 0.2s;
-        }
-
-            .products-table tbody tr:hover {
-                background: #f9fafb;
-            }
-
-        .products-table td {
-            padding: 16px 12px;
-            font-size: 14px;
-            color: #4b5563;
-        }
-
-    .product-name {
-        font-weight: 600;
-        color: #1f2937;
-    }
-
-    .product-category {
-        color: #6b7280;
-    }
-
-    .product-price {
-        font-weight: 700;
-        color: #a855f7;
-        font-size: 15px;
-    }
-
-    .stock-normal {
-        font-weight: 600;
-        color: #1f2937;
-    }
-
-    .stock-low {
-        font-weight: 600;
-        color: #ef4444;
-    }
-
-    .product-sales {
-        color: #6b7280;
-    }
-
-    .badge {
-        padding: 6px 12px;
-        border-radius: 20px;
-        font-size: 12px;
-        font-weight: 600;
-        display: inline-block;
-        white-space: nowrap;
-    }
-
-    .badge-active {
-        background: #d1fae5;
-        color: #065f46;
-    }
-
-    .badge-low {
-        background: #fef3c7;
-        color: #92400e;
-    }
-
-    .badge-out {
-        background: #fee2e2;
-        color: #991b1b;
-    }
-
-    .badge-default {
-        background: #e5e7eb;
-        color: #4b5563;
-    }
-
-    .action-buttons {
-        display: flex;
-        gap: 8px;
-    }
-
-    .btn-action {
-        padding: 8px;
-        border: none;
-        border-radius: 8px;
-        cursor: pointer;
-        font-size: 16px;
-        transition: all 0.2s;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .btn-view {
-        background: transparent;
-        color: #a855f7;
-    }
-
-        .btn-view:hover {
-            background: #f3e8ff;
-        }
-
-    .btn-edit {
-        background: transparent;
-        color: #3b82f6;
-    }
-
-        .btn-edit:hover {
-            background: #dbeafe;
-        }
-
-    .btn-delete {
-        background: transparent;
-        color: #ef4444;
-    }
-
-        .btn-delete:hover {
-            background: #fee2e2;
-        }
-
-    .empty-state {
-        text-align: center;
-        padding: 48px 24px;
-        color: #9ca3af;
-    }
-
-    .empty-icon {
-        font-size: 64px;
-        display: block;
-        margin-bottom: 16px;
-    }
-
-    .empty-state p {
-        font-size: 16px;
-        margin: 0;
-    }
-
-    /* MODAL STYLES */
-    .modal-overlay {
-        position: fixed;
-        inset: 0;
-        background: rgba(0, 0, 0, 0.5);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 9999;
-        padding: 20px;
-        animation: fadeIn 0.2s ease;
-    }
-
-    @@keyframes fadeIn {
-        from {
-            opacity: 0;
-        }
-
-        to {
-            opacity: 1;
-        }
-    }
-
-    .modal-container {
-        background: white;
-        border-radius: 20px;
-        width: 100%;
-        max-width: 600px;
-        max-height: 90vh;
-        overflow-y: auto;
-        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-        animation: slideUp 0.3s ease;
-    }
-
-    @@keyframes slideUp {
-        from {
-            transform: translateY(50px);
-            opacity: 0;
-        }
-
-        to {
-            transform: translateY(0);
-            opacity: 1;
-        }
-    }
-
-    .modal-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 24px 28px;
-        border-bottom: 1px solid #e5e7eb;
-    }
-
-    .modal-title {
-        font-size: 24px;
-        font-weight: 700;
-        color: #1f2937;
-        margin: 0;
-    }
-
-    .modal-close {
-        background: none;
-        border: none;
-        font-size: 28px;
-        color: #6b7280;
-        cursor: pointer;
-        width: 36px;
-        height: 36px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 8px;
-        transition: all 0.2s;
-    }
-
-        .modal-close:hover {
-            background: #f3f4f6;
-            color: #1f2937;
-        }
-
-    .modal-body {
-        padding: 28px;
-    }
-
-    .form-group {
-        margin-bottom: 20px;
-    }
-
-        .form-group label {
-            display: block;
-            font-weight: 600;
-            color: #374151;
-            margin-bottom: 8px;
-            font-size: 14px;
-        }
-
-    .form-input {
-        width: 100%;
-        padding: 12px 16px;
-        border: 1px solid #d1d5db;
-        border-radius: 10px;
-        font-size: 15px;
-        transition: all 0.2s;
-        font-family: inherit;
-    }
-
-        .form-input:focus {
-            outline: none;
-            border-color: #a855f7;
-            box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.1);
-        }
-
-    .form-row {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 16px;
-    }
-
-    .error-message {
-        background: #fee2e2;
-        color: #991b1b;
-        padding: 12px 16px;
-        border-radius: 10px;
-        font-size: 14px;
-        font-weight: 500;
-        margin-top: 16px;
-    }
-
-    .modal-footer {
-        display: flex;
-        gap: 12px;
-        padding: 20px 28px;
-        border-top: 1px solid #e5e7eb;
-        justify-content: flex-end;
-    }
-
-    .btn-cancel {
-        padding: 12px 24px;
-        border: 1px solid #d1d5db;
-        border-radius: 10px;
-        background: white;
-        color: #4b5563;
-        font-weight: 600;
-        font-size: 15px;
-        cursor: pointer;
-        transition: all 0.2s;
-    }
-
-        .btn-cancel:hover {
-            background: #f9fafb;
-        }
-
-    .btn-save {
-        padding: 12px 24px;
-        border: none;
-        border-radius: 10px;
-        background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
-        color: white;
-        font-weight: 600;
-        font-size: 15px;
-        cursor: pointer;
-        transition: all 0.3s;
-        box-shadow: 0 4px 12px rgba(168, 85, 247, 0.3);
-    }
-
-        .btn-save:hover {
-            box-shadow: 0 6px 20px rgba(168, 85, 247, 0.5);
-            transform: translateY(-2px);
-        }
-
-    /* Responsive */
-    @@media (max-width: 768px) {
-        .page-header {
-            flex-direction: column;
-            align-items: stretch;
-        }
-
-        .toolbar {
-            flex-direction: column;
-        }
-
-        .search-container {
-            min-width: 100%;
-        }
-
-        .products-table {
-            font-size: 13px;
-        }
-
-            .products-table th,
-            .products-table td {
-                padding: 10px 8px;
-            }
-
-        .action-buttons {
-            flex-direction: column;
-        }
-
-        .form-row {
-            grid-template-columns: 1fr;
-        }
-
-        .modal-container {
-            max-width: 100%;
-            margin: 0;
-            border-radius: 20px 20px 0 0;
-            align-self: flex-end;
-        }
-    }
-</style>

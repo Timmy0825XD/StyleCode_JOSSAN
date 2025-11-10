@@ -33,10 +33,14 @@ var connectionString = builder.Configuration.GetConnectionString("OracleConnecti
 // ===== REGISTRAR SERVICIOS DE LA CAPA DAL =====
 builder.Services.AddScoped<IUsuarioDAO>(sp => new UsuarioDAO(connectionString));
 builder.Services.AddScoped<IRolDAO>(sp => new RolDAO(connectionString));
+builder.Services.AddScoped<IArticuloDAO>(sp => new ArticuloDAO(connectionString));
+builder.Services.AddScoped<ICategoriaDAO>(sp => new CategoriaDAO(connectionString));
 
 // ===== REGISTRAR SERVICIOS DE LA CAPA BLL =====
 builder.Services.AddScoped<IUsuarioService, UsuarioService>();
 builder.Services.AddScoped<IRolService, RolService>();
+builder.Services.AddScoped<IArticuloServices, ArticuloServices>();
+builder.Services.AddScoped<ICategoriaServices, CategoriaServices>();
 
 var app = builder.Build();
 
