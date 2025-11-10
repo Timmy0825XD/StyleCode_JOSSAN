@@ -232,8 +232,9 @@
                                         <div class="variante-number">@(index + 1)</div>
                                         <div class="variante-fields">
                                             <div class="form-group-inline">
-                                                <label>Talla</label>
-                                                <select class="form-select-sm" @bind="variante.Talla">
+                                                <label>Talla *</label>
+                                                <select class="form-select-sm" @bind="variante.Talla" required>
+                                                    <option value="">Seleccionar...</option>
                                                     <option value="XS">XS</option>
                                                     <option value="S">S</option>
                                                     <option value="M">M</option>
@@ -468,17 +469,55 @@
 
         if (pasoModal == 1)
         {
-            if (string.IsNullOrWhiteSpace(nuevoProducto.Nombre) || nuevoProducto.CategoriaTipoId == 0 ||
-                nuevoProducto.CategoriaOcasionId == 0 || nuevoProducto.PrecioBase <= 0)
+            if (string.IsNullOrWhiteSpace(nuevoProducto.Nombre) ||
+                string.IsNullOrWhiteSpace(nuevoProducto.Marca) ||
+                string.IsNullOrWhiteSpace(nuevoProducto.Genero) ||
+                nuevoProducto.CategoriaTipoId == 0 ||
+                nuevoProducto.CategoriaOcasionId == 0 ||
+                nuevoProducto.PrecioBase <= 0)
             {
-                mensajeErrorModal = "Por favor completa todos los campos obligatorios";
+                mensajeErrorModal = "Por favor completa todos los campos obligatorios (*)";
                 return;
             }
         }
-        else if (pasoModal == 2 && !nuevoProducto.Variantes.Any())
+        else if (pasoModal == 2)
         {
-            mensajeErrorModal = "Debes agregar al menos una variante";
-            return;
+            if (!nuevoProducto.Variantes.Any())
+            {
+                mensajeErrorModal = "Debes agregar al menos una variante";
+                return;
+            }
+
+            var variantesSinTalla = nuevoProducto.Variantes
+                .Where(v => string.IsNullOrWhiteSpace(v.Talla))
+                .ToList();
+
+            if (variantesSinTalla.Any())
+            {
+                mensajeErrorModal = "❌ Todas las variantes deben tener una talla seleccionada";
+                return;
+            }
+
+            var variantesSinColor = nuevoProducto.Variantes
+                .Where(v => string.IsNullOrWhiteSpace(v.Color))
+                .ToList();
+
+            if (variantesSinColor.Any())
+            {
+                mensajeErrorModal = "❌ Todas las variantes deben tener un color especificado";
+                return;
+            }
+
+            var duplicados = nuevoProducto.Variantes
+                .GroupBy(v => new { v.Talla, v.Color })
+                .Where(g => g.Count() > 1)
+                .ToList();
+
+            if (duplicados.Any())
+            {
+                mensajeErrorModal = "❌ Hay variantes duplicadas. Cada combinación talla-color debe ser única";
+                return;
+            }
         }
 
         pasoModal++;
@@ -492,7 +531,12 @@
 
     private void AgregarVariante()
     {
-        nuevoProducto.Variantes.Add(new VarianteArticuloDTO());
+        nuevoProducto.Variantes.Add(new VarianteArticuloDTO
+        {
+            Talla = "", 
+            Color = "",
+            Stock = 0
+        });
     }
 
     private void EliminarVariante(int index)
@@ -502,19 +546,18 @@
 
     private void SeleccionarImagenes()
     {
-        // Simulación - En producción usarías InputFile
         var urlsSimuladas = new[] {
-            "https://via.placeholder.com/300x400/a855f7/ffffff?text=Producto+1",
-            "https://via.placeholder.com/300x400/ec4899/ffffff?text=Producto+2"
-        };
+        "https://via.placeholder.com/300x400/a855f7/ffffff?text=Producto+1",
+        "https://via.placeholder.com/300x400/ec4899/ffffff?text=Producto+2"
+    };
 
         foreach (var url in urlsSimuladas)
         {
             nuevoProducto.Imagenes.Add(new ImagenArticuloDTO
             {
                 Url = url,
-                Orden = nuevoProducto.Imagenes.Count + 1,
-                EsPrincipal = !nuevoProducto.Imagenes.Any() ? 'S' : 'N'
+                Orden = nuevoProducto.Imagenes.Count + 1, // ✅ 1, 2, 3, ...
+                EsPrincipal = !nuevoProducto.Imagenes.Any() ? 'S' : 'N' // Primera es 'S'
             });
         }
     }
@@ -532,11 +575,21 @@
 
     private void MarcarComoPrincipal(int index)
     {
-        foreach (var img in nuevoProducto.Imagenes)
+        // ✅ La imagen seleccionada se convierte en orden 1
+        var imagenSeleccionada = nuevoProducto.Imagenes[index];
+
+        // Remover la imagen de su posición actual
+        nuevoProducto.Imagenes.RemoveAt(index);
+
+        // Insertarla al inicio
+        nuevoProducto.Imagenes.Insert(0, imagenSeleccionada);
+
+        // Reordenar todas las imágenes
+        for (int i = 0; i < nuevoProducto.Imagenes.Count; i++)
         {
-            img.EsPrincipal = 'N';
+            nuevoProducto.Imagenes[i].Orden = i + 1;
+            nuevoProducto.Imagenes[i].EsPrincipal = (i == 0) ? 'S' : 'N';
         }
-        nuevoProducto.Imagenes[index].EsPrincipal = 'S';
     }
 
     private async Task GuardarProducto()
@@ -552,7 +605,7 @@
         try
         {
             guardandoProducto = true;
-
+            
             var resultado = await ArticuloService.RegistrarArticuloCompleto(nuevoProducto);
 
             if (resultado.IsSuccess)

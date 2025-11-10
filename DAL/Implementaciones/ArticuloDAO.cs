@@ -83,8 +83,11 @@ namespace DAL.Implementaciones
                     }
                 }
 
-                // 3. Registrar imágenes
-                foreach (var imagen in articulo.Imagenes)
+                // 3. ✅ Registrar imágenes (ahora es simple)
+                // Ordenar por Orden para asegurar que la primera imagen tenga orden=1
+                var imagenesOrdenadas = articulo.Imagenes.OrderBy(i => i.Orden).ToList();
+
+                foreach (var imagen in imagenesOrdenadas)
                 {
                     using (var command = connection.CreateCommand())
                     {
