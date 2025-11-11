@@ -52,7 +52,8 @@ namespace DAL.Implementaciones
 
                         int idDireccionGenerado = ((OracleDecimal)idParam.Value).ToInt32();
 
-                        return Response<int>.Done("Dirección creada exitosamente", idDireccionGenerado);
+                        // ✅ Corregido: usar 'obj' en lugar de dato sin nombre
+                        return Response<int>.Done("Dirección creada exitosamente", idDireccionGenerado, null);
                     }
                 }
             }
@@ -97,7 +98,8 @@ namespace DAL.Implementaciones
 
                         await command.ExecuteNonQueryAsync();
 
-                        return Response<bool>.Done("Dirección actualizada exitosamente", true);
+                        // ✅ Corregido: usar 'obj' en lugar de dato sin nombre
+                        return Response<bool>.Done("Dirección actualizada exitosamente", true, null);
                     }
                 }
             }
@@ -171,7 +173,8 @@ namespace DAL.Implementaciones
                             return Response<DireccionDetalleDTO>.Fail("Dirección no encontrada");
                         }
 
-                        return Response<DireccionDetalleDTO>.Done("Dirección obtenida exitosamente", direccion);
+                        // ✅ Corregido: usar 'obj' en lugar de dato sin nombre
+                        return Response<DireccionDetalleDTO>.Done("Dirección obtenida exitosamente", direccion, null);
                     }
                 }
             }
@@ -219,7 +222,13 @@ namespace DAL.Implementaciones
                             }
                         }
 
-                        return Response<CiudadDTO>.Done("Ciudades obtenidas exitosamente", list: ciudades);
+                        // ✅ CORREGIDO: Usar los parámetros correctos según tu clase Response
+                        // Firma: Done(string message, T obj, IList<T> list)
+                        return Response<CiudadDTO>.Done(
+                            message: "Ciudades obtenidas exitosamente",
+                            obj: default,      // No hay un objeto individual, solo la lista
+                            list: ciudades     // Aquí va la lista de ciudades
+                        );
                     }
                 }
             }

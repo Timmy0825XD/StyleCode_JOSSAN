@@ -1,10 +1,13 @@
-﻿@page "/Register"
+﻿﻿@page "/Register"
 @using GUI.Components.Layout
 @using ENTITY.Usuarios
+@using ENTITY.Direcciones
 @using BLL.Interfaces
+@using System.Linq
 @layout AuthLayout
 @inject NavigationManager NavigationManager
 @inject IUsuarioService UsuarioService
+@inject IDireccionService DireccionService
 
 <div class="register-container">
     <div class="register-card">
@@ -93,13 +96,24 @@
 
                     <div class="form-group">
                         <label class="form-label">Ciudad *</label>
-                        <select class="form-select" @bind="ciudadSeleccionada" required>
-                            <option value="">Selecciona una ciudad</option>
-                            @foreach (var ciudad in ciudades)
-                            {
-                                <option value="@ciudad">@ciudad</option>
-                            }
-                        </select>
+                        @if (cargandoCiudades)
+                        {
+                            <p style="font-size: 12px; color: #6b7280;">Cargando ciudades...</p>
+                        }
+                        else if (!ciudades.Any())
+                        {
+                            <p style="font-size: 12px; color: #dc2626;">No se pudieron cargar las ciudades</p>
+                        }
+                        else
+                        {
+                            <select class="form-select" @bind="ciudadIdSeleccionada" required>
+                                <option value="0">Selecciona una ciudad</option>
+                                @foreach (var ciudad in ciudades)
+                                {
+                                    <option value="@ciudad.Id">@ciudad.Nombre - @ciudad.Departamento</option>
+                                }
+                            </select>
+                        }
                     </div>
 
                     <div class="form-group">
@@ -135,7 +149,7 @@
                         <label class="form-label">Contraseña *</label>
                         <div style="display:flex;">
                             <input type="@(mostrarPassword ? "text" : "password")" class="form-input" placeholder="Mínimo 8 caracteres" @bind="password" required />
-                            <button type="button" class="toggle-password" @onclick="TogglePassword">👁️‍🗨️ </button>
+                            <button type="button" class="toggle-password" @onclick="TogglePassword">👁‍🗨 </button>
                         </div>
                         <div class="password-strength">
                             <div class="strength-bar @GetPasswordStrength()"></div>
@@ -146,7 +160,7 @@
                         <label class="form-label">Confirmar Contraseña *</label>
                         <div style="display:flex;">
                             <input type="@(mostrarConfirmPassword ? "text" : "password")" class="form-input" placeholder="Repite tu contraseña" @bind="confirmPassword" required />
-                            <button type="button" class="toggle-password" @onclick="ToggleConfirmPassword">👁️‍🗨️ </button>
+                            <button type="button" class="toggle-password" @onclick="ToggleConfirmPassword">👁‍🗨 </button>
                         </div>
                     </div>
 
@@ -163,7 +177,7 @@
             @if (!string.IsNullOrEmpty(mensajeError))
             {
                 <div class="error-message">
-                    <span>⚠️</span>
+                    <span>⚠</span>
                     <span>@mensajeError</span>
                 </div>
             }
@@ -233,25 +247,14 @@
     private string email = "";
 
     // Paso 2: Dirección
-    private string ciudadSeleccionada = "";
+    private int ciudadIdSeleccionada = 0;
     private string direccion = "";
     private string barrio = "";
     private string codigoPostal = "";
     private string referencia = "";
 
-    private List<string> ciudades = new()
-    {
-        "Valledupar",
-        "Bogotá",
-        "Medellín",
-        "Cali",
-        "Barranquilla",
-        "Cartagena",
-        "Bucaramanga",
-        "Santa Marta",
-        "Cúcuta",
-        "Pereira"
-    };
+    private List<CiudadDTO> ciudades = new();
+    private bool cargandoCiudades = false;
 
     // Contraseña
     private string password = "";
@@ -264,7 +267,54 @@
     private string mensajeError = "";
     private string mensajeExito = "";
 
-    private void PasoSiguiente()
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarCiudades();
+    }
+
+    private async Task CargarCiudades()
+    {
+        cargandoCiudades = true;
+        mensajeError = ""; // Limpiar mensajes previos
+
+        try
+        {
+            var resultado = await DireccionService.ObtenerTodasLasCiudades();
+
+            if (resultado.IsSuccess)
+            {
+                // Usar ListObject que es como se llama en tu Response
+                if (resultado.ListObject != null && resultado.ListObject.Count > 0)
+                {
+                    ciudades = resultado.ListObject.ToList();
+                    Console.WriteLine($"✅ Se cargaron {ciudades.Count} ciudades desde la BD");
+                }
+                else
+                {
+                    mensajeError = "No hay ciudades disponibles en la base de datos";
+                    Console.WriteLine("⚠ La consulta fue exitosa pero no hay ciudades");
+                }
+            }
+            else
+            {
+                mensajeError = $"Error al cargar ciudades: {resultado.Message}";
+                Console.WriteLine($"❌ Error en servicio: {resultado.Message}");
+            }
+        }
+        catch (Exception ex)
+        {
+            mensajeError = "Error al conectar con el servidor";
+            Console.WriteLine($"❌ Excepción al cargar ciudades: {ex.Message}");
+            Console.WriteLine($"Stack trace: {ex.StackTrace}");
+        }
+        finally
+        {
+            cargandoCiudades = false;
+            StateHasChanged(); // Forzar actualización de la UI
+        }
+    }
+
+    private async Task PasoSiguiente()
     {
         mensajeError = "";
 
@@ -276,6 +326,28 @@
                 string.IsNullOrWhiteSpace(email))
             {
                 mensajeError = "Por favor completa todos los campos obligatorios";
+                return;
+            }
+        }
+
+        // Validar paso 2
+        if (paso == 2)
+        {
+            if (ciudadIdSeleccionada <= 0)
+            {
+                mensajeError = "Por favor selecciona una ciudad";
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(direccion) || string.IsNullOrWhiteSpace(barrio))
+            {
+                mensajeError = "Por favor completa todos los campos obligatorios de la dirección";
+                return;
+            }
+
+            if (direccion.Length < 10)
+            {
+                mensajeError = "La dirección debe tener al menos 10 caracteres";
                 return;
             }
         }
@@ -335,7 +407,27 @@
 
             cargando = true;
 
-            // Crear el DTO de usuario
+            // 1. PRIMERO: Crear la dirección
+            var nuevaDireccion = new DireccionCreacionDTO
+            {
+                CiudadId = ciudadIdSeleccionada,
+                DireccionCompleta = direccion,
+                Barrio = barrio,
+                CodigoPostal = string.IsNullOrWhiteSpace(codigoPostal) ? null : codigoPostal,
+                Referencia = string.IsNullOrWhiteSpace(referencia) ? null : referencia
+            };
+
+            var resultadoDireccion = await DireccionService.CrearDireccion(nuevaDireccion);
+
+            if (!resultadoDireccion.IsSuccess)
+            {
+                mensajeError = $"Error al crear la dirección: {resultadoDireccion.Message}";
+                return;
+            }
+
+            int direccionId = resultadoDireccion.Object; // ✅ Usar Object en lugar de Data
+
+            // 2. SEGUNDO: Crear el usuario con el ID de la dirección
             var nuevoUsuario = new UsuarioDTO
             {
                 Cedula = cedula,
@@ -348,13 +440,13 @@
                 Correo = email,
                 Contrasena = password,
                 RolId = 2, // Cliente por defecto
-                DireccionId = null // Sin dirección por ahora
+                DireccionId = direccionId // Asignar el ID de la dirección creada
             };
 
-            // Llamar al servicio para registrar
-            var resultado = await UsuarioService.RegistrarUsuario(nuevoUsuario);
+            // 3. TERCERO: Registrar el usuario
+            var resultadoUsuario = await UsuarioService.RegistrarUsuario(nuevoUsuario);
 
-            if (resultado.IsSuccess)
+            if (resultadoUsuario.IsSuccess)
             {
                 mensajeExito = "¡Cuenta creada exitosamente! Redirigiendo...";
                 StateHasChanged();
@@ -364,7 +456,7 @@
             }
             else
             {
-                mensajeError = resultado.Message;
+                mensajeError = resultadoUsuario.Message;
             }
         }
         catch (Exception ex)
