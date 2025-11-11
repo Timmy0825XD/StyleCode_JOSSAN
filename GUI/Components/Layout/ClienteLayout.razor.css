@@ -1,0 +1,145 @@
+﻿body {
+    /* Contenedor base */
+    .layout-container
+
+{
+    height: 100vh;
+    background: #0b0d10;
+    color: #e8ecf1;
+}
+
+.page {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    height: 100%;
+}
+
+/* Sidebar */
+.sidebar {
+    background: #0f1318;
+    border-right: 1px solid #1f2833;
+    transition: width .2s ease, transform .2s ease;
+}
+
+    .sidebar.collapsed {
+        width: 0;
+        transform: translateX(-100%);
+    }
+
+.menu {
+    display: flex;
+    flex-direction: column;
+    padding: 12px;
+    gap: 6px;
+}
+
+    .menu .item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 12px;
+        border-radius: 10px;
+        text-decoration: none;
+        color: #cfe0ff;
+    }
+
+        .menu .item.active, .menu .item:hover {
+            background: #1c2430;
+            color: #fff;
+        }
+
+    .menu .icon {
+        width: 22px;
+        text-align: center;
+    }
+
+/* Main */
+.main-content {
+    display: flex;
+    flex-direction: column;
+    transition: margin-left .2s ease;
+}
+
+    .main-content.expanded {
+        margin-left: -260px;
+    }
+/* cuando se colapsa sidebar */
+
+/* Header */
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 18px;
+    background: #0f1318;
+    border-bottom: 1px solid #1f2833;
+}
+
+    .header .left {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+.brand {
+    font-weight: 600;
+    opacity: .9;
+}
+
+.btn-toggle {
+    background: #1c2430;
+    color: #fff;
+    border: none;
+    padding: 8px 10px;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+/* Usuario */
+.user-menu {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.user-avatar {
+    background: #5b8cff;
+    color: #fff;
+    width: 32px;
+    height: 32px;
+    display: grid;
+    place-items: center;
+    border-radius: 999px;
+    font-weight: 700;
+}
+
+.user-name {
+    opacity: .9;
+}
+
+/* Contenido */
+.content {
+    padding: 18px;
+    overflow: auto;
+}
+
+/* Responsive */
+@media (max-width: 980px) {
+    .page {
+        grid-template-columns: 0 1fr;
+    }
+
+    .sidebar {
+        position: absolute;
+        z-index: 10;
+        width: 260px;
+        height: 100%;
+    }
+
+    .main-content.expanded {
+        margin-left: 0;
+    }
+}
+
+}

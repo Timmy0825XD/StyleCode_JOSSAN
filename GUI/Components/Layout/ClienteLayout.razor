@@ -1,0 +1,41 @@
+﻿@inherits LayoutComponentBase
+
+<div class="layout-container">
+    <div class="page">
+
+        <aside class="sidebar @(isMenuVisible ? "" : "collapsed")">
+            <ClientMenu />
+        </aside>
+
+        <main class="main-content @(isMenuVisible ? "" : "expanded")">
+
+            <div class="header">
+                <div class="left">
+                    <button class="btn-toggle" @onclick="ToggleMenu">
+                        @(isMenuVisible ? "✕" : "☰")
+                    </button>
+                    <span class="brand">Área de Cliente</span>
+                </div>
+
+                <div class="header-right">
+                    <div class="user-menu">
+                        <div class="user-avatar">CL</div>
+                        <div class="user-name">@UserDisplayName</div>
+                    </div>
+                </div>
+            </div>
+
+            <article class="content">
+                @Body
+            </article>
+        </main>
+    </div>
+</div>
+
+@code {
+    private bool isMenuVisible = true;
+
+    private string UserDisplayName { get; set; } = "Cliente";
+
+    private void ToggleMenu() => isMenuVisible = !isMenuVisible;
+}

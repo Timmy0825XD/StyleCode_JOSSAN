@@ -1,0 +1,723 @@
+﻿@page "/ClienteCatalogo"
+@using GUI.Components.Layout
+@using DAL.Interfaces
+@using ENTITY.Articulos
+@using ENTITY.Utilidades
+@inject IArticuloDAO ArticuloDAO
+@inject NavigationManager Navigation
+@layout ClienteLayout
+
+<section class="catalogo">
+    @if (isLoading)
+    {
+        <div class="loading-container">
+            <div class="spinner"></div>
+            <p>Cargando productos...</p>
+        </div>
+    }
+    else if (errorMessage != null)
+    {
+        <div class="error-container">
+            <p>❌ @errorMessage</p>
+            <button class="btn" @onclick="LoadProducts">Reintentar</button>
+        </div>
+    }
+    else
+    {
+        <!-- Filtros / Controles -->
+        <div class="toolbar">
+            <div class="search">
+                <input class="input" type="text" placeholder="Buscar productos..."
+                       @bind="searchText" @bind:event="oninput" />
+            </div>
+
+            <div class="filters">
+                <!-- Filtro por Tipo de Categoría -->
+                <select class="select" @bind="selectedCategoriaTipo">
+                    <option value="">Todos los tipos</option>
+                    @foreach (var tipo in categoriasTipo)
+                    {
+                        <option value="@tipo">@tipo</option>
+                    }
+                </select>
+
+                <!-- Filtro por Ocasión -->
+                <select class="select" @bind="selectedCategoriaOcasion">
+                    <option value="">Todas las ocasiones</option>
+                    @foreach (var ocasion in categoriasOcasion)
+                    {
+                        <option value="@ocasion">@ocasion</option>
+                    }
+                </select>
+
+                <!-- Filtro por Género -->
+                <select class="select" @bind="selectedGenero">
+                    <option value="">Todos los géneros</option>
+                    @foreach (var genero in generos)
+                    {
+                        <option value="@genero">@genero</option>
+                    }
+                </select>
+
+                <!-- Filtro por Marca -->
+                <select class="select" @bind="selectedMarca">
+                    <option value="">Todas las marcas</option>
+                    @foreach (var marca in marcas)
+                    {
+                        <option value="@marca">@marca</option>
+                    }
+                </select>
+
+                <!-- Rango de Precio -->
+                <div class="price">
+                    <label>Precio máx: <strong>@maxPriceFilter.ToString("C0")</strong></label>
+                    <input type="range" min="@minPrice" max="@maxPrice" step="1000"
+                           @bind="maxPriceFilter" @bind:event="oninput" />
+                </div>
+
+                <!-- Ordenamiento -->
+                <select class="select" @bind="sortBy">
+                    <option value="relevancia">Ordenar: Relevancia</option>
+                    <option value="precio_asc">Precio ↑</option>
+                    <option value="precio_desc">Precio ↓</option>
+                    <option value="nombre_asc">Nombre A–Z</option>
+                    <option value="nombre_desc">Nombre Z–A</option>
+                    <option value="nuevos">Más recientes</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Chips de categorías rápidas -->
+        <div class="chips">
+            <button class="chip @(string.IsNullOrEmpty(selectedCategoriaTipo) ? "active" : "")"
+                    @onclick="() => SetCategoriaTipo(string.Empty)">
+                Todos
+            </button>
+            @foreach (var tipo in categoriasTipo.Take(5))
+            {
+                <button class="chip @(selectedCategoriaTipo == tipo ? "active" : "")"
+                        @onclick="() => SetCategoriaTipo(tipo)">
+                    @tipo
+                </button>
+            }
+        </div>
+
+        <!-- Contador de resultados -->
+        <div class="results-info">
+            <p>Mostrando @PagedProducts.Count() de @FilteredProducts.Count() productos</p>
+        </div>
+
+        <!-- Grid de productos -->
+        @if (PagedProducts.Any())
+        {
+            <div class="grid">
+                @foreach (var articulo in PagedProducts)
+                {
+                    <div class="card" @onclick="() => ViewDetails(articulo)">
+                        <div class="img-wrap">
+                            <img src="@GetImageUrl(articulo)" alt="@articulo.Nombre" loading="lazy" />
+
+                            <button class="fav @(favorites.Contains(articulo.IdArticulo) ? "on" : "")"
+                                    title="Favorito"
+                                    @onclick="(e) => ToggleFavorite(articulo.IdArticulo, e)"
+                                    @onclick:stopPropagation="true">
+                                ♥
+                            </button>
+
+                            @if (IsNewProduct(articulo))
+                            {
+                                <span class="badge new">Nuevo</span>
+                            }
+
+                            @if (articulo.TotalVariantes > 0)
+                            {
+                                <span class="badge variants">@articulo.TotalVariantes variantes</span>
+                            }
+                        </div>
+
+                        <div class="info">
+                            <h3>@articulo.Nombre</h3>
+                            <p class="brand">@articulo.Marca</p>
+                            <div class="tags">
+                                <span class="tag">@articulo.CategoriaTipo</span>
+                                <span class="tag">@articulo.Genero</span>
+                            </div>
+                            <p class="price">Desde @articulo.PrecioBase.ToString("C")</p>
+                            @if (!string.IsNullOrEmpty(articulo.Material))
+                            {
+                                <p class="material">Material: @articulo.Material</p>
+                            }
+                        </div>
+
+                        <div class="actions">
+                            <button class="btn"
+                                    @onclick="(e) => ViewDetails(articulo, e)"
+                                    @onclick:stopPropagation="true">
+                                Ver opciones
+                            </button>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="no-results">
+                <p>😔 No se encontraron productos con los filtros seleccionados.</p>
+                <button class="btn" @onclick="ClearFilters">Limpiar filtros</button>
+            </div>
+        }
+
+        <!-- Paginación -->
+        @if (TotalPages > 1)
+        {
+            <div class="pagination">
+                <button class="pg-btn" disabled="@(currentPage == 1)" @onclick="PrevPage">«</button>
+                <span>Página @currentPage de @TotalPages</span>
+                <button class="pg-btn" disabled="@(currentPage == TotalPages)" @onclick="NextPage">»</button>
+            </div>
+        }
+    }
+</section>
+
+<style>
+    .catalogo {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    .toolbar {
+        background: white;
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        margin-bottom: 20px;
+    }
+
+    .search {
+        margin-bottom: 15px;
+    }
+
+    .input {
+        width: 100%;
+        padding: 12px 16px;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        font-size: 16px;
+        transition: border-color 0.3s;
+    }
+
+        .input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+    .filters {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+    }
+
+    .select {
+        padding: 10px 14px;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        font-size: 14px;
+        background: white;
+        cursor: pointer;
+        transition: border-color 0.3s;
+    }
+
+        .select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+    .price {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+        .price label {
+            font-size: 14px;
+            color: #333;
+        }
+
+        .price input[type="range"] {
+            width: 100%;
+        }
+
+    .chips {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+        overflow-x: auto;
+        padding: 10px 0;
+    }
+
+    .chip {
+        padding: 8px 16px;
+        border: 2px solid #e0e0e0;
+        border-radius: 20px;
+        background: white;
+        cursor: pointer;
+        white-space: nowrap;
+        transition: all 0.3s;
+        font-size: 14px;
+        font-weight: 500;
+    }
+
+        .chip:hover {
+            border-color: #667eea;
+            background: #f0f3ff;
+        }
+
+        .chip.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+    .results-info {
+        text-align: center;
+        margin-bottom: 20px;
+        color: #666;
+        font-size: 14px;
+    }
+
+    .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 24px;
+        margin-bottom: 30px;
+    }
+
+    .card {
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        transition: transform 0.3s, box-shadow 0.3s;
+        cursor: pointer;
+    }
+
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+        }
+
+    .img-wrap {
+        position: relative;
+        width: 100%;
+        height: 300px;
+        overflow: hidden;
+        background: #f5f5f5;
+    }
+
+        .img-wrap img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+    .fav {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        width: 40px;
+        height: 40px;
+        border: none;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.9);
+        font-size: 20px;
+        color: #ccc;
+        cursor: pointer;
+        transition: all 0.3s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+        .fav:hover {
+            background: white;
+            transform: scale(1.1);
+        }
+
+        .fav.on {
+            color: #e74c3c;
+        }
+
+    .badge {
+        position: absolute;
+        top: 12px;
+        left: 12px;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+        .badge.new {
+            background: #667eea;
+            color: white;
+        }
+
+        .badge.variants {
+            background: #48bb78;
+            color: white;
+            top: 52px;
+        }
+
+    .info {
+        padding: 16px;
+    }
+
+        .info h3 {
+            margin: 0 0 8px 0;
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+        }
+
+    .brand {
+        color: #667eea;
+        font-size: 14px;
+        font-weight: 500;
+        margin: 0 0 8px 0;
+    }
+
+    .tags {
+        display: flex;
+        gap: 6px;
+        margin-bottom: 8px;
+        flex-wrap: wrap;
+    }
+
+    .tag {
+        padding: 4px 10px;
+        background: #f0f3ff;
+        color: #667eea;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 500;
+    }
+
+    .price {
+        font-size: 20px;
+        font-weight: 700;
+        color: #2d3748;
+        margin: 8px 0;
+    }
+
+    .material {
+        font-size: 13px;
+        color: #718096;
+        margin: 4px 0 0 0;
+    }
+
+    .actions {
+        padding: 0 16px 16px 16px;
+    }
+
+    .btn {
+        width: 100%;
+        padding: 12px;
+        border: none;
+        border-radius: 8px;
+        background: #667eea;
+        color: white;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+        .btn:hover:not(:disabled) {
+            background: #5568d3;
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            background: #cbd5e0;
+            cursor: not-allowed;
+        }
+
+    .pagination {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 20px;
+        padding: 20px;
+    }
+
+    .pg-btn {
+        padding: 8px 16px;
+        border: 2px solid #667eea;
+        border-radius: 8px;
+        background: white;
+        color: #667eea;
+        font-size: 18px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+        .pg-btn:hover:not(:disabled) {
+            background: #667eea;
+            color: white;
+        }
+
+        .pg-btn:disabled {
+            border-color: #cbd5e0;
+            color: #cbd5e0;
+            cursor: not-allowed;
+        }
+
+    .loading-container, .error-container, .no-results {
+        text-align: center;
+        padding: 60px 20px;
+        min-height: 400px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 20px;
+    }
+
+    .spinner {
+        width: 50px;
+        height: 50px;
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #667eea;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+
+    @@keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+    .error-container {
+        color: #e74c3c;
+    }
+
+    .no-results {
+        color: #7f8c8d;
+    }
+</style>
+
+@code {
+    // ========= Estado =========
+    private List<ArticuloListaDTO> allProducts = new();
+    private HashSet<int> favorites = new();
+    private bool isLoading = true;
+    private string? errorMessage = null;
+
+    // Filtros
+    private string searchText = "";
+    private string selectedCategoriaTipo = "";
+    private string selectedCategoriaOcasion = "";
+    private string selectedGenero = "";
+    private string selectedMarca = "";
+    private string sortBy = "relevancia";
+
+    // Precio
+    private decimal minPrice = 0;
+    private decimal maxPrice = 1000000;
+    private decimal maxPriceFilter = 1000000;
+
+    // Paginación
+    private int pageSize = 12;
+    private int currentPage = 1;
+
+    // Listas de filtros dinámicos
+    private List<string> categoriasTipo = new();
+    private List<string> categoriasOcasion = new();
+    private List<string> generos = new();
+    private List<string> marcas = new();
+
+    // ========= Ciclo de vida =========
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadProducts();
+    }
+
+    private async Task LoadProducts()
+    {
+        try
+        {
+            isLoading = true;
+            errorMessage = null;
+
+            var response = await ArticuloDAO.ObtenerArticulosActivos();
+
+            if (response.IsSuccess && response.ListObject != null)
+            {
+                allProducts = response.ListObject.ToList();
+
+                if (allProducts.Any())
+                {
+                    // Extraer opciones de filtros únicos
+                    categoriasTipo = allProducts
+                        .Select(p => p.CategoriaTipo)
+                        .Distinct()
+                        .OrderBy(c => c)
+                        .ToList();
+
+                    categoriasOcasion = allProducts
+                        .Select(p => p.CategoriaOcasion)
+                        .Distinct()
+                        .OrderBy(c => c)
+                        .ToList();
+
+                    generos = allProducts
+                        .Select(p => p.Genero)
+                        .Distinct()
+                        .OrderBy(g => g)
+                        .ToList();
+
+                    marcas = allProducts
+                        .Select(p => p.Marca)
+                        .Distinct()
+                        .OrderBy(m => m)
+                        .ToList();
+
+                    // Calcular rangos de precio
+                    minPrice = allProducts.Min(p => p.PrecioBase);
+                    maxPrice = allProducts.Max(p => p.PrecioBase);
+                    maxPriceFilter = maxPrice;
+                }
+                else
+                {
+                    errorMessage = "No hay productos disponibles en este momento.";
+                }
+            }
+            else
+            {
+                errorMessage = response.Message ?? "Error al cargar los productos.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error inesperado: {ex.Message}";
+            Console.WriteLine($"Error en LoadProducts: {ex}");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    // ========= Filtrado y Ordenamiento =========
+    private IEnumerable<ArticuloListaDTO> FilteredProducts => ApplySort(
+        allProducts
+            .Where(p => string.IsNullOrWhiteSpace(searchText)
+                        || p.Nombre.Contains(searchText, StringComparison.OrdinalIgnoreCase)
+                        || p.Descripcion?.Contains(searchText, StringComparison.OrdinalIgnoreCase) == true
+                        || p.Marca.Contains(searchText, StringComparison.OrdinalIgnoreCase))
+            .Where(p => string.IsNullOrWhiteSpace(selectedCategoriaTipo)
+                        || p.CategoriaTipo.Equals(selectedCategoriaTipo, StringComparison.OrdinalIgnoreCase))
+            .Where(p => string.IsNullOrWhiteSpace(selectedCategoriaOcasion)
+                        || p.CategoriaOcasion.Equals(selectedCategoriaOcasion, StringComparison.OrdinalIgnoreCase))
+            .Where(p => string.IsNullOrWhiteSpace(selectedGenero)
+                        || p.Genero.Equals(selectedGenero, StringComparison.OrdinalIgnoreCase))
+            .Where(p => string.IsNullOrWhiteSpace(selectedMarca)
+                        || p.Marca.Equals(selectedMarca, StringComparison.OrdinalIgnoreCase))
+            .Where(p => p.PrecioBase <= maxPriceFilter)
+    );
+
+    private IEnumerable<ArticuloListaDTO> ApplySort(IEnumerable<ArticuloListaDTO> seq) =>
+        sortBy switch
+        {
+            "precio_asc" => seq.OrderBy(p => p.PrecioBase),
+            "precio_desc" => seq.OrderByDescending(p => p.PrecioBase),
+            "nombre_asc" => seq.OrderBy(p => p.Nombre),
+            "nombre_desc" => seq.OrderByDescending(p => p.Nombre),
+            "nuevos" => seq.OrderByDescending(p => p.FechaCreacion),
+            _ => seq // relevancia
+        };
+
+    private int TotalPages => Math.Max(1, (int)Math.Ceiling(FilteredProducts.Count() / (double)pageSize));
+
+    private IEnumerable<ArticuloListaDTO> PagedProducts
+    {
+        get
+        {
+            if (currentPage > TotalPages) currentPage = 1;
+            return FilteredProducts
+                .Skip((currentPage - 1) * pageSize)
+                .Take(pageSize);
+        }
+    }
+
+    // ========= Helpers =========
+    private string GetImageUrl(ArticuloListaDTO articulo)
+    {
+        if (!string.IsNullOrEmpty(articulo.ImagenPrincipal))
+        {
+            // Si tienes una ruta base para las imágenes
+            return articulo.ImagenPrincipal;
+        }
+        // Imagen placeholder
+        return $"https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=600&h=800&fit=crop&q=80";
+    }
+
+    private bool IsNewProduct(ArticuloListaDTO articulo)
+    {
+        // Considera "nuevo" si fue creado en los últimos 30 días
+        return articulo.FechaCreacion >= DateTime.Now.AddDays(-30);
+    }
+
+    // ========= Acciones de Filtrado =========
+    private void SetCategoriaTipo(string tipo)
+    {
+        selectedCategoriaTipo = tipo;
+        currentPage = 1;
+    }
+
+    private void ClearFilters()
+    {
+        searchText = "";
+        selectedCategoriaTipo = "";
+        selectedCategoriaOcasion = "";
+        selectedGenero = "";
+        selectedMarca = "";
+        maxPriceFilter = maxPrice;
+        sortBy = "relevancia";
+        currentPage = 1;
+    }
+
+    // ========= Acciones de Paginación =========
+    private void PrevPage()
+    {
+        if (currentPage > 1) currentPage--;
+    }
+
+    private void NextPage()
+    {
+        if (currentPage < TotalPages) currentPage++;
+    }
+
+    // ========= Acciones de Producto =========
+    private void ToggleFavorite(int productId, MouseEventArgs e)
+    {
+        if (!favorites.Add(productId))
+            favorites.Remove(productId);
+
+        // TODO: Persistir favoritos en localStorage o BD
+        // await JSRuntime.InvokeVoidAsync("localStorage.setItem", "favorites", JsonSerializer.Serialize(favorites));
+    }
+
+    private void ViewDetails(ArticuloListaDTO articulo, MouseEventArgs? e = null)
+    {
+        Navigation.NavigateTo($"/cliente/producto/{articulo.IdArticulo}");
+    }
+}
