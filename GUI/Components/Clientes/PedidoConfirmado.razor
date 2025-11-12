@@ -4,147 +4,228 @@
 @inject IPedidoService PedidoService
 @inject NavigationManager Navigation
 
-<div class="confirmacion-container">
+<div class="confirmacion-wrapper">
     @if (cargando)
     {
-        <div class="loading">
-            <div class="spinner"></div>
-            <p>Cargando información del pedido...</p>
+        <div class="loading-state">
+            <div class="loading-animation">
+                <div class="spinner-elegant"></div>
+                <div class="loading-dots">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
+            <p class="loading-text">Cargando información del pedido...</p>
         </div>
     }
     else if (errorMessage != null)
     {
-        <div class="error-container">
-            <div class="error-icon">❌</div>
-            <h2>Error al cargar el pedido</h2>
-            <p>@errorMessage</p>
-            <button class="btn-primary" @onclick="VolverAlCatalogo">
-                Volver al Catálogo
+        <div class="error-state">
+            <div class="error-animation">⚠️</div>
+            <h2>¡Algo salió mal!</h2>
+            <p class="error-message">@errorMessage</p>
+            <button class="btn-action btn-primary" @onclick="VolverAlCatalogo">
+                🏠 Volver al Catálogo
             </button>
         </div>
     }
     else if (pedido != null)
     {
-        <div class="confirmacion-exito">
-            <div class="success-icon">✓</div>
-            <h1>¡Pedido Confirmado!</h1>
-            <p class="numero-pedido">Número de pedido: <strong>@pedido.NumeroPedido</strong></p>
-            <p class="mensaje-exito">Tu pedido ha sido recibido y está siendo procesado</p>
+        <div class="confirmacion-content">
+            <!-- Success Header -->
+            <div class="success-header">
+                <div class="success-animation">
+                    <div class="checkmark-circle">
+                        <div class="checkmark"></div>
+                    </div>
+                </div>
+                <h1 class="success-title">¡Pedido Confirmado!</h1>
+                <p class="pedido-numero">
+                    Orden N° <strong>@pedido.NumeroPedido</strong>
+                </p>
+                <p class="success-message">
+                    Tu pedido ha sido recibido exitosamente y está siendo procesado
+                </p>
+            </div>
 
-            <!-- Información del pedido -->
-            <div class="info-card">
-                <div class="info-row">
-                    <span class="label">Fecha:</span>
-                    <span class="value">@pedido.FechaPedido.ToString("dd/MM/yyyy HH:mm")</span>
+            <!-- Timeline de Estado -->
+            <div class="timeline-container">
+                <div class="timeline-item completado">
+                    <div class="timeline-icon">✓</div>
+                    <div class="timeline-content">
+                        <h4>Pedido Recibido</h4>
+                        <p>@pedido.FechaPedido.ToString("dd/MM/yyyy HH:mm")</p>
+                    </div>
                 </div>
-                <div class="info-row">
-                    <span class="label">Estado:</span>
-                    <span class="badge-estado @GetEstadoClass(pedido.Estado)">@pedido.Estado</span>
+                <div class="timeline-item">
+                    <div class="timeline-icon">📦</div>
+                    <div class="timeline-content">
+                        <h4>En Preparación</h4>
+                        <p>Próximamente</p>
+                    </div>
                 </div>
-                <div class="info-row">
-                    <span class="label">Total:</span>
-                    <span class="value total">@pedido.Total.ToString("C")</span>
+                <div class="timeline-item">
+                    <div class="timeline-icon">🚚</div>
+                    <div class="timeline-content">
+                        <h4>En Camino</h4>
+                        <p>3-5 días hábiles</p>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-icon">🎉</div>
+                    <div class="timeline-content">
+                        <h4>Entregado</h4>
+                        <p>Te notificaremos</p>
+                    </div>
                 </div>
             </div>
 
-            <!-- Productos -->
-            <div class="productos-card">
-                <h3>Productos</h3>
-                @foreach (var producto in pedido.Productos)
-                {
-                    <div class="producto-item">
-                        <div class="producto-imagen">
-                            @if (!string.IsNullOrEmpty(producto.ImagenUrl))
+            <!-- Contenedor Principal -->
+            <div class="details-grid">
+                <!-- Columna Izquierda: Productos y Envío -->
+                <div class="left-column">
+                    <!-- Productos -->
+                    <div class="section-card productos-section">
+                        <div class="section-header">
+                            <h3>📦 Tus Productos</h3>
+                            <span class="badge-cantidad">@pedido.Productos.Count items</span>
+                        </div>
+                        <div class="productos-list">
+                            @foreach (var producto in pedido.Productos)
                             {
-                                <img src="@producto.ImagenUrl" alt="@producto.NombreProducto" />
+                                <div class="producto-item-modern">
+                                    <div class="producto-imagen-wrapper">
+                                        @if (!string.IsNullOrEmpty(producto.ImagenUrl))
+                                        {
+                                            <img src="@producto.ImagenUrl" alt="@producto.NombreProducto" class="producto-img" />
+                                        }
+                                        else
+                                        {
+                                            <div class="producto-placeholder">📦</div>
+                                        }
+                                    </div>
+                                    <div class="producto-detalles">
+                                        <h4 class="producto-nombre">@producto.NombreProducto</h4>
+                                        <p class="producto-marca">@producto.Marca</p>
+                                        <div class="producto-variantes">
+                                            <span class="variante-tag">@producto.Talla</span>
+                                            <span class="variante-tag">@producto.Color</span>
+                                        </div>
+                                        <p class="producto-cantidad-texto">Cantidad: <strong>@producto.Cantidad</strong></p>
+                                    </div>
+                                    <div class="producto-precio-section">
+                                        <p class="producto-precio-total">@producto.SubtotalLinea.ToString("C")</p>
+                                    </div>
+                                </div>
                             }
-                            else
-                            {
-                                <div class="placeholder-imagen">📦</div>
-                            }
-                        </div>
-                        <div class="producto-info">
-                            <h4>@producto.NombreProducto</h4>
-                            <p>@producto.Marca</p>
-                            <p class="variante">@producto.Talla / @producto.Color</p>
-                            <p class="cantidad">Cantidad: @producto.Cantidad</p>
-                        </div>
-                        <div class="producto-precio">
-                            @producto.SubtotalLinea.ToString("C")
                         </div>
                     </div>
-                }
-            </div>
 
-            <!-- Información de envío -->
-            <div class="envio-card">
-                <h3>Información de Envío</h3>
-                <div class="envio-info">
-                    <p><strong>@pedido.NombreCliente</strong></p>
-                    <p>@pedido.DireccionCompleta</p>
-                    <p>@pedido.Barrio</p>
-                    <p>@pedido.Ciudad, @pedido.Departamento</p>
-                    <p>Teléfono: @pedido.TelefonoPrincipal</p>
-                </div>
-            </div>
-
-            <!-- Resumen de pago -->
-            <div class="resumen-pago">
-                <h3>Resumen de Pago</h3>
-                <div class="resumen-linea">
-                    <span>Subtotal:</span>
-                    <span>@pedido.Subtotal.ToString("C")</span>
-                </div>
-                <div class="resumen-linea">
-                    <span>Envío:</span>
-                    <span class="envio-gratis">GRATIS</span>
-                </div>
-                <div class="resumen-linea">
-                    <span>IVA (19%):</span>
-                    <span>@pedido.Impuesto.ToString("C")</span>
-                </div>
-                <div class="resumen-divider"></div>
-                <div class="resumen-total">
-                    <span>Total Pagado:</span>
-                    <span>@pedido.Total.ToString("C")</span>
-                </div>
-                <div class="metodo-pago">
-                    <span>Método de pago: <strong>@pedido.MetodoPago</strong></span>
-                </div>
-            </div>
-
-            <!-- Información adicional -->
-            <div class="info-adicional">
-                <div class="info-box">
-                    <div class="info-icon">📧</div>
-                    <div class="info-text">
-                        <p><strong>Confirmación enviada</strong></p>
-                        <p>Hemos enviado los detalles del pedido a <strong>@pedido.CorreoCliente</strong></p>
+                    <!-- Información de Envío -->
+                    <div class="section-card envio-section">
+                        <div class="section-header">
+                            <h3>🚚 Información de Envío</h3>
+                        </div>
+                        <div class="envio-detalles">
+                            <div class="envio-grupo">
+                                <div class="envio-icon">👤</div>
+                                <div>
+                                    <p class="envio-label">Destinatario</p>
+                                    <p class="envio-valor">@pedido.NombreCliente</p>
+                                </div>
+                            </div>
+                            <div class="envio-grupo">
+                                <div class="envio-icon">📍</div>
+                                <div>
+                                    <p class="envio-label">Dirección</p>
+                                    <p class="envio-valor">@pedido.DireccionCompleta</p>
+                                    <p class="envio-valor-secundario">@pedido.Barrio</p>
+                                    <p class="envio-valor-secundario">@pedido.Ciudad, @pedido.Departamento</p>
+                                </div>
+                            </div>
+                            <div class="envio-grupo">
+                                <div class="envio-icon">📞</div>
+                                <div>
+                                    <p class="envio-label">Teléfono</p>
+                                    <p class="envio-valor">@pedido.TelefonoPrincipal</p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <div class="info-box">
-                    <div class="info-icon">🚚</div>
-                    <div class="info-text">
-                        <p><strong>Tiempo de entrega</strong></p>
-                        <p>Tu pedido llegará en 3-5 días hábiles</p>
+
+                <!-- Columna Derecha: Resumen -->
+                <div class="right-column">
+                    <!-- Resumen de Pago -->
+                    <div class="section-card resumen-section sticky">
+                        <div class="section-header">
+                            <h3>💳 Resumen del Pedido</h3>
+                        </div>
+                        <div class="resumen-contenido">
+                            <div class="resumen-linea">
+                                <span class="resumen-label">Subtotal</span>
+                                <span class="resumen-valor">@pedido.Subtotal.ToString("C")</span>
+                            </div>
+                            <div class="resumen-linea">
+                                <span class="resumen-label">Envío</span>
+                                <span class="resumen-envio-gratis">
+                                    <span class="envio-gratis-badge">GRATIS</span>
+                                </span>
+                            </div>
+                            <div class="resumen-linea">
+                                <span class="resumen-label">IVA (19%)</span>
+                                <span class="resumen-valor">@pedido.Impuesto.ToString("C")</span>
+                            </div>
+                            <div class="resumen-divider"></div>
+                            <div class="resumen-total-linea">
+                                <span class="resumen-total-label">Total</span>
+                                <span class="resumen-total-valor">@pedido.Total.ToString("C")</span>
+                            </div>
+                            <div class="metodo-pago-info">
+                                <div class="metodo-pago-icon">💰</div>
+                                <div>
+                                    <p class="metodo-label">Método de pago</p>
+                                    <p class="metodo-valor">@pedido.MetodoPago</p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                </div>
-                <div class="info-box">
-                    <div class="info-icon">💬</div>
-                    <div class="info-text">
-                        <p><strong>¿Necesitas ayuda?</strong></p>
-                        <p>Contacta a nuestro soporte con tu número de pedido</p>
+
+                    <!-- Info Boxes -->
+                    <div class="info-boxes">
+                        <div class="info-box-modern">
+                            <div class="info-box-icon">📧</div>
+                            <div class="info-box-content">
+                                <h4>Confirmación Enviada</h4>
+                                <p>Revisa <strong>@pedido.CorreoCliente</strong> para más detalles</p>
+                            </div>
+                        </div>
+                        <div class="info-box-modern">
+                            <div class="info-box-icon">⏱️</div>
+                            <div class="info-box-content">
+                                <h4>Tiempo de Entrega</h4>
+                                <p>3-5 días hábiles a partir de hoy</p>
+                            </div>
+                        </div>
+                        <div class="info-box-modern">
+                            <div class="info-box-icon">💬</div>
+                            <div class="info-box-content">
+                                <h4>¿Necesitas Ayuda?</h4>
+                                <p>Contáctanos con tu N° de orden</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Botones de acción -->
-            <div class="acciones">
-                <button class="btn-secondary" @onclick="VerMisPedidos">
-                    Ver Mis Pedidos
+            <!-- Botones de Acción -->
+            <div class="acciones-footer">
+                <button class="btn-action btn-secondary" @onclick="VerMisPedidos">
+                    📋 Ver Mis Pedidos
                 </button>
-                <button class="btn-primary" @onclick="VolverAlCatalogo">
-                    Seguir Comprando
+                <button class="btn-action btn-primary" @onclick="VolverAlCatalogo">
+                    🛍️ Seguir Comprando
                 </button>
             </div>
         </div>
@@ -152,349 +233,767 @@
 </div>
 
 <style>
-    .confirmacion-container {
-        max-width: 900px;
-        margin: 0 auto;
+    /* ==================== VARIABLES ==================== */
+    :root {
+        --primary: #667eea;
+        --primary-dark: #5568d3;
+        --secondary: #764ba2;
+        --success: #10b981;
+        --success-light: #d1fae5;
+        --danger: #ef4444;
+        --warning: #f59e0b;
+        --text-dark: #1f2937;
+        --text-medium: #6b7280;
+        --text-light: #9ca3af;
+        --bg-page: #f3f4f6;
+        --bg-card: #ffffff;
+        --border: #e5e7eb;
+        --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+        --shadow-md: 0 4px 6px rgba(0,0,0,0.07);
+        --shadow-lg: 0 10px 15px rgba(0,0,0,0.1);
+        --shadow-xl: 0 20px 25px rgba(0,0,0,0.15);
+    }
+
+    * {
+        box-sizing: border-box;
+    }
+
+    /* ==================== WRAPPER ==================== */
+    .confirmacion-wrapper {
+        min-height: 100vh;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 40%, #f093fb 100%);
         padding: 40px 20px;
     }
 
-    .loading {
+    /* ==================== ESTADOS DE CARGA Y ERROR ==================== */
+    .loading-state, .error-state {
+        max-width: 600px;
+        margin: 80px auto;
+        background: var(--bg-card);
+        padding: 60px 40px;
+        border-radius: 24px;
         text-align: center;
-        padding: 80px 20px;
+        box-shadow: var(--shadow-xl);
+        animation: fadeInScale 0.5s ease-out;
     }
 
-    .spinner {
+    .loading-animation {
+        margin-bottom: 32px;
+    }
+
+    .spinner-elegant {
         width: 60px;
         height: 60px;
-        border: 6px solid #f3f3f3;
-        border-top: 6px solid #667eea;
+        border: 4px solid var(--border);
+        border-top: 4px solid var(--primary);
         border-radius: 50%;
         animation: spin 1s linear infinite;
         margin: 0 auto 20px;
     }
 
-    @@keyframes spin {
-        0% {
-            transform: rotate(0deg);
-        }
-
-        100% {
-            transform: rotate(360deg);
-        }
-    }
-
-    .error-container {
-        text-align: center;
-        padding: 80px 20px;
-        background: white;
-        border-radius: 16px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    }
-
-    .error-icon {
-        font-size: 80px;
-        margin-bottom: 20px;
-    }
-
-    .confirmacion-exito {
-        text-align: center;
-    }
-
-    .success-icon {
-        width: 100px;
-        height: 100px;
-        border-radius: 50%;
-        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-        color: white;
-        font-size: 60px;
+    .loading-dots {
         display: flex;
-        align-items: center;
         justify-content: center;
-        margin: 0 auto 30px;
-        box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
+        gap: 8px;
     }
 
-    .confirmacion-exito h1 {
-        font-size: 36px;
-        font-weight: 700;
-        color: #1f2937;
-        margin: 0 0 16px 0;
-    }
+        .loading-dots span {
+            width: 12px;
+            height: 12px;
+            background: var(--primary);
+            border-radius: 50%;
+            animation: bounce 1.4s infinite ease-in-out both;
+        }
 
-    .numero-pedido {
-        font-size: 18px;
-        color: #667eea;
-        margin: 0 0 8px 0;
-    }
+            .loading-dots span:nth-child(1) {
+                animation-delay: -0.32s;
+            }
 
-    .mensaje-exito {
+            .loading-dots span:nth-child(2) {
+                animation-delay: -0.16s;
+            }
+
+    .loading-text {
         font-size: 16px;
-        color: #6b7280;
-        margin: 0 0 40px 0;
-    }
-
-    .info-card {
-        background: white;
-        padding: 24px;
-        border-radius: 12px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        margin-bottom: 24px;
-        text-align: left;
-    }
-
-    .info-row {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 12px 0;
-        border-bottom: 1px solid #e5e7eb;
-    }
-
-        .info-row:last-child {
-            border-bottom: none;
-        }
-
-    .label {
-        font-size: 14px;
-        color: #6b7280;
-    }
-
-    .value {
-        font-size: 16px;
-        font-weight: 600;
-        color: #1f2937;
-    }
-
-        .value.total {
-            font-size: 24px;
-            color: #10b981;
-        }
-
-    .badge-estado {
-        padding: 6px 16px;
-        border-radius: 20px;
-        font-size: 13px;
-        font-weight: 600;
-        text-transform: uppercase;
-    }
-
-    .badge-pendiente {
-        background: #fef3c7;
-        color: #92400e;
-    }
-
-    .productos-card {
-        background: white;
-        padding: 24px;
-        border-radius: 12px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        margin-bottom: 24px;
-        text-align: left;
-    }
-
-        .productos-card h3 {
-            font-size: 20px;
-            font-weight: 700;
-            color: #1f2937;
-            margin: 0 0 20px 0;
-        }
-
-    .producto-item {
-        display: grid;
-        grid-template-columns: 80px 1fr auto;
-        gap: 16px;
-        padding: 16px;
-        background: #f9fafb;
-        border-radius: 8px;
-        margin-bottom: 12px;
-    }
-
-        .producto-item:last-child {
-            margin-bottom: 0;
-        }
-
-    .producto-imagen img {
-        width: 80px;
-        height: 80px;
-        object-fit: cover;
-        border-radius: 8px;
-    }
-
-    .placeholder-imagen {
-        width: 80px;
-        height: 80px;
-        background: #e5e7eb;
-        border-radius: 8px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 32px;
-    }
-
-    .producto-info h4 {
-        margin: 0 0 4px 0;
-        font-size: 16px;
-        font-weight: 600;
-        color: #1f2937;
-    }
-
-    .producto-info p {
-        margin: 2px 0;
-        font-size: 14px;
-        color: #6b7280;
-    }
-
-    .producto-info .variante {
-        color: #667eea;
+        color: var(--text-medium);
         font-weight: 500;
     }
 
-    .producto-precio {
-        font-size: 18px;
+    .error-animation {
+        font-size: 80px;
+        margin-bottom: 24px;
+        animation: shake 0.5s;
+    }
+
+    .error-state h2 {
+        font-size: 28px;
         font-weight: 700;
-        color: #667eea;
+        color: var(--text-dark);
+        margin: 0 0 12px 0;
+    }
+
+    .error-message {
+        font-size: 16px;
+        color: var(--text-medium);
+        margin: 0 0 32px 0;
+    }
+
+    /* ==================== CONFIRMACIÓN CONTENT ==================== */
+    .confirmacion-content {
+        max-width: 1200px;
+        margin: 0 auto;
+        animation: fadeInUp 0.6s ease-out;
+    }
+
+    /* ==================== SUCCESS HEADER ==================== */
+    .success-header {
+        background: var(--bg-card);
+        border-radius: 24px;
+        padding: 48px 32px;
+        text-align: center;
+        margin-bottom: 32px;
+        box-shadow: var(--shadow-xl);
+    }
+
+    .success-animation {
+        margin-bottom: 24px;
+    }
+
+    .checkmark-circle {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--success) 0%, #059669 100%);
         display: flex;
         align-items: center;
+        justify-content: center;
+        margin: 0 auto;
+        box-shadow: 0 10px 30px rgba(16, 185, 129, 0.3);
+        animation: scaleIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
 
-    .envio-card {
-        background: white;
-        padding: 24px;
-        border-radius: 12px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        margin-bottom: 24px;
-        text-align: left;
+    .checkmark {
+        width: 50px;
+        height: 30px;
+        border-bottom: 6px solid white;
+        border-right: 6px solid white;
+        transform: rotate(45deg);
+        animation: drawCheck 0.5s 0.3s ease-out forwards;
+        opacity: 0;
     }
 
-        .envio-card h3 {
-            font-size: 20px;
+    .success-title {
+        font-size: 42px;
+        font-weight: 800;
+        background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin: 0 0 16px 0;
+    }
+
+    .pedido-numero {
+        font-size: 18px;
+        color: var(--text-medium);
+        margin: 0 0 12px 0;
+    }
+
+        .pedido-numero strong {
+            color: var(--primary);
             font-weight: 700;
-            color: #1f2937;
-            margin: 0 0 16px 0;
         }
 
-    .envio-info p {
-        margin: 4px 0;
-        font-size: 14px;
-        color: #6b7280;
+    .success-message {
+        font-size: 16px;
+        color: var(--text-medium);
+        margin: 0;
     }
 
-    .resumen-pago {
-        background: white;
-        padding: 24px;
-        border-radius: 12px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        margin-bottom: 24px;
-        text-align: left;
-    }
-
-        .resumen-pago h3 {
-            font-size: 20px;
-            font-weight: 700;
-            color: #1f2937;
-            margin: 0 0 16px 0;
-        }
-
-    .resumen-linea {
-        display: flex;
-        justify-content: space-between;
-        margin: 8px 0;
-        font-size: 14px;
-        color: #6b7280;
-    }
-
-    .envio-gratis {
-        color: #10b981;
-        font-weight: 600;
-    }
-
-    .resumen-divider {
-        height: 1px;
-        background: #e5e7eb;
-        margin: 16px 0;
-    }
-
-    .resumen-total {
-        display: flex;
-        justify-content: space-between;
-        font-size: 20px;
-        font-weight: 700;
-        color: #1f2937;
-        margin-bottom: 16px;
-    }
-
-    .metodo-pago {
-        text-align: center;
-        padding: 12px;
-        background: #f9fafb;
-        border-radius: 8px;
-        font-size: 14px;
-        color: #6b7280;
-    }
-
-    .info-adicional {
+    /* ==================== TIMELINE ==================== */
+    .timeline-container {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
         gap: 16px;
         margin-bottom: 32px;
     }
 
-    .info-box {
+    .timeline-item {
+        background: var(--bg-card);
+        padding: 24px;
+        border-radius: 16px;
+        text-align: center;
+        box-shadow: var(--shadow-md);
+        transition: all 0.3s;
+        position: relative;
+    }
+
+        .timeline-item.completado {
+            background: linear-gradient(135deg, var(--success-light) 0%, #f0fdf4 100%);
+            border: 2px solid var(--success);
+        }
+
+        .timeline-item:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+        }
+
+    .timeline-icon {
+        font-size: 36px;
+        margin-bottom: 12px;
+    }
+
+    .timeline-content h4 {
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--text-dark);
+        margin: 0 0 6px 0;
+    }
+
+    .timeline-content p {
+        font-size: 13px;
+        color: var(--text-medium);
+        margin: 0;
+    }
+
+    /* ==================== DETAILS GRID ==================== */
+    .details-grid {
+        display: grid;
+        grid-template-columns: 1fr 400px;
+        gap: 32px;
+        margin-bottom: 32px;
+    }
+
+    .left-column {
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+    }
+
+    .right-column {
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+    }
+
+    /* ==================== SECTION CARDS ==================== */
+    .section-card {
+        background: var(--bg-card);
+        border-radius: 20px;
+        padding: 28px;
+        box-shadow: var(--shadow-lg);
+        transition: all 0.3s;
+    }
+
+        .section-card:hover {
+            box-shadow: var(--shadow-xl);
+        }
+
+    .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+        padding-bottom: 16px;
+        border-bottom: 2px solid var(--border);
+    }
+
+        .section-header h3 {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin: 0;
+        }
+
+    .badge-cantidad {
+        padding: 6px 14px;
+        background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+        color: white;
+        border-radius: 20px;
+        font-size: 13px;
+        font-weight: 700;
+    }
+
+    /* ==================== PRODUCTOS ==================== */
+    .productos-list {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .producto-item-modern {
+        display: grid;
+        grid-template-columns: 100px 1fr auto;
+        gap: 20px;
+        padding: 16px;
+        background: var(--bg-page);
+        border-radius: 16px;
+        transition: all 0.3s;
+    }
+
+        .producto-item-modern:hover {
+            background: #f9fafb;
+            transform: translateX(4px);
+        }
+
+    .producto-imagen-wrapper {
+        width: 100px;
+        height: 100px;
+        border-radius: 12px;
+        overflow: hidden;
+        background: white;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .producto-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .producto-placeholder {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 40px;
+        background: var(--border);
+    }
+
+    .producto-detalles {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        justify-content: center;
+    }
+
+    .producto-nombre {
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--text-dark);
+        margin: 0;
+    }
+
+    .producto-marca {
+        font-size: 13px;
+        color: var(--primary);
+        font-weight: 600;
+        margin: 0;
+    }
+
+    .producto-variantes {
+        display: flex;
+        gap: 8px;
+        margin: 4px 0;
+    }
+
+    .variante-tag {
+        padding: 4px 10px;
+        background: white;
+        color: var(--text-medium);
+        border-radius: 8px;
+        font-size: 12px;
+        font-weight: 500;
+        border: 1px solid var(--border);
+    }
+
+    .producto-cantidad-texto {
+        font-size: 13px;
+        color: var(--text-medium);
+        margin: 0;
+    }
+
+    .producto-precio-section {
+        display: flex;
+        align-items: center;
+    }
+
+    .producto-precio-total {
+        font-size: 20px;
+        font-weight: 800;
+        background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin: 0;
+    }
+
+    /* ==================== ENVÍO ==================== */
+    .envio-detalles {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .envio-grupo {
+        display: flex;
+        gap: 16px;
+        padding: 16px;
+        background: var(--bg-page);
+        border-radius: 12px;
+    }
+
+    .envio-icon {
+        font-size: 28px;
+        flex-shrink: 0;
+    }
+
+    .envio-label {
+        font-size: 12px;
+        color: var(--text-light);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        font-weight: 600;
+        margin: 0 0 4px 0;
+    }
+
+    .envio-valor {
+        font-size: 15px;
+        color: var(--text-dark);
+        font-weight: 600;
+        margin: 0;
+    }
+
+    .envio-valor-secundario {
+        font-size: 14px;
+        color: var(--text-medium);
+        margin: 2px 0 0 0;
+    }
+
+    /* ==================== RESUMEN ==================== */
+    .sticky {
+        position: sticky;
+        top: 24px;
+    }
+
+    .resumen-contenido {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .resumen-linea {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 15px;
+    }
+
+    .resumen-label {
+        color: var(--text-medium);
+    }
+
+    .resumen-valor {
+        font-weight: 600;
+        color: var(--text-dark);
+    }
+
+    .envio-gratis-badge {
+        padding: 4px 12px;
+        background: linear-gradient(135deg, var(--success) 0%, #059669 100%);
+        color: white;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+    }
+
+    .resumen-divider {
+        height: 2px;
+        background: linear-gradient(to right, transparent, var(--border), transparent);
+        margin: 8px 0;
+    }
+
+    .resumen-total-linea {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 16px;
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+        border-radius: 12px;
+    }
+
+    .resumen-total-label {
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--text-dark);
+    }
+
+    .resumen-total-valor {
+        font-size: 28px;
+        font-weight: 800;
+        background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .metodo-pago-info {
+        display: flex;
+        gap: 16px;
+        align-items: center;
+        padding: 16px;
+        background: var(--bg-page);
+        border-radius: 12px;
+        margin-top: 8px;
+    }
+
+    .metodo-pago-icon {
+        font-size: 28px;
+    }
+
+    .metodo-label {
+        font-size: 12px;
+        color: var(--text-light);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin: 0 0 4px 0;
+    }
+
+    .metodo-valor {
+        font-size: 15px;
+        color: var(--text-dark);
+        font-weight: 700;
+        margin: 0;
+    }
+
+    /* ==================== INFO BOXES ==================== */
+    .info-boxes {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .info-box-modern {
         display: flex;
         gap: 16px;
         padding: 20px;
-        background: #f0f9ff;
-        border: 1px solid #bae6fd;
-        border-radius: 12px;
-        text-align: left;
+        background: var(--bg-card);
+        border: 2px solid var(--border);
+        border-radius: 16px;
+        transition: all 0.3s;
+        box-shadow: var(--shadow-sm);
     }
 
-    .info-icon {
+        .info-box-modern:hover {
+            border-color: var(--primary);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+    .info-box-icon {
         font-size: 32px;
         flex-shrink: 0;
     }
 
-    .info-text p {
-        margin: 4px 0;
-        font-size: 14px;
-        color: #0c4a6e;
+    .info-box-content h4 {
+        font-size: 15px;
+        font-weight: 700;
+        color: var(--text-dark);
+        margin: 0 0 6px 0;
     }
 
-    .acciones {
+    .info-box-content p {
+        font-size: 13px;
+        color: var(--text-medium);
+        margin: 0;
+        line-height: 1.5;
+    }
+
+    /* ==================== ACCIONES FOOTER ==================== */
+    .acciones-footer {
         display: flex;
         gap: 16px;
         justify-content: center;
+        flex-wrap: wrap;
     }
 
-    .btn-primary, .btn-secondary {
-        padding: 14px 32px;
-        border-radius: 8px;
+    .btn-action {
+        padding: 16px 32px;
+        border-radius: 12px;
         font-size: 16px;
-        font-weight: 600;
+        font-weight: 700;
         cursor: pointer;
         transition: all 0.3s;
         border: none;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        box-shadow: var(--shadow-md);
     }
 
     .btn-primary {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
         color: white;
     }
 
         .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-xl);
         }
 
     .btn-secondary {
-        background: white;
-        color: #667eea;
-        border: 2px solid #667eea;
+        background: var(--bg-card);
+        color: var(--primary);
+        border: 2px solid var(--primary);
     }
 
         .btn-secondary:hover {
-            background: #f0f3ff;
+            background: var(--primary);
+            color: white;
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-xl);
         }
+
+    /* ==================== ANIMACIONES ==================== */
+    @@keyframes fadeInScale {
+        from {
+            opacity: 0;
+            transform: scale(0.9);
+        }
+
+        to {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+
+    @@keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @@keyframes spin {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    @@keyframes bounce {
+        0%, 80%, 100% {
+            transform: scale(0);
+        }
+
+        40% {
+            transform: scale(1);
+        }
+    }
+
+    @@keyframes shake {
+        0%, 100% {
+            transform: translateX(0);
+        }
+
+        10%, 30%, 50%, 70%, 90% {
+            transform: translateX(-10px);
+        }
+
+        20%, 40%, 60%, 80% {
+            transform: translateX(10px);
+        }
+    }
+
+    @@keyframes scaleIn {
+        from {
+            transform: scale(0);
+        }
+
+        to {
+            transform: scale(1);
+        }
+    }
+
+    @@keyframes drawCheck {
+        to {
+            opacity: 1;
+        }
+    }
+
+    /* ==================== RESPONSIVE ==================== */
+    @@media (max-width: 1024px) {
+        .details-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .sticky {
+            position: static;
+        }
+
+        .timeline-container {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @@media (max-width: 768px) {
+        .confirmacion-wrapper {
+            padding: 24px 16px;
+        }
+
+        .success-header {
+            padding: 32px 24px;
+        }
+
+        .success-title {
+            font-size: 32px;
+        }
+
+        .checkmark-circle {
+            width: 80px;
+            height: 80px;
+        }
+
+        .section-card {
+            padding: 20px;
+        }
+
+        .producto-item-modern {
+            grid-template-columns: 80px 1fr;
+            gap: 16px;
+        }
+
+        .producto-precio-section {
+            grid-column: 1 / -1;
+            justify-content: flex-start;
+            padding-top: 12px;
+            border-top: 1px solid var(--border);
+        }
+
+        .timeline-container {
+            grid-template-columns: 1fr;
+        }
+
+        .acciones-footer {
+            flex-direction: column;
+        }
+
+        .btn-action {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+
+    @@media (max-width: 480px) {
+        .success-title {
+            font-size: 26px;
+        }
+
+        .pedido-numero {
+            font-size: 16px;
+        }
+
+        .producto-imagen-wrapper {
+            width: 70px;
+            height: 70px;
+        }
+
+        .producto-item-modern {
+            grid-template-columns: 70px 1fr;
+        }
+    }
 </style>
 
 @code {
@@ -551,7 +1050,6 @@
 
     private void VerMisPedidos()
     {
-        // Redirigir a la página de mis pedidos
         Navigation.NavigateTo("/mis-pedidos");
     }
 
@@ -560,4 +1058,3 @@
         Navigation.NavigateTo("/ClienteCatalogo");
     }
 }
-

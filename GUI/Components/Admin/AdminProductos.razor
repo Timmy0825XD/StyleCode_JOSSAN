@@ -1,6 +1,7 @@
 ﻿@page "/AdminProductos"
 @using ENTITY.Articulos
 @using BLL.Interfaces
+@using ENTITY.Utilidades
 @inject IArticuloServices ArticuloService
 @inject ICategoriaServices CategoriaService
 
@@ -23,13 +24,9 @@
                        @bind="searchText"
                        @bind:event="oninput" />
             </div>
-            <button class="btn-secondary">
+            <button class="btn-secondary" @onclick="AbrirModalFiltros">
                 <span>🔽</span>
                 Filtros
-            </button>
-            <button class="btn-secondary" @onclick="ExportarProductos">
-                <span>📥</span>
-                Exportar
             </button>
         </div>
 
@@ -88,13 +85,10 @@
                                 </td>
                                 <td>
                                     <div class="action-buttons">
-                                        <button class="btn-action btn-view" @onclick="() => VerProducto(product.IdArticulo)" title="Ver">
-                                            <span>👁️</span>
-                                        </button>
                                         <button class="btn-action btn-edit" @onclick="() => EditarProducto(product.IdArticulo)" title="Editar">
                                             <span>✏️</span>
                                         </button>
-                                        <button class="btn-action btn-delete" @onclick="() => EliminarProducto(product.IdArticulo)" title="Eliminar">
+                                        <button class="btn-action btn-delete" @onclick="() => ConfirmarEliminarProducto(product.IdArticulo, product.Nombre)" title="Eliminar">
                                             <span>🗑️</span>
                                         </button>
                                     </div>
@@ -116,12 +110,134 @@
     </div>
 </div>
 
+@* MODAL DE FILTROS *@
+@if (mostrarModalFiltros)
+{
+    <div class="modal-overlay" @onclick="CerrarModalFiltros">
+        <div class="modal-content modal-medium" @onclick:stopPropagation>
+            <div class="modal-header">
+                <h3>Filtros Avanzados</h3>
+                <button class="btn-close" @onclick="CerrarModalFiltros">✕</button>
+            </div>
+
+            <div class="modal-body">
+                <div class="form-section">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Categoría Tipo</label>
+                            <select class="form-select" @bind="filtroCategoriaTipo">
+                                <option value="">Todas</option>
+                                @foreach (var cat in categoriasTipo)
+                                {
+                                    <option value="@cat.Nombre">@cat.Nombre</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Categoría Ocasión</label>
+                            <select class="form-select" @bind="filtroCategoriaOcasion">
+                                <option value="">Todas</option>
+                                @foreach (var cat in categoriasOcasion)
+                                {
+                                    <option value="@cat.Nombre">@cat.Nombre</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Género</label>
+                            <select class="form-select" @bind="filtroGenero">
+                                <option value="">Todos</option>
+                                <option value="Hombre">Hombre</option>
+                                <option value="Mujer">Mujer</option>
+                                <option value="Unisex">Unisex</option>
+                                <option value="Niño">Niño</option>
+                                <option value="Niña">Niña</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Estado</label>
+                            <select class="form-select" @bind="filtroEstado">
+                                <option value="">Todos</option>
+                                <option value="A">Activo</option>
+                                <option value="I">Inactivo</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Precio Mínimo</label>
+                            <input type="number" class="form-input" @bind="filtroPrecioMin" min="0" step="0.01" placeholder="0.00" />
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Precio Máximo</label>
+                            <input type="number" class="form-input" @bind="filtroPrecioMax" min="0" step="0.01" placeholder="0.00" />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn-modal-back" @onclick="LimpiarFiltros">
+                        Limpiar Filtros
+                    </button>
+                    <button type="button" class="btn-modal-save" @onclick="AplicarFiltros">
+                        Aplicar Filtros
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@* MODAL DE CONFIRMACIÓN DE ELIMINACIÓN *@
+@if (mostrarModalConfirmacion)
+{
+    <div class="modal-overlay" @onclick="CerrarModalConfirmacion">
+        <div class="modal-content modal-small" @onclick:stopPropagation>
+            <div class="modal-header">
+                <h3>⚠️ Confirmar Eliminación</h3>
+                <button class="btn-close" @onclick="CerrarModalConfirmacion">✕</button>
+            </div>
+
+            <div class="modal-body">
+                <p style="margin-bottom: 20px; text-align: center;">
+                    ¿Estás seguro de que deseas eliminar el producto<br />
+                    <strong>"@nombreProductoAEliminar"</strong>?
+                </p>
+                <p style="text-align: center; color: #ef4444; font-size: 14px;">
+                    Esta acción no se puede deshacer.
+                </p>
+
+                <div class="modal-actions" style="margin-top: 24px;">
+                    <button type="button" class="btn-modal-back" @onclick="CerrarModalConfirmacion">
+                        Cancelar
+                    </button>
+                    <button type="button" class="btn-delete-confirm" @onclick="EliminarProductoConfirmado" disabled="@eliminandoProducto">
+                        @if (eliminandoProducto)
+                        {
+                            <span>Eliminando...</span>
+                        }
+                        else
+                        {
+                            <span>🗑️ Eliminar</span>
+                        }
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@* MODAL DE PRODUCTO (CREAR/EDITAR) *@
 @if (mostrarModal)
 {
     <div class="modal-overlay" @onclick="CerrarModal">
         <div class="modal-content modal-large" @onclick:stopPropagation>
             <div class="modal-header">
-                <h3>@(productoEditando != null ? "Editar Producto" : "Nuevo Producto")</h3>
+                <h3>@(idProductoEditando.HasValue ? "Editar Producto" : "Nuevo Producto")</h3>
                 <button class="btn-close" @onclick="CerrarModal">✕</button>
             </div>
 
@@ -361,15 +477,30 @@
     private string searchText = "";
     private List<ArticuloListaDTO> products = new();
     private bool mostrarModal = false;
+    private bool mostrarModalFiltros = false;
+    private bool mostrarModalConfirmacion = false;
     private int pasoModal = 1;
     private ArticuloCreacionDTO nuevoProducto = new();
-    private ArticuloListaDTO? productoEditando = null;
+    private int? idProductoEditando = null;
     private bool guardandoProducto = false;
+    private bool eliminandoProducto = false;
     private string mensajeErrorModal = "";
     private bool cargando = true;
 
     private List<CategoriaTipoDTO> categoriasTipo = new();
     private List<CategoriaOcasionDTO> categoriasOcasion = new();
+
+    // Filtros avanzados
+    private string filtroCategoriaTipo = "";
+    private string filtroCategoriaOcasion = "";
+    private string filtroGenero = "";
+    private string filtroEstado = "";
+    private decimal? filtroPrecioMin = null;
+    private decimal? filtroPrecioMax = null;
+
+    // Confirmación de eliminación
+    private int? idProductoAEliminar = null;
+    private string nombreProductoAEliminar = "";
 
     protected override async Task OnInitializedAsync()
     {
@@ -434,25 +565,143 @@
     {
         get
         {
-            if (string.IsNullOrWhiteSpace(searchText))
-                return products;
+            var resultado = products.AsEnumerable();
 
-            return products.Where(p =>
-                p.Nombre.Contains(searchText, StringComparison.OrdinalIgnoreCase) ||
-                p.CategoriaTipo.Contains(searchText, StringComparison.OrdinalIgnoreCase) ||
-                p.Marca.Contains(searchText, StringComparison.OrdinalIgnoreCase)
-            );
+            // Filtro de búsqueda por texto
+            if (!string.IsNullOrWhiteSpace(searchText))
+            {
+                resultado = resultado.Where(p =>
+                    p.Nombre.Contains(searchText, StringComparison.OrdinalIgnoreCase) ||
+                    p.CategoriaTipo.Contains(searchText, StringComparison.OrdinalIgnoreCase) ||
+                    p.Marca.Contains(searchText, StringComparison.OrdinalIgnoreCase)
+                );
+            }
+
+            // Filtros avanzados
+            if (!string.IsNullOrWhiteSpace(filtroCategoriaTipo))
+            {
+                resultado = resultado.Where(p => p.CategoriaTipo == filtroCategoriaTipo);
+            }
+
+            if (!string.IsNullOrWhiteSpace(filtroCategoriaOcasion))
+            {
+                resultado = resultado.Where(p => p.CategoriaOcasion == filtroCategoriaOcasion);
+            }
+
+            if (!string.IsNullOrWhiteSpace(filtroGenero))
+            {
+                resultado = resultado.Where(p => p.Genero == filtroGenero);
+            }
+
+            if (!string.IsNullOrWhiteSpace(filtroEstado))
+            {
+                resultado = resultado.Where(p => p.Estado == filtroEstado);
+            }
+
+            if (filtroPrecioMin.HasValue)
+            {
+                resultado = resultado.Where(p => p.PrecioBase >= filtroPrecioMin.Value);
+            }
+
+            if (filtroPrecioMax.HasValue)
+            {
+                resultado = resultado.Where(p => p.PrecioBase <= filtroPrecioMax.Value);
+            }
+
+            return resultado;
         }
     }
 
-    // Modal Methods
+    // ========================================
+    // MODAL DE FILTROS
+    // ========================================
+    private void AbrirModalFiltros()
+    {
+        mostrarModalFiltros = true;
+    }
+
+    private void CerrarModalFiltros()
+    {
+        mostrarModalFiltros = false;
+    }
+
+    private void AplicarFiltros()
+    {
+        CerrarModalFiltros();
+    }
+
+    private void LimpiarFiltros()
+    {
+        filtroCategoriaTipo = "";
+        filtroCategoriaOcasion = "";
+        filtroGenero = "";
+        filtroEstado = "";
+        filtroPrecioMin = null;
+        filtroPrecioMax = null;
+    }
+
+    // ========================================
+    // MODAL DE PRODUCTO (CREAR/EDITAR)
+    // ========================================
     private void AbrirModalNuevoProducto()
     {
         nuevoProducto = new ArticuloCreacionDTO();
-        productoEditando = null;
+        idProductoEditando = null;
         pasoModal = 1;
         mensajeErrorModal = "";
         mostrarModal = true;
+    }
+
+    private async Task EditarProducto(int id)
+    {
+        try
+        {
+            cargando = true;
+            var resultado = await ArticuloService.ObtenerArticuloPorId(id);
+
+            if (resultado.IsSuccess && resultado.Object != null)
+            {
+                var detalle = resultado.Object;
+
+                // Convertir ArticuloDetalleDTO a ArticuloCreacionDTO
+                nuevoProducto = new ArticuloCreacionDTO
+                {
+                    Nombre = detalle.Nombre,
+                    Descripcion = detalle.Descripcion,
+                    Marca = detalle.Marca,
+                    Genero = detalle.Genero,
+                    Material = detalle.Material,
+                    PrecioBase = detalle.PrecioBase,
+                    CategoriaTipoId = detalle.CategoriaTipoId,
+                    CategoriaOcasionId = detalle.CategoriaOcasionId,
+                    Estado = detalle.Estado[0],
+                    Variantes = detalle.Variantes.Select(v => new VarianteArticuloDTO
+                    {
+                        Talla = v.Talla,
+                        Color = v.Color,
+                        Stock = v.Stock
+                    }).ToList(),
+                    Imagenes = detalle.Imagenes.ToList()
+                };
+
+                idProductoEditando = id;
+                pasoModal = 1;
+                mensajeErrorModal = "";
+                mostrarModal = true;
+            }
+            else
+            {
+                Console.WriteLine($"Error al cargar producto: {resultado.Message}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al editar producto: {ex.Message}");
+        }
+        finally
+        {
+            cargando = false;
+        }
     }
 
     private void CerrarModal()
@@ -460,6 +709,7 @@
         mostrarModal = false;
         pasoModal = 1;
         nuevoProducto = new();
+        idProductoEditando = null;
         mensajeErrorModal = "";
     }
 
@@ -533,7 +783,7 @@
     {
         nuevoProducto.Variantes.Add(new VarianteArticuloDTO
         {
-            Talla = "", 
+            Talla = "",
             Color = "",
             Stock = 0
         });
@@ -546,12 +796,12 @@
 
     private void SeleccionarImagenes()
     {
-        // ✅ URLs reales de tus imágenes en wwwroot/img/ropa
+        // URLs reales de tus imágenes en wwwroot/img/ropa
         var urlsImagenes = new[] {
-        "/img/ropa/Camisa1.png",
-        "/img/ropa/Camisa2.png",
-        "/img/ropa/Camisa3.png"
-    };
+            "/img/ropa/Camisa1.png",
+            "/img/ropa/Camisa2.png",
+            "/img/ropa/Camisa3.png"
+        };
 
         foreach (var url in urlsImagenes)
         {
@@ -577,16 +827,11 @@
 
     private void MarcarComoPrincipal(int index)
     {
-        // ✅ La imagen seleccionada se convierte en orden 1
         var imagenSeleccionada = nuevoProducto.Imagenes[index];
 
-        // Remover la imagen de su posición actual
         nuevoProducto.Imagenes.RemoveAt(index);
-
-        // Insertarla al inicio
         nuevoProducto.Imagenes.Insert(0, imagenSeleccionada);
 
-        // Reordenar todas las imágenes
         for (int i = 0; i < nuevoProducto.Imagenes.Count; i++)
         {
             nuevoProducto.Imagenes[i].Orden = i + 1;
@@ -607,18 +852,52 @@
         try
         {
             guardandoProducto = true;
-            
-            var resultado = await ArticuloService.RegistrarArticuloCompleto(nuevoProducto);
 
-            if (resultado.IsSuccess)
+            Response<int> resultado;
+
+            if (idProductoEditando.HasValue)
             {
-                Console.WriteLine($"Producto guardado con ID: {resultado.Object}");
-                await CargarProductos();
-                CerrarModal();
+                // ACTUALIZAR producto existente
+                var actualizacion = new ArticuloActualizacionDTO
+                {
+                    IdArticulo = idProductoEditando.Value,
+                    Nombre = nuevoProducto.Nombre,
+                    Descripcion = nuevoProducto.Descripcion,
+                    Marca = nuevoProducto.Marca,
+                    Genero = nuevoProducto.Genero,
+                    Material = nuevoProducto.Material,
+                    PrecioBase = nuevoProducto.PrecioBase,
+                    Estado = nuevoProducto.Estado
+                };
+
+                var resultadoActualizacion = await ArticuloService.ActualizarArticulo(actualizacion);
+
+                if (resultadoActualizacion.IsSuccess)
+                {
+                    Console.WriteLine($"Producto actualizado: {idProductoEditando.Value}");
+                    await CargarProductos();
+                    CerrarModal();
+                }
+                else
+                {
+                    mensajeErrorModal = resultadoActualizacion.Message;
+                }
             }
             else
             {
-                mensajeErrorModal = resultado.Message;
+                // CREAR nuevo producto
+                resultado = await ArticuloService.RegistrarArticuloCompleto(nuevoProducto);
+
+                if (resultado.IsSuccess)
+                {
+                    Console.WriteLine($"Producto guardado con ID: {resultado.Object}");
+                    await CargarProductos();
+                    CerrarModal();
+                }
+                else
+                {
+                    mensajeErrorModal = resultado.Message;
+                }
             }
         }
         catch (Exception ex)
@@ -631,28 +910,37 @@
         }
     }
 
-    // Product Actions
-    private async Task VerProducto(int id)
+    // ========================================
+    // ELIMINAR PRODUCTO
+    // ========================================
+    private void ConfirmarEliminarProducto(int id, string nombre)
     {
-        Console.WriteLine($"Ver producto: {id}");
-        // Aquí podrías abrir un modal de detalle
+        idProductoAEliminar = id;
+        nombreProductoAEliminar = nombre;
+        mostrarModalConfirmacion = true;
     }
 
-    private void EditarProducto(int id)
+    private void CerrarModalConfirmacion()
     {
-        Console.WriteLine($"Editar producto: {id}");
-        // Cargar producto y abrir modal
+        mostrarModalConfirmacion = false;
+        idProductoAEliminar = null;
+        nombreProductoAEliminar = "";
     }
 
-    private async Task EliminarProducto(int id)
+    private async Task EliminarProductoConfirmado()
     {
+        if (!idProductoAEliminar.HasValue) return;
+
         try
         {
-            var resultado = await ArticuloService.EliminarArticulo(id);
+            eliminandoProducto = true;
+            var resultado = await ArticuloService.EliminarArticulo(idProductoAEliminar.Value);
 
             if (resultado.IsSuccess)
             {
+                Console.WriteLine($"Producto eliminado: {idProductoAEliminar.Value}");
                 await CargarProductos();
+                CerrarModalConfirmacion();
             }
             else
             {
@@ -663,13 +951,15 @@
         {
             Console.WriteLine($"Error: {ex.Message}");
         }
+        finally
+        {
+            eliminandoProducto = false;
+        }
     }
 
-    private void ExportarProductos()
-    {
-        Console.WriteLine("Exportar productos");
-    }
-
+    // ========================================
+    // UTILIDADES
+    // ========================================
     private string GetVariantesClass(int total)
     {
         return total > 0 ? "stock-normal" : "stock-low";

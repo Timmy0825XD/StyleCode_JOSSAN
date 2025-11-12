@@ -71,11 +71,10 @@
 
                                 <td class="user-info">
                                     <div class="user-avatar">
-                                        @GetIniciales(usuario.NombreCompleto)
+                                        @GetIniciales(usuario.ObtenerNombreCompleto())
                                     </div>
                                     <div class="user-details">
-                                        <div style="font-weight: 600; color: #1f2937;"> @usuario.NombreCompleto</div>
-                                        <div style="font-size: 12px;color: #9ca3af;">Cédula: @usuario.Cedula</div>
+                                        <div style="font-weight: 600; color: #1f2937;">@usuario.ObtenerNombreCompleto()</div>
                                     </div>
                                 </td>
 
@@ -113,19 +112,7 @@
 </div>
 
 @code {
-    // Modelo interno para la vista
-    public class UsuarioVista
-    {
-        public int Id { get; set; }
-        public string NombreCompleto { get; set; }
-        public string Correo { get; set; }
-        public string Cedula { get; set; }
-        public string TelefonoPrincipal { get; set; }
-        public string Estado { get; set; }
-        public DateTime FechaRegistro { get; set; }
-    }
-
-    private List<UsuarioVista> usuarios = new();
+    private List<UsuarioDTO> usuarios = new();
     private string searchTerm = "";
     private string filterEstado = "";
     private bool cargando = true;
@@ -137,61 +124,35 @@
 
     private async Task CargarUsuarios()
     {
-        try
-        {
-            cargando = true;
-            var resultado = await UsuarioService.ObtenerTodosLosUsuarios();
+        cargando = true;
+        var resultado = await UsuarioService.ObtenerTodosLosUsuarios();
 
-            if (resultado.IsSuccess && resultado.ListObject != null)
-            {
-                // Mapear los DTOs a nuestro modelo de vista
-                usuarios = resultado.ListObject.Select(u => new UsuarioVista
-                {
-                    Id = u.Id,
-                    NombreCompleto = $"{u.PrimerNombre} {u.SegundoNombre} {u.ApellidoPaterno} {u.ApellidoMaterno}".Replace("  ", " ").Trim(),
-                    Correo = u.Correo,
-                    Cedula = u.Cedula,
-                    TelefonoPrincipal = u.TelefonoPrincipal,
-                    Estado = u.Estado,
-                    FechaRegistro = u.FechaRegistro
-                }).ToList();
-            }
-            else
-            {
-                Console.WriteLine($"Error al cargar usuarios: {resultado.Message}");
-            }
-        }
-        catch (Exception ex)
+        if (resultado.IsSuccess)
         {
-            Console.WriteLine($"Error al cargar usuarios: {ex.Message}");
+            usuarios = resultado.ListObject.ToList();
         }
-        finally
-        {
-            cargando = false;
-        }
+
+        cargando = false;
     }
 
-    private IEnumerable<UsuarioVista> UsuariosFiltrados
+    private IEnumerable<UsuarioDTO> UsuariosFiltrados
     {
         get
         {
             var resultado = usuarios.AsEnumerable();
-
             if (!string.IsNullOrWhiteSpace(searchTerm))
             {
                 resultado = resultado.Where(u =>
-                    u.NombreCompleto.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
-                    u.Correo.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
-                    u.Cedula.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
-                    u.TelefonoPrincipal.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)
+                    (u.ObtenerNombreCompleto() ?? "").Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                    (u.Correo ?? "").Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                    (u.Cedula ?? "").Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                    (u.TelefonoPrincipal ?? "").Contains(searchTerm, StringComparison.OrdinalIgnoreCase)
                 );
             }
-
             if (!string.IsNullOrWhiteSpace(filterEstado))
             {
                 resultado = resultado.Where(u => u.Estado == filterEstado);
             }
-
             return resultado.OrderByDescending(u => u.FechaRegistro);
         }
     }
@@ -199,41 +160,19 @@
     private string GetIniciales(string nombreCompleto)
     {
         var palabras = nombreCompleto.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+
         if (palabras.Length >= 2)
-        {
             return $"{palabras[0][0]}{palabras[1][0]}".ToUpper();
-        }
+
         return palabras[0].Substring(0, Math.Min(2, palabras[0].Length)).ToUpper();
     }
 
-    private async Task CambiarEstado(UsuarioVista usuario)
+    private async Task CambiarEstado(UsuarioDTO usuario)
     {
-        try
-        {
-            // Cambiar el estado localmente
-            usuario.Estado = usuario.Estado == "A" ? "I" : "A";
-
-            // Aquí podrías llamar al servicio para actualizar en BD
-            // await UsuarioService.ActualizarUsuario(...);
-
-            Console.WriteLine($"Usuario {usuario.NombreCompleto} - Estado cambiado a: {GetEstadoText(usuario.Estado)}");
-            StateHasChanged();
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error al cambiar estado: {ex.Message}");
-            // Revertir el cambio si hay error
-            usuario.Estado = usuario.Estado == "A" ? "I" : "A";
-        }
+        usuario.Estado = usuario.Estado == "A" ? "I" : "A";
+        StateHasChanged();
     }
 
-    private string GetStatusClass(string estado)
-    {
-        return estado == "A" ? "activo" : "inactivo";
-    }
-
-    private string GetEstadoText(string estado)
-    {
-        return estado == "A" ? "Activo" : "Inactivo";
-    }
+    private string GetStatusClass(string estado) => estado == "A" ? "activo" : "inactivo";
+    private string GetEstadoText(string estado) => estado == "A" ? "Activo" : "Inactivo";
 }

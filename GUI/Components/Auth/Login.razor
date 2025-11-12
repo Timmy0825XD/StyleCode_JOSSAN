@@ -75,21 +75,17 @@
 
         try
         {
-            // Crear el DTO de request
             var loginRequest = new LoginRequestDTO
             {
                 Correo = email,
                 Contrasena = password
             };
 
-            // Llamar al servicio de login (ahora se llama Login, no LoginUsuarioAsync)
             var resultado = await UsuarioService.Login(loginRequest);
             Console.WriteLine(resultado.Message);
 
             if (resultado.IsSuccess)
             {
-                // Redirigir según el rol
-                // IdRol = 1 -> Admin, IdRol = 2 -> Cliente
                 if (resultado.Object.IdRol == 1)
                 {
                     NavigationManager.NavigateTo("/AdminDashboard");

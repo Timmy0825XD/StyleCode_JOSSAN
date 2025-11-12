@@ -275,7 +275,7 @@
     private async Task CargarCiudades()
     {
         cargandoCiudades = true;
-        mensajeError = ""; // Limpiar mensajes previos
+        mensajeError = "";
 
         try
         {
@@ -283,7 +283,6 @@
 
             if (resultado.IsSuccess)
             {
-                // Usar ListObject que es como se llama en tu Response
                 if (resultado.ListObject != null && resultado.ListObject.Count > 0)
                 {
                     ciudades = resultado.ListObject.ToList();
@@ -310,7 +309,7 @@
         finally
         {
             cargandoCiudades = false;
-            StateHasChanged(); // Forzar actualización de la UI
+            StateHasChanged();
         }
     }
 
@@ -386,7 +385,6 @@
 
         try
         {
-            // Validaciones
             if (password != confirmPassword)
             {
                 mensajeError = "Las contraseñas no coinciden";
@@ -407,7 +405,6 @@
 
             cargando = true;
 
-            // 1. PRIMERO: Crear la dirección
             var nuevaDireccion = new DireccionCreacionDTO
             {
                 CiudadId = ciudadIdSeleccionada,
@@ -425,9 +422,8 @@
                 return;
             }
 
-            int direccionId = resultadoDireccion.Object; // ✅ Usar Object en lugar de Data
+            int direccionId = resultadoDireccion.Object;
 
-            // 2. SEGUNDO: Crear el usuario con el ID de la dirección
             var nuevoUsuario = new UsuarioDTO
             {
                 Cedula = cedula,
@@ -439,11 +435,10 @@
                 TelefonoSecundario = string.IsNullOrWhiteSpace(telefonoSecundario) ? null : telefonoSecundario,
                 Correo = email,
                 Contrasena = password,
-                RolId = 2, // Cliente por defecto
-                DireccionId = direccionId // Asignar el ID de la dirección creada
+                RolId = 2,
+                DireccionId = direccionId
             };
 
-            // 3. TERCERO: Registrar el usuario
             var resultadoUsuario = await UsuarioService.RegistrarUsuario(nuevoUsuario);
 
             if (resultadoUsuario.IsSuccess)
