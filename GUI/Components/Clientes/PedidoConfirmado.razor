@@ -11,7 +11,6 @@
     @if (errorMessage != null)
     {
         <div class="error-state">
-            <div class="error-animation">⚠️</div>
             <h2>¡Algo salió mal!</h2>
             <p class="error-message">@errorMessage</p>
             <button class="btn-action btn-primary" @onclick="VolverAlCatalogo">
@@ -33,7 +32,6 @@
                 </p>
             </div>
 
-            <!-- Contenedor Principal -->
             <div class="details-grid">
                 <div class="left-column">
                     <div class="section-card productos-section">
@@ -72,7 +70,6 @@
                         </div>
                     </div>
 
-                    <!-- Información de Envío -->
                     <div class="section-card envio-section">
                         <div class="section-header">
                             <h3>🚚 Información de Envío</h3>
@@ -105,7 +102,6 @@
                     </div>
                 </div>
 
-                <!-- Columna Derecha: Resumen -->
                 <div class="right-column">
                     <div class="section-card resumen-section">
                         <div class="section-header">
@@ -135,7 +131,6 @@
                         </div>
                     </div>
 
-                    <!-- Info Boxes -->
                     <div class="info-boxes">
                         <div class="info-box-modern">
                             <div class="info-box-icon">📧</div>
@@ -156,7 +151,6 @@
                 </div>
             </div>
 
-            <!-- Botones de Acción -->
             <div class="acciones-footer">
                 <button class="btn-action btn-secondary" @onclick="VerMisPedidos">
                     📋 Ver Mis Pedidos

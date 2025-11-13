@@ -14,7 +14,6 @@ namespace ENTITY.Articulos
         public int Orden { get; set; } = 1;
         public char EsPrincipal { get; set; } = 'N';
 
-        // Relaciones
         public Articulo Articulo { get; set; } = null!;
     }
 

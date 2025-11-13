@@ -21,9 +21,6 @@ namespace DAL.Implementaciones
             _connectionString = connectionString;
         }
 
-        // ========================================
-        // 1. REGISTRAR ARTÍCULO COMPLETO
-        // ========================================
         public async Task<Response<int>> RegistrarArticuloCompleto(ArticuloCreacionDTO articulo)
         {
             OracleConnection connection = null;
@@ -37,7 +34,7 @@ namespace DAL.Implementaciones
 
                 int idArticuloGenerado = 0;
 
-                // 1. Registrar el artículo base
+                // Registrar el artículo base
                 using (var command = connection.CreateCommand())
                 {
                     command.Transaction = transaction;
@@ -62,7 +59,7 @@ namespace DAL.Implementaciones
                     idArticuloGenerado = ((OracleDecimal)idParam.Value).ToInt32();
                 }
 
-                // 2. Registrar variantes
+                // Registrar variantes
                 foreach (var variante in articulo.Variantes)
                 {
                     using (var command = connection.CreateCommand())
@@ -83,8 +80,8 @@ namespace DAL.Implementaciones
                     }
                 }
 
-                // 3. ✅ Registrar imágenes (ahora es simple)
-                // Ordenar por Orden para asegurar que la primera imagen tenga orden=1
+                // Registrar imágenes
+
                 var imagenesOrdenadas = articulo.Imagenes.OrderBy(i => i.Orden).ToList();
 
                 foreach (var imagen in imagenesOrdenadas)
@@ -139,9 +136,6 @@ namespace DAL.Implementaciones
             }
         }
 
-        // ========================================
-        // 2. ACTUALIZAR ARTÍCULO
-        // ========================================
         public async Task<Response<bool>> ActualizarArticulo(ArticuloActualizacionDTO articulo)
         {
             try
@@ -184,9 +178,6 @@ namespace DAL.Implementaciones
             }
         }
 
-        // ========================================
-        // 3. ACTUALIZAR STOCK
-        // ========================================
         public async Task<Response<bool>> ActualizarStock(ActualizarStockDTO stockDTO)
         {
             try
@@ -225,9 +216,6 @@ namespace DAL.Implementaciones
             }
         }
 
-        // ========================================
-        // 4. OBTENER ARTÍCULOS ACTIVOS
-        // ========================================
         public async Task<Response<ArticuloListaDTO>> ObtenerArticulosActivos()
         {
             try
@@ -283,9 +271,6 @@ namespace DAL.Implementaciones
             }
         }
 
-        // ========================================
-        // 5. OBTENER ARTÍCULO POR ID
-        // ========================================
         public async Task<Response<ArticuloDetalleDTO>> ObtenerArticuloPorId(int idArticulo)
         {
             try
@@ -388,9 +373,6 @@ namespace DAL.Implementaciones
             }
         }
 
-        // ========================================
-        // 6. ELIMINAR ARTÍCULO
-        // ========================================
         public async Task<Response<bool>> EliminarArticulo(int idArticulo)
         {
             try

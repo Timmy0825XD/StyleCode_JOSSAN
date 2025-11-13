@@ -18,7 +18,6 @@ namespace ENTITY.Articulos
         public int Stock { get; set; } = 0;
         public char Estado { get; set; } = 'A';
 
-        // Relaciones
         public Articulo Articulo { get; set; } = null!;
         public ICollection<DetallePedido> DetallesPedidos { get; set; } = new List<DetallePedido>();
         public ICollection<DetalleFactura> DetallesFactura { get; set; } = new List<DetalleFactura>();

@@ -16,7 +16,6 @@ namespace ENTITY.Pedidos
         public decimal PrecioUnitario { get; set; }
         public decimal SubtotalLinea { get; set; }
 
-        // Relaciones
         public Pedido Pedido { get; set; } = null!;
         public VarianteArticulo Variante { get; set; } = null!;
     }

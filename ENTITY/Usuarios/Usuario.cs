@@ -26,7 +26,6 @@ namespace ENTITY.Usuarios
         public char Estado { get; set; } = 'A';
         public DateTime FechaRegistro { get; set; } = DateTime.Now;
 
-        // Relaciones
         public Rol Rol { get; set; } = null!;
         public Direccion? Direccion { get; set; }
         public ICollection<Pedido> Pedidos { get; set; } = new List<Pedido>();

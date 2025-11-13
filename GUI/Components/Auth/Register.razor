@@ -190,7 +190,6 @@
                 </div>
             }
 
-            <!-- Navigation Buttons -->
             <div class="form-actions">
                 @if (paso > 1)
                 {
@@ -236,7 +235,6 @@
 @code {
     private int paso = 1;
 
-    // Datos Personales
     private string primerNombre = "";
     private string segundoNombre = "";
     private string apellidoPaterno = "";
@@ -246,7 +244,6 @@
     private string telefonoSecundario = "";
     private string email = "";
 
-    // Paso 2: Dirección
     private int ciudadIdSeleccionada = 0;
     private string direccion = "";
     private string barrio = "";
@@ -256,7 +253,6 @@
     private List<CiudadDTO> ciudades = new();
     private bool cargandoCiudades = false;
 
-    // Contraseña
     private string password = "";
     private string confirmPassword = "";
     private bool aceptaTerminos = false;
@@ -286,24 +282,24 @@
                 if (resultado.ListObject != null && resultado.ListObject.Count > 0)
                 {
                     ciudades = resultado.ListObject.ToList();
-                    Console.WriteLine($"✅ Se cargaron {ciudades.Count} ciudades desde la BD");
+                    Console.WriteLine($" Se cargaron {ciudades.Count} ciudades desde la BD");
                 }
                 else
                 {
                     mensajeError = "No hay ciudades disponibles en la base de datos";
-                    Console.WriteLine("⚠ La consulta fue exitosa pero no hay ciudades");
+                    Console.WriteLine("La consulta fue exitosa pero no hay ciudades");
                 }
             }
             else
             {
                 mensajeError = $"Error al cargar ciudades: {resultado.Message}";
-                Console.WriteLine($"❌ Error en servicio: {resultado.Message}");
+                Console.WriteLine($" Error en servicio: {resultado.Message}");
             }
         }
         catch (Exception ex)
         {
             mensajeError = "Error al conectar con el servidor";
-            Console.WriteLine($"❌ Excepción al cargar ciudades: {ex.Message}");
+            Console.WriteLine($"Excepción al cargar ciudades: {ex.Message}");
             Console.WriteLine($"Stack trace: {ex.StackTrace}");
         }
         finally
@@ -317,7 +313,6 @@
     {
         mensajeError = "";
 
-        // Validar paso 1
         if (paso == 1)
         {
             if (string.IsNullOrWhiteSpace(primerNombre) || string.IsNullOrWhiteSpace(apellidoPaterno) ||
@@ -329,7 +324,6 @@
             }
         }
 
-        // Validar paso 2
         if (paso == 2)
         {
             if (ciudadIdSeleccionada <= 0)

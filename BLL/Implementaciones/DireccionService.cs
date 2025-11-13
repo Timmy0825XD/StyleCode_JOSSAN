@@ -19,14 +19,10 @@ namespace BLL.Implementaciones
             _direccionDAO = direccionDAO;
         }
 
-        // ========================================
-        // 1. CREAR DIRECCIÓN
-        // ========================================
         public async Task<Response<int>> CrearDireccion(DireccionCreacionDTO direccion)
         {
             try
             {
-                // Validaciones de negocio
                 if (direccion.CiudadId <= 0)
                 {
                     return Response<int>.Fail("Debe seleccionar una ciudad válida");
@@ -52,7 +48,6 @@ namespace BLL.Implementaciones
                     return Response<int>.Fail("El barrio debe tener al menos 3 caracteres");
                 }
 
-                // Llamar al DAO
                 return await _direccionDAO.CrearDireccion(direccion);
             }
             catch (Exception ex)
@@ -61,14 +56,10 @@ namespace BLL.Implementaciones
             }
         }
 
-        // ========================================
-        // 2. ACTUALIZAR DIRECCIÓN
-        // ========================================
         public async Task<Response<bool>> ActualizarDireccion(DireccionActualizacionDTO direccion)
         {
             try
             {
-                // Validaciones de negocio
                 if (direccion.IdDireccion <= 0)
                 {
                     return Response<bool>.Fail("ID de dirección inválido");
@@ -99,7 +90,6 @@ namespace BLL.Implementaciones
                     return Response<bool>.Fail("El barrio debe tener al menos 3 caracteres");
                 }
 
-                // Llamar al DAO
                 return await _direccionDAO.ActualizarDireccion(direccion);
             }
             catch (Exception ex)
@@ -108,9 +98,6 @@ namespace BLL.Implementaciones
             }
         }
 
-        // ========================================
-        // 3. OBTENER DIRECCIÓN POR ID
-        // ========================================
         public async Task<Response<DireccionDetalleDTO>> ObtenerDireccionPorId(int idDireccion)
         {
             try
@@ -127,10 +114,6 @@ namespace BLL.Implementaciones
                 return Response<DireccionDetalleDTO>.Fail($"Error en la capa de negocio: {ex.Message}");
             }
         }
-
-        // ========================================
-        // 4. OBTENER TODAS LAS CIUDADES
-        // ========================================
         public async Task<Response<CiudadDTO>> ObtenerTodasLasCiudades()
         {
             try

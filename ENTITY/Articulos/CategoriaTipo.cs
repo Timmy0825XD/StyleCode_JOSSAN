@@ -14,7 +14,6 @@ namespace ENTITY.Articulos
         public char Estado { get; set; } = 'A';
         public DateTime FechaCreacion { get; set; } = DateTime.Now;
 
-        // Relaciones
         public ICollection<Articulo> Articulos { get; set; } = new List<Articulo>();
     }
 }

@@ -24,7 +24,7 @@
     </div>
 
     <div class="charts-grid">
-        <!-- Sales Chart -->
+
         <div class="chart-card">
             <div class="chart-header">
                 <h3>Ventas Mensuales</h3>
@@ -35,7 +35,6 @@
             </div>
         </div>
 
-        <!-- Category Chart -->
         <div class="chart-card">
             <div class="chart-header">
                 <h3>Ventas por Categoría</h3>
@@ -47,7 +46,6 @@
         </div>
     </div>
 
-    <!-- Recent Orders -->
     <div class="orders-card">
         <h3 class="orders-title">Pedidos Recientes</h3>
         <div class="table-container">
@@ -337,7 +335,7 @@
 
     private async Task HandleRedraw()
     {
-        // Configurar gráfico de líneas (Ventas Mensuales)
+        //gráfico de líneas
         await lineChart.Clear();
 
         await lineChart.AddLabelsDatasetsAndUpdate(
@@ -345,7 +343,7 @@
             GetLineChartDataset()
         );
 
-        // Configurar gráfico de dona (Categorías)
+        // gráfico de dona
         await doughnutChart.Clear();
 
         await doughnutChart.AddLabelsDatasetsAndUpdate(
@@ -377,10 +375,10 @@
             Data = new List<int> { 35, 28, 22, 15 },
             BackgroundColor = new List<string>
             {
-                "rgba(168, 85, 247, 0.8)",  // Púrpura
-                "rgba(59, 130, 246, 0.8)",   // Azul
-                "rgba(16, 185, 129, 0.8)",   // Verde
-                "rgba(245, 158, 11, 0.8)"    // Naranja
+                "rgba(168, 85, 247, 0.8)",
+                "rgba(59, 130, 246, 0.8)",
+                "rgba(16, 185, 129, 0.8)",
+                "rgba(245, 158, 11, 0.8)" 
             },
             BorderColor = new List<string> { "#fff" },
             BorderWidth = 2

@@ -24,12 +24,10 @@ namespace ENTITY.Pedidos
         public decimal Impuesto { get; set; }
         public decimal Total { get; set; }
 
-        // Relaciones
         public UsuarioDTO? Usuario { get; set; }
         public DireccionDTO? DireccionEnvio { get; set; }
         public MetodoPagoDTO? MetodoPago { get; set; }
 
-        // Lista de detalles
         public List<DetallePedidoDTO> Detalles { get; set; } = new();
     }
 

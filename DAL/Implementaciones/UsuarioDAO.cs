@@ -22,9 +22,6 @@ namespace DAL.Implementaciones
             _connectionString = connectionString;
         }
 
-        // ========================================
-        // 1. LOGIN
-        // ========================================
         public async Task<Response<LoginResponseDTO>> Login(LoginRequestDTO loginRequest)
         {
             try
@@ -86,9 +83,6 @@ namespace DAL.Implementaciones
             }
         }
 
-        // ========================================
-        // 2. CREAR USUARIO
-        // ========================================
         public async Task<Response<int>> CrearUsuario(UsuarioDTO usuario)
         {
             try
@@ -102,7 +96,6 @@ namespace DAL.Implementaciones
                         command.CommandText = "pkg_usuarios.crear_usuario";
                         command.CommandType = CommandType.StoredProcedure;
 
-                        // Parámetros de entrada
                         command.Parameters.Add("p_id_direccion", OracleDbType.Int32).Value =
                             usuario.DireccionId.HasValue ? (object)usuario.DireccionId.Value : DBNull.Value;
                         command.Parameters.Add("p_cedula", OracleDbType.Varchar2).Value = usuario.Cedula;
@@ -118,7 +111,6 @@ namespace DAL.Implementaciones
                         command.Parameters.Add("p_correo", OracleDbType.Varchar2).Value = usuario.Correo;
                         command.Parameters.Add("p_contrasena", OracleDbType.Varchar2).Value = usuario.Contrasena;
 
-                        // Parámetro de salida (ID generado)
                         var idParam = new OracleParameter("p_id_generado", OracleDbType.Int32, ParameterDirection.Output);
                         command.Parameters.Add(idParam);
 
@@ -144,9 +136,6 @@ namespace DAL.Implementaciones
             }
         }
 
-        // ========================================
-        // 3. ACTUALIZAR USUARIO
-        // ========================================
         public async Task<Response<bool>> ActualizarUsuario(UsuarioDTO usuario)
         {
             try
@@ -160,7 +149,6 @@ namespace DAL.Implementaciones
                         command.CommandText = "pkg_usuarios.actualizar_usuario";
                         command.CommandType = CommandType.StoredProcedure;
 
-                        // Parámetros
                         command.Parameters.Add("p_id_usuario", OracleDbType.Int32).Value = usuario.Id;
                         command.Parameters.Add("p_id_direccion", OracleDbType.Int32).Value =
                             usuario.DireccionId.HasValue ? (object)usuario.DireccionId.Value : DBNull.Value;
@@ -201,9 +189,6 @@ namespace DAL.Implementaciones
             }
         }
 
-        // ========================================
-        // 4. OBTENER USUARIOS
-        // ========================================
         public async Task<Response<UsuarioDTO>> ObtenerUsuarios()
         {
             try
@@ -217,7 +202,6 @@ namespace DAL.Implementaciones
                         command.CommandText = "pkg_usuarios.listar_usuarios_activos";
                         command.CommandType = CommandType.StoredProcedure;
 
-                        // Parámetro de salida (cursor)
                         var cursorParam = new OracleParameter("p_cursor", OracleDbType.RefCursor, ParameterDirection.Output);
                         command.Parameters.Add(cursorParam);
 
@@ -225,7 +209,6 @@ namespace DAL.Implementaciones
 
                         var usuarios = new List<UsuarioDTO>();
 
-                        // Leer el cursor
                         using (var reader = ((OracleRefCursor)cursorParam.Value).GetDataReader())
                         {
                             while (await reader.ReadAsync())
@@ -254,9 +237,6 @@ namespace DAL.Implementaciones
             }
         }
 
-        // ========================================
-        // 5. ELIMINAR USUARIO
-        // ========================================
         public async Task<Response<bool>> EliminarUsuario(int idUsuario)
         {
             try
@@ -270,7 +250,6 @@ namespace DAL.Implementaciones
                         command.CommandText = "pkg_usuarios.eliminar_usuario";
                         command.CommandType = CommandType.StoredProcedure;
 
-                        // Parámetro
                         command.Parameters.Add("p_id_usuario", OracleDbType.Int32).Value = idUsuario;
 
                         await command.ExecuteNonQueryAsync();

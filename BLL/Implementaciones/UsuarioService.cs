@@ -23,7 +23,6 @@ namespace BLL.Implementaciones
 
         public async Task<Response<LoginResponseDTO>> Login(LoginRequestDTO loginRequest)
         {
-            // Validaciones
             if (string.IsNullOrWhiteSpace(loginRequest.Correo))
             {
                 return Response<LoginResponseDTO>.Fail("El correo es obligatorio");
@@ -51,7 +50,6 @@ namespace BLL.Implementaciones
 
         public async Task<Response<int>> RegistrarUsuario(UsuarioDTO usuario)
         {
-            // Validaciones de negocio
             var validacion = ValidarDatosUsuario(usuario);
             if (!validacion.IsSuccess)
             {
@@ -64,15 +62,11 @@ namespace BLL.Implementaciones
                 usuario.RolId = 2;
             }
 
-            // Aquí podrías hashear la contraseña
-            // usuario.Contrasena = HashPassword(usuario.Contrasena);
-
             return await _usuarioDAO.CrearUsuario(usuario);
         }
 
         public async Task<Response<bool>> ActualizarUsuario(UsuarioDTO usuario)
         {
-            // Validaciones
             if (usuario.Id <= 0)
             {
                 return Response<bool>.Fail("ID de usuario inválido");

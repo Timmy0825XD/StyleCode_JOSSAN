@@ -13,10 +13,10 @@ namespace ENTITY.Articulos
         public string Nombre { get; set; } = null!;
         public string? Descripcion { get; set; }
         public string Marca { get; set; } = null!;
-        public string Genero { get; set; } = null!; // Hombre, Mujer, Unisex, etc.
+        public string Genero { get; set; } = null!;
         public string? Material { get; set; }
         public decimal PrecioBase { get; set; }
-        public char Estado { get; set; } = 'A';  // siempre 'A'
+        public char Estado { get; set; } = 'A';
 
         public List<VarianteArticuloDTO> Variantes { get; set; } = new();
         public List<ImagenArticuloDTO> Imagenes { get; set; } = new();

@@ -20,7 +20,6 @@ namespace ENTITY.Articulos
         public char Estado { get; set; } = 'A';
         public DateTime FechaCreacion { get; set; } = DateTime.Now;
 
-        // Relaciones
         public CategoriaTipo CategoriaTipo { get; set; } = null!;
         public CategoriaOcasion CategoriaOcasion { get; set; } = null!;
         public ICollection<VarianteArticulo> Variantes { get; set; } = new List<VarianteArticulo>();

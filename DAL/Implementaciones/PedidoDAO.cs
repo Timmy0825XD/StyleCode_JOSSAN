@@ -21,9 +21,6 @@ namespace DAL.Implementaciones
             _connectionString = connectionString;
         }
 
-        // ========================================
-        // 1. CREAR PEDIDO COMPLETO
-        // ========================================
         public async Task<Response<int>> CrearPedido(CrearPedidoDTO pedido)
         {
             OracleConnection connection = null;
@@ -37,7 +34,7 @@ namespace DAL.Implementaciones
 
                 int idPedidoGenerado = 0;
 
-                // 1. Crear el encabezado del pedido
+                // Crear el encabezado del pedido
                 using (var command = connection.CreateCommand())
                 {
                     command.Transaction = transaction;
@@ -56,7 +53,7 @@ namespace DAL.Implementaciones
                     idPedidoGenerado = ((OracleDecimal)idParam.Value).ToInt32();
                 }
 
-                // 2. Agregar cada producto al pedido
+                // Agregar cada producto al pedido
                 foreach (var producto in pedido.Productos)
                 {
                     using (var command = connection.CreateCommand())
@@ -82,7 +79,6 @@ namespace DAL.Implementaciones
                 if (transaction != null)
                     await transaction.RollbackAsync();
 
-                // Manejar errores específicos de Oracle
                 if (ex.Message.Contains("ORA-20001"))
                 {
                     return Response<int>.Fail("Usuario no encontrado o inactivo");
@@ -125,9 +121,6 @@ namespace DAL.Implementaciones
             }
         }
 
-        // ========================================
-        // 2. OBTENER PEDIDOS POR USUARIO
-        // ========================================
         public async Task<Response<PedidoDTO>> ObtenerPedidosUsuario(int idUsuario)
         {
             try
@@ -189,13 +182,6 @@ namespace DAL.Implementaciones
                 return Response<PedidoDTO>.Fail($"Error al obtener pedidos: {ex.Message}");
             }
         }
-
-        // ========================================
-        // 3. OBTENER PEDIDO COMPLETO
-        // ========================================
-        // ========================================
-        // 3. OBTENER PEDIDO COMPLETO
-        // ========================================
         public async Task<Response<PedidoCompletoDTO>> ObtenerPedidoCompleto(int idPedido)
         {
             try
@@ -230,7 +216,7 @@ namespace DAL.Implementaciones
                                 {
                                     IdPedido = reader.GetInt32(reader.GetOrdinal("ID_PEDIDO")),
                                     NumeroPedido = reader.GetString(reader.GetOrdinal("NUMERO_PEDIDO")),
-                                    IdUsuario = reader.GetInt32(reader.GetOrdinal("ID_USUARIO")), // ✅ LÍNEA AGREGADA
+                                    IdUsuario = reader.GetInt32(reader.GetOrdinal("ID_USUARIO")),
                                     FechaPedido = reader.GetDateTime(reader.GetOrdinal("FECHA_PEDIDO")),
                                     Estado = reader.GetString(reader.GetOrdinal("ESTADO")),
                                     Subtotal = reader.GetDecimal(reader.GetOrdinal("SUBTOTAL")),
@@ -284,10 +270,6 @@ namespace DAL.Implementaciones
                 return Response<PedidoCompletoDTO>.Fail($"Error al obtener detalle del pedido: {ex.Message}");
             }
         }
-
-        // ========================================
-        // 4. OBTENER TODOS LOS PEDIDOS (ADMIN)
-        // ========================================
         public async Task<Response<PedidoListaDTO>> ObtenerTodosPedidos()
         {
             try
@@ -337,9 +319,6 @@ namespace DAL.Implementaciones
             }
         }
 
-        // ========================================
-        // 5. ACTUALIZAR ESTADO DEL PEDIDO
-        // ========================================
         public async Task<Response<bool>> ActualizarEstadoPedido(ActualizarEstadoPedidoDTO actualizacion)
         {
             try
@@ -381,9 +360,6 @@ namespace DAL.Implementaciones
             }
         }
 
-        // ========================================
-        // 6. CANCELAR PEDIDO
-        // ========================================
         public async Task<Response<bool>> CancelarPedido(int idPedido)
         {
             try
@@ -424,9 +400,6 @@ namespace DAL.Implementaciones
             }
         }
 
-        // ========================================
-        // 7. OBTENER MÉTODOS DE PAGO
-        // ========================================
         public async Task<Response<MetodoPagoDTO>> ObtenerMetodosPago()
         {
             try

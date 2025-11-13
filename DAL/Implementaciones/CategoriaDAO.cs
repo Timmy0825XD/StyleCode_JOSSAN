@@ -21,9 +21,6 @@ namespace DAL.Implementaciones
             _connectionString = connectionString;
         }
 
-        // ========================================
-        // 1. OBTENER CATEGORÍAS TIPO
-        // ========================================
         public async Task<Response<CategoriaTipoDTO>> ObtenerCategoriasTipo()
         {
             try
@@ -68,9 +65,6 @@ namespace DAL.Implementaciones
             }
         }
 
-        // ========================================
-        // 2. OBTENER CATEGORÍAS OCASIÓN
-        // ========================================
         public async Task<Response<CategoriaOcasionDTO>> ObtenerCategoriasOcasion()
         {
             try

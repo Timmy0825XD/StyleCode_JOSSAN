@@ -22,7 +22,7 @@ namespace ENTITY.Facturas
         public string Cufe { get; set; } = null!;
 
         [JsonPropertyName("qr")]
-        public string Qr { get; set; } = null!; // URL del QR DIAN
+        public string Qr { get; set; } = null!;
 
         [JsonPropertyName("validated")]
         public string? Validated { get; set; }

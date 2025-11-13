@@ -23,7 +23,6 @@ namespace ENTITY.Pedidos
         public decimal Impuesto { get; set; } = 0;
         public decimal Total { get; set; }
 
-        // Relaciones
         public Usuario Usuario { get; set; } = null!;
         public Direccion DireccionEnvio { get; set; } = null!;
         public MetodoPago MetodoPago { get; set; } = null!;

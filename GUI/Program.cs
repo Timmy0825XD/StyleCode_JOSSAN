@@ -31,7 +31,7 @@ OracleConfiguration.WalletLocation = walletLocation;
 // Obtener la cadena de conexión
 var connectionString = builder.Configuration.GetConnectionString("OracleConnection")!;
 
-// ===== REGISTRAR SERVICIOS DE LA CAPA DAL =====0.0
+// ===== REGISTRAR SERVICIOS DE LA CAPA DAL =====
 builder.Services.AddScoped<IUsuarioDAO>(sp => new UsuarioDAO(connectionString));
 builder.Services.AddScoped<IRolDAO>(sp => new RolDAO(connectionString));
 builder.Services.AddScoped<IArticuloDAO>(sp => new ArticuloDAO(connectionString));

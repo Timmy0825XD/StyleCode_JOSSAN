@@ -12,7 +12,6 @@ namespace ENTITY.Pedidos
         public string Nombre { get; set; } = null!;
         public char Estado { get; set; } = 'A';
 
-        // Relaciones
         public ICollection<Pedido> Pedidos { get; set; } = new List<Pedido>();
     }
 

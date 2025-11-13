@@ -23,7 +23,7 @@
     else if (errorMessage != null)
     {
         <div class="error-container">
-            <p>❌ @errorMessage</p>
+            <p> @errorMessage</p>
             <button class="btn" @onclick="LoadProducts">Reintentar</button>
         </div>
     }
@@ -164,7 +164,6 @@
             </div>
         }
 
-        <!-- Paginación -->
         @if (TotalPages > 1)
         {
             <div class="pagination">
@@ -346,9 +345,6 @@
     {
         if (!favorites.Add(productId))
             favorites.Remove(productId);
-
-        // TODO: Persistir favoritos en localStorage o BD
-        // await JSRuntime.InvokeVoidAsync("localStorage.setItem", "favorites", JsonSerializer.Serialize(favorites));
     }
 
     private void ViewDetails(ArticuloListaDTO articulo, MouseEventArgs? e = null)

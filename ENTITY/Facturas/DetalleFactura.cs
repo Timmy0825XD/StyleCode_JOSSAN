@@ -16,7 +16,6 @@ namespace ENTITY.Facturas
         public decimal PrecioUnitario { get; set; }
         public decimal SubtotalLinea { get; set; }
 
-        // Relaciones
         public Factura Factura { get; set; } = null!;
         public VarianteArticulo Variante { get; set; } = null!;
     }

@@ -8,21 +8,20 @@ namespace ENTITY.Facturas
 {
     public class FacturaDTO
     {
-        public int Id { get; set; }                    // id_factura
-        public int IdPedido { get; set; }              // FK hacia pedido
-        public int IdUsuario { get; set; }             // FK hacia usuario
-        public string NumeroFactura { get; set; } = null!;  // Ejemplo: FE-2025-00001
-        public string? Cufe { get; set; }              // Código único de facturación
-        public string? CodigoQr { get; set; }          // Base64 o URL del QR
-        public DateTime FechaEmision { get; set; }     // Fecha de generación
+        public int Id { get; set; }
+        public int IdPedido { get; set; }
+        public int IdUsuario { get; set; }
+        public string NumeroFactura { get; set; } = null!;
+        public string? Cufe { get; set; }  
+        public string? CodigoQr { get; set; }    
+        public DateTime FechaEmision { get; set; } 
         public decimal Subtotal { get; set; }
         public decimal Impuesto { get; set; }
         public decimal Total { get; set; }
-        public string Estado { get; set; } = "Generada";    // Generada, Enviada, Anulada
-        public string? EstadoDian { get; set; }             // Aprobada, Rechazada, Pendiente
-        public DateTime? FechaDian { get; set; }            // Fecha de respuesta de la DIAN
+        public string Estado { get; set; } = "Generada"; 
+        public string? EstadoDian { get; set; }   
+        public DateTime? FechaDian { get; set; }
 
-        // Asociación con detalles de factura
         public List<DetalleFacturaDTO>? Detalles { get; set; }
     }
 

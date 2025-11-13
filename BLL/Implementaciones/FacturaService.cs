@@ -51,7 +51,7 @@ namespace BLL.Implementaciones
         {
             try
             {
-                // 1. Verificar si ya existe factura para este pedido
+                // Verificar si ya existe factura para este pedido
                 var verificacion = await _facturaDAO.VerificarFacturaPedido(idPedido);
                 if (!verificacion.IsSuccess)
                     return Response<int>.Fail(verificacion.Message);
@@ -59,37 +59,37 @@ namespace BLL.Implementaciones
                 if (verificacion.Object.Existe)
                     return Response<int>.Fail($"Ya existe una factura para este pedido (ID Factura: {verificacion.Object.IdFactura})");
 
-                // 2. Obtener datos del pedido completo
+                // Obtener datos del pedido completo
                 var pedidoResponse = await _pedidoDAO.ObtenerPedidoCompleto(idPedido);
                 if (!pedidoResponse.IsSuccess || pedidoResponse.Object == null)
                     return Response<int>.Fail("No se pudo obtener la información del pedido");
 
                 var pedido = pedidoResponse.Object;
 
-                // ✅ NUEVO: Validar que el IdUsuario existe y es válido
+                // Validar que el IdUsuario existe y es válido
                 if (pedido.IdUsuario <= 0)
                 {
                     return Response<int>.Fail($"El pedido no tiene un usuario válido asociado (IdUsuario: {pedido.IdUsuario})");
                 }
 
-                // 3. Obtener token de Factus
+                // Obtener token de Factus
                 var tokenResponse = await ObtenerTokenFactus();
                 if (!tokenResponse.IsSuccess)
                     return Response<int>.Fail($"Error al autenticar con Factus: {tokenResponse.Message}");
 
                 var token = tokenResponse.Object;
 
-                // 4. Crear request para Factus
+                //  Crear request para Factus
                 var factusRequest = CrearFactusRequest(pedido);
 
-                // 5. Enviar factura a Factus
+                // Enviar factura a Factus
                 var factusResponse = await EnviarFacturaAFactus(factusRequest, token);
                 if (!factusResponse.IsSuccess)
                     return Response<int>.Fail($"Error al crear factura en Factus: {factusResponse.Message}");
 
                 var factusData = factusResponse.Object;
 
-                // 6. Guardar factura en BD
+                // Guardar factura en BD
                 var idFacturaCreada = await _facturaDAO.CrearFactura(
                     idPedido: pedido.IdPedido,
                     idUsuario: pedido.IdUsuario,
@@ -113,10 +113,6 @@ namespace BLL.Implementaciones
                 return Response<int>.Fail($"Error inesperado al generar factura: {ex.Message}");
             }
         }
-
-        /// <summary>
-        /// Obtiene token de acceso de Factus
-        /// </summary>
         private async Task<Response<string>> ObtenerTokenFactus()
         {
             try
@@ -225,13 +221,9 @@ namespace BLL.Implementaciones
                 "tarjeta crédito" or "tarjeta credito" => "48",
                 "transferencia" => "47",
                 "consignación" or "consignacion" => "42",
-                _ => "10" // Por defecto: Efectivo
+                _ => "10"
             };
         }
-
-        // ========================================
-        // MÉTODOS DE CONSULTA
-        // ========================================
 
         public async Task<Response<FacturaDTO>> ObtenerTodasFacturas()
         {

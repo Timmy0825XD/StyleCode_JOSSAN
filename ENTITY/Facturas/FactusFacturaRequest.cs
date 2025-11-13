@@ -10,7 +10,7 @@ namespace ENTITY.Facturas
     public class FactusFacturaRequest
     {
         [JsonPropertyName("document")]
-        public string Document { get; set; } = "01"; // 01 = Factura de venta
+        public string Document { get; set; } = "01";
 
         [JsonPropertyName("reference_code")]
         public string ReferenceCode { get; set; } = null!;
@@ -19,7 +19,7 @@ namespace ENTITY.Facturas
         public string? Observation { get; set; }
 
         [JsonPropertyName("payment_method_code")]
-        public string PaymentMethodCode { get; set; } = "10"; // 10 = Efectivo
+        public string PaymentMethodCode { get; set; } = "10";
 
         [JsonPropertyName("customer")]
         public FactusCustomer Customer { get; set; } = null!;

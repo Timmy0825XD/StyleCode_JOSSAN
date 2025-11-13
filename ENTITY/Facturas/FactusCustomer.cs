@@ -10,7 +10,7 @@ namespace ENTITY.Facturas
     public class FactusCustomer
     {
         [JsonPropertyName("identification_document_id")]
-        public int IdentificationDocumentId { get; set; } = 3; // 3 = Cédula
+        public int IdentificationDocumentId { get; set; } = 3;
 
         [JsonPropertyName("identification")]
         public string Identification { get; set; } = null!;
@@ -34,7 +34,7 @@ namespace ENTITY.Facturas
         public string? Phone { get; set; }
 
         [JsonPropertyName("legal_organization_id")]
-        public string LegalOrganizationId { get; set; } = "2"; // 2 = Persona Natural
+        public string LegalOrganizationId { get; set; } = "2";
 
         [JsonPropertyName("tribute_id")]
         public string TributeId { get; set; } = "21"; // 21 = No aplica

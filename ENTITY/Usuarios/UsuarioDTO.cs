@@ -24,7 +24,6 @@ namespace ENTITY.Usuarios
         public string Estado { get; set; } = "A";
         public DateTime FechaRegistro { get; set; }
 
-        // Relaciones
         public DireccionDTO? Direccion { get; set; }
         public RolDTO? Rol { get; set; }
 

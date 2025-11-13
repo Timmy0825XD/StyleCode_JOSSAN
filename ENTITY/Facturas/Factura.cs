@@ -24,7 +24,6 @@ namespace ENTITY.Facturas
         public string? EstadoDian { get; set; }
         public DateTime? FechaDian { get; set; }
 
-        // Relaciones
         public Pedido Pedido { get; set; } = null!;
         public Usuario Usuario { get; set; } = null!;
         public ICollection<DetalleFactura> Detalles { get; set; } = new List<DetalleFactura>();

@@ -13,7 +13,6 @@ namespace ENTITY.Direcciones
         public string Departamento { get; set; } = null!;
         public string? CodigoDane { get; set; }
 
-        // Relaciones
         public ICollection<Direccion> Direcciones { get; set; } = new List<Direccion>();
     }
 }

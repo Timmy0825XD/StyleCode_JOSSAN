@@ -28,15 +28,15 @@ namespace ENTITY.Facturas
         public string TaxRate { get; set; } = "19.00";
 
         [JsonPropertyName("unit_measure_id")]
-        public int UnitMeasureId { get; set; } = 70; // 70 = unidad
+        public int UnitMeasureId { get; set; } = 70;
 
         [JsonPropertyName("standard_code_id")]
-        public int StandardCodeId { get; set; } = 1; // 1 = Estándar del contribuyente
+        public int StandardCodeId { get; set; } = 1;
 
         [JsonPropertyName("is_excluded")]
         public int IsExcluded { get; set; } = 0;
 
         [JsonPropertyName("tribute_id")]
-        public int TributeId { get; set; } = 1; // 1 = IVA
+        public int TributeId { get; set; } = 1;
     }
 }

@@ -15,7 +15,6 @@ namespace ENTITY.Direcciones
         public string? CodigoPostal { get; set; }
         public string? Referencia { get; set; }
 
-        // Datos de la ciudad
         public string CiudadNombre { get; set; } = null!;
         public string CiudadDepartamento { get; set; } = null!;
     }

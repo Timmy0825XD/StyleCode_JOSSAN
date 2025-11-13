@@ -19,14 +19,10 @@ namespace BLL.Implementaciones
             _articuloDAO = articuloDAO;
         }
 
-        // ========================================
-        // 1. REGISTRAR ARTÍCULO COMPLETO
-        // ========================================
         public async Task<Response<int>> RegistrarArticuloCompleto(ArticuloCreacionDTO articulo)
         {
             try
             {
-                // Validaciones de negocio
                 if (string.IsNullOrWhiteSpace(articulo.Nombre))
                 {
                     return Response<int>.Fail("El nombre del artículo es requerido");
@@ -78,7 +74,6 @@ namespace BLL.Implementaciones
                     return Response<int>.Fail("El stock de las variantes no puede ser negativo");
                 }
 
-                // Llamar al DAO
                 return await _articuloDAO.RegistrarArticuloCompleto(articulo);
             }
             catch (Exception ex)
@@ -87,14 +82,10 @@ namespace BLL.Implementaciones
             }
         }
 
-        // ========================================
-        // 2. ACTUALIZAR ARTÍCULO
-        // ========================================
         public async Task<Response<bool>> ActualizarArticulo(ArticuloActualizacionDTO articulo)
         {
             try
             {
-                // Validaciones de negocio
                 if (articulo.IdArticulo <= 0)
                 {
                     return Response<bool>.Fail("ID de artículo inválido");
@@ -115,7 +106,6 @@ namespace BLL.Implementaciones
                     return Response<bool>.Fail("El precio base debe ser mayor a 0");
                 }
 
-                // Llamar al DAO
                 return await _articuloDAO.ActualizarArticulo(articulo);
             }
             catch (Exception ex)
@@ -124,14 +114,10 @@ namespace BLL.Implementaciones
             }
         }
 
-        // ========================================
-        // 3. ACTUALIZAR STOCK
-        // ========================================
         public async Task<Response<bool>> ActualizarStock(ActualizarStockDTO stockDTO)
         {
             try
             {
-                // Validaciones de negocio
                 if (stockDTO.IdArticulo <= 0)
                 {
                     return Response<bool>.Fail("ID de artículo inválido");
@@ -152,7 +138,6 @@ namespace BLL.Implementaciones
                     return Response<bool>.Fail("El stock no puede ser negativo");
                 }
 
-                // Llamar al DAO
                 return await _articuloDAO.ActualizarStock(stockDTO);
             }
             catch (Exception ex)
@@ -161,9 +146,6 @@ namespace BLL.Implementaciones
             }
         }
 
-        // ========================================
-        // 4. OBTENER ARTÍCULOS ACTIVOS
-        // ========================================
         public async Task<Response<ArticuloListaDTO>> ObtenerArticulosActivos()
         {
             try
@@ -176,9 +158,6 @@ namespace BLL.Implementaciones
             }
         }
 
-        // ========================================
-        // 5. OBTENER ARTÍCULO POR ID
-        // ========================================
         public async Task<Response<ArticuloDetalleDTO>> ObtenerArticuloPorId(int idArticulo)
         {
             try
@@ -196,9 +175,6 @@ namespace BLL.Implementaciones
             }
         }
 
-        // ========================================
-        // 6. ELIMINAR ARTÍCULO
-        // ========================================
         public async Task<Response<bool>> EliminarArticulo(int idArticulo)
         {
             try

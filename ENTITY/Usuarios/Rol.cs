@@ -12,7 +12,6 @@ namespace ENTITY.Usuarios
         public string Nombre { get; set; } = null!;
         public char Estado { get; set; } = 'A';
 
-        // Relaciones
         public ICollection<Usuario> Usuarios { get; set; } = new List<Usuario>();
     }
 }

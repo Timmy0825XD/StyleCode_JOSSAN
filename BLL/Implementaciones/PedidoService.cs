@@ -19,14 +19,10 @@ namespace BLL.Implementaciones
             _pedidoDAO = pedidoDAO;
         }
 
-        // ========================================
-        // 1. CREAR PEDIDO
-        // ========================================
         public async Task<Response<int>> CrearPedido(CrearPedidoDTO pedido)
         {
             try
             {
-                // Validaciones de negocio
                 if (pedido.IdUsuario <= 0)
                 {
                     return Response<int>.Fail("ID de usuario inválido");
@@ -47,7 +43,6 @@ namespace BLL.Implementaciones
                     return Response<int>.Fail("El pedido debe contener al menos un producto");
                 }
 
-                // Validar cada producto
                 foreach (var producto in pedido.Productos)
                 {
                     if (producto.IdVariante <= 0)
@@ -77,7 +72,6 @@ namespace BLL.Implementaciones
                     return Response<int>.Fail("El pedido contiene productos duplicados");
                 }
 
-                // Llamar al DAO
                 return await _pedidoDAO.CrearPedido(pedido);
             }
             catch (Exception ex)
@@ -86,9 +80,6 @@ namespace BLL.Implementaciones
             }
         }
 
-        // ========================================
-        // 2. OBTENER PEDIDOS POR USUARIO
-        // ========================================
         public async Task<Response<PedidoDTO>> ObtenerPedidosUsuario(int idUsuario)
         {
             try
@@ -105,10 +96,6 @@ namespace BLL.Implementaciones
                 return Response<PedidoDTO>.Fail($"Error en la capa de negocio: {ex.Message}");
             }
         }
-
-        // ========================================
-        // 3. OBTENER PEDIDO COMPLETO
-        // ========================================
         public async Task<Response<PedidoCompletoDTO>> ObtenerPedidoCompleto(int idPedido)
         {
             try
@@ -126,9 +113,6 @@ namespace BLL.Implementaciones
             }
         }
 
-        // ========================================
-        // 4. OBTENER TODOS LOS PEDIDOS
-        // ========================================
         public async Task<Response<PedidoListaDTO>> ObtenerTodosPedidos()
         {
             try
@@ -141,9 +125,6 @@ namespace BLL.Implementaciones
             }
         }
 
-        // ========================================
-        // 5. ACTUALIZAR ESTADO DEL PEDIDO
-        // ========================================
         public async Task<Response<bool>> ActualizarEstadoPedido(ActualizarEstadoPedidoDTO actualizacion)
         {
             try
@@ -158,7 +139,6 @@ namespace BLL.Implementaciones
                     return Response<bool>.Fail("El estado es requerido");
                 }
 
-                // Validar estados permitidos
                 var estadosPermitidos = new[] { "Pendiente", "Confirmado", "Enviado", "Entregado", "Cancelado" };
                 if (!estadosPermitidos.Contains(actualizacion.Estado))
                 {
@@ -173,9 +153,6 @@ namespace BLL.Implementaciones
             }
         }
 
-        // ========================================
-        // 6. CANCELAR PEDIDO
-        // ========================================
         public async Task<Response<bool>> CancelarPedido(int idPedido)
         {
             try
@@ -193,9 +170,6 @@ namespace BLL.Implementaciones
             }
         }
 
-        // ========================================
-        // 7. OBTENER MÉTODOS DE PAGO
-        // ========================================
         public async Task<Response<MetodoPagoDTO>> ObtenerMetodosPago()
         {
             try

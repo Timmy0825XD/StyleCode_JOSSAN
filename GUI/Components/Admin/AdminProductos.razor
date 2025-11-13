@@ -110,7 +110,6 @@
     </div>
 </div>
 
-@* MODAL DE FILTROS *@
 @if (mostrarModalFiltros)
 {
     <div class="modal-overlay" @onclick="CerrarModalFiltros">
@@ -192,7 +191,6 @@
     </div>
 }
 
-@* MODAL DE CONFIRMACIÓN DE ELIMINACIÓN *@
 @if (mostrarModalConfirmacion)
 {
     <div class="modal-overlay" @onclick="CerrarModalConfirmacion">
@@ -231,7 +229,6 @@
     </div>
 }
 
-@* MODAL DE PRODUCTO (CREAR/EDITAR) *@
 @if (mostrarModal)
 {
     <div class="modal-overlay" @onclick="CerrarModal">
@@ -473,7 +470,6 @@
 }
 
 @code {
-    // State
     private string searchText = "";
     private List<ArticuloListaDTO> products = new();
     private bool mostrarModal = false;
@@ -490,7 +486,6 @@
     private List<CategoriaTipoDTO> categoriasTipo = new();
     private List<CategoriaOcasionDTO> categoriasOcasion = new();
 
-    // Filtros avanzados
     private string filtroCategoriaTipo = "";
     private string filtroCategoriaOcasion = "";
     private string filtroGenero = "";
@@ -498,7 +493,6 @@
     private decimal? filtroPrecioMin = null;
     private decimal? filtroPrecioMax = null;
 
-    // Confirmación de eliminación
     private int? idProductoAEliminar = null;
     private string nombreProductoAEliminar = "";
 
@@ -567,7 +561,6 @@
         {
             var resultado = products.AsEnumerable();
 
-            // Filtro de búsqueda por texto
             if (!string.IsNullOrWhiteSpace(searchText))
             {
                 resultado = resultado.Where(p =>
@@ -577,7 +570,6 @@
                 );
             }
 
-            // Filtros avanzados
             if (!string.IsNullOrWhiteSpace(filtroCategoriaTipo))
             {
                 resultado = resultado.Where(p => p.CategoriaTipo == filtroCategoriaTipo);
@@ -612,9 +604,6 @@
         }
     }
 
-    // ========================================
-    // MODAL DE FILTROS
-    // ========================================
     private void AbrirModalFiltros()
     {
         mostrarModalFiltros = true;
@@ -640,9 +629,6 @@
         filtroPrecioMax = null;
     }
 
-    // ========================================
-    // MODAL DE PRODUCTO (CREAR/EDITAR)
-    // ========================================
     private void AbrirModalNuevoProducto()
     {
         nuevoProducto = new ArticuloCreacionDTO();
@@ -744,7 +730,7 @@
 
             if (variantesSinTalla.Any())
             {
-                mensajeErrorModal = "❌ Todas las variantes deben tener una talla seleccionada";
+                mensajeErrorModal = "Todas las variantes deben tener una talla seleccionada";
                 return;
             }
 
@@ -754,7 +740,7 @@
 
             if (variantesSinColor.Any())
             {
-                mensajeErrorModal = "❌ Todas las variantes deben tener un color especificado";
+                mensajeErrorModal = " Todas las variantes deben tener un color especificado";
                 return;
             }
 
@@ -765,7 +751,7 @@
 
             if (duplicados.Any())
             {
-                mensajeErrorModal = "❌ Hay variantes duplicadas. Cada combinación talla-color debe ser única";
+                mensajeErrorModal = " Hay variantes duplicadas. Cada combinación talla-color debe ser única";
                 return;
             }
         }
@@ -796,7 +782,6 @@
 
     private void SeleccionarImagenes()
     {
-        // URLs reales de tus imágenes en wwwroot/img/ropa
         var urlsImagenes = new[] {
             "/img/ropa/Camisa1.png",
             "/img/ropa/Camisa2.png",
@@ -857,7 +842,6 @@
 
             if (idProductoEditando.HasValue)
             {
-                // ACTUALIZAR producto existente
                 var actualizacion = new ArticuloActualizacionDTO
                 {
                     IdArticulo = idProductoEditando.Value,
@@ -885,7 +869,6 @@
             }
             else
             {
-                // CREAR nuevo producto
                 resultado = await ArticuloService.RegistrarArticuloCompleto(nuevoProducto);
 
                 if (resultado.IsSuccess)
@@ -910,9 +893,6 @@
         }
     }
 
-    // ========================================
-    // ELIMINAR PRODUCTO
-    // ========================================
     private void ConfirmarEliminarProducto(int id, string nombre)
     {
         idProductoAEliminar = id;
@@ -957,9 +937,6 @@
         }
     }
 
-    // ========================================
-    // UTILIDADES
-    // ========================================
     private string GetVariantesClass(int total)
     {
         return total > 0 ? "stock-normal" : "stock-low";

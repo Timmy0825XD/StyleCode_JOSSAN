@@ -17,7 +17,6 @@ namespace ENTITY.Direcciones
         public string? CodigoPostal { get; set; }
         public string? Referencia { get; set; }
 
-        // Relaciones
         public Ciudad Ciudad { get; set; } = null!;
         public ICollection<Usuario> Usuarios { get; set; } = new List<Usuario>();
         public ICollection<Pedido> Pedidos { get; set; } = new List<Pedido>();

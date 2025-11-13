@@ -85,16 +85,14 @@
 
             var resultado = await UsuarioService.Login(loginRequest);
 
-            Console.WriteLine($"📝 Login resultado: {resultado.Message}");
+            Console.WriteLine($"Login resultado: {resultado.Message}");
 
             if (resultado.IsSuccess && resultado.Object != null)
             {
-                // ✅✅✅ GUARDAR SESIÓN (ahora es async)
                 await Sesion.IniciarSesion(resultado.Object);
 
-                Console.WriteLine($"✅ Usuario logueado: {resultado.Object.NombreCompleto} (ID: {resultado.Object.IdUsuario})");
+                Console.WriteLine($"Usuario logueado: {resultado.Object.NombreCompleto} (ID: {resultado.Object.IdUsuario})");
 
-                // Redirigir según el rol
                 if (resultado.Object.IdRol == 1)
                 {
                     NavigationManager.NavigateTo("/AdminDashboard", forceLoad: true);
@@ -112,7 +110,7 @@
         catch (Exception ex)
         {
             mensajeError = $"Error inesperado: {ex.Message}";
-            Console.WriteLine($"❌ Error en login: {ex}");
+            Console.WriteLine($" Error en login: {ex}");
         }
         finally
         {

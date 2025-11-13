@@ -56,9 +56,6 @@
                     <div class="form-section">
                         <h3>Dirección de Envío</h3>
 
-                        <!-- NOTA: Aquí deberías cargar las direcciones del usuario desde la BD -->
-                        <!-- Por ahora, usamos una dirección simulada -->
-
                         <div class="direccion-card selected">
                             <div class="direccion-info">
                                 <h4>Dirección Principal</h4>
@@ -69,7 +66,7 @@
                         </div>
 
                         <div class="info-note">
-                            <p>ℹ️ La dirección de envío se tomará de tu perfil de usuario</p>
+                            <p>La dirección de envío se tomará de tu perfil de usuario</p>
                         </div>
 
                         <div class="form-actions">
@@ -248,24 +245,22 @@
     private string? errorMessage;
     private string? mensajeError;
 
-    // NOTA: En una aplicación real, obtendrías el ID del usuario de la sesión
     private int idUsuarioAutenticado = 0;
     private int idDireccion = 1;
 
     protected override async Task OnInitializedAsync()
     {
-        // ✅ Obtener usuario de la sesión (ahora es async)
         var usuario = await Sesion.ObtenerUsuarioActual();
 
         if (usuario == null)
         {
-            Console.WriteLine("❌ No hay usuario en sesión - redirigiendo al login");
+            Console.WriteLine("No hay usuario en sesión - redirigiendo al login");
             Navigation.NavigateTo("/", forceLoad: true);
             return;
         }
 
         idUsuarioAutenticado = usuario.IdUsuario;
-        Console.WriteLine($"✅ Usuario en checkout: {usuario.NombreCompleto} (ID: {idUsuarioAutenticado})");
+        Console.WriteLine($"Usuario en checkout: {usuario.NombreCompleto} (ID: {idUsuarioAutenticado})");
 
         items = Carrito.ObtenerItems();
         ActualizarTotales();
@@ -361,10 +356,9 @@
             procesandoPedido = true;
             mensajeError = null;
 
-            // ✅ USAR ID DEL USUARIO AUTENTICADO
             var pedido = new CrearPedidoDTO
             {
-                IdUsuario = idUsuarioAutenticado, // ✅ ID REAL
+                IdUsuario = idUsuarioAutenticado,
                 IdDireccionEnvio = idDireccion,
                 IdMetodoPago = metodoPagoSeleccionado,
                 Productos = items.Select(i => new ProductoPedidoDTO
