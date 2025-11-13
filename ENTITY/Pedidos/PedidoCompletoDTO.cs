@@ -19,6 +19,7 @@ namespace ENTITY.Pedidos
         public decimal Total { get; set; }
 
         // Información del cliente
+        public int IdUsuario { get; set; }
         public string NombreCliente { get; set; } = null!;
         public string CorreoCliente { get; set; } = null!;
         public string TelefonoPrincipal { get; set; } = null!;

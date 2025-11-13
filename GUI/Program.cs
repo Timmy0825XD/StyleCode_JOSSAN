@@ -52,6 +52,14 @@ builder.Services.AddScoped<IPedidoService, PedidoService>();
 builder.Services.AddScoped<SesionService>();
 builder.Services.AddScoped<CarritoService>();
 
+builder.Services.AddHttpClient<IFacturaService, FacturaService>();
+
+// Registrar DAOs y Services de Facturación
+builder.Services.AddScoped<IFacturaDAO>(provider =>
+    new FacturaDAO(builder.Configuration.GetConnectionString("OracleConnection")));
+
+builder.Services.AddScoped<IFacturaService, FacturaService>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
