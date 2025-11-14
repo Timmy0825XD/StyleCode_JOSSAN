@@ -18,19 +18,17 @@
                     <button class="btn-toggle" @onclick="ToggleMenu">
                         @(isMenuVisible ? "✕" : "☰")
                     </button>
-                    <div class="header-brand">
+                    <div class="header-brand" @onclick="IrAlInicio" style="cursor: pointer;">
                         <span class="brand-icon">🛍️</span>
                         <span class="brand-text">Tienda JOSSAN</span>
                     </div>
                 </div>
-
                 <div class="header-center">
                     <div class="search-bar">
                         <span class="search-icon">🔍</span>
                         <input type="text" placeholder="Buscar productos..." class="search-input" />
                     </div>
                 </div>
-
                 <div class="header-right">
                     <button class="btn-carrito" @onclick="IrAlCarrito">
                         🛒 Carrito
@@ -39,13 +37,28 @@
                             <span class="carrito-badge">@cantidadCarrito</span>
                         }
                     </button>
-                    <div class="user-menu">
-                        <div class="user-avatar">@GetInitials(UserDisplayName)</div>
-                        <div class="user-info">
-                            <div class="user-name">@UserDisplayName</div>
-                            <div class="user-role">Cliente</div>
+
+                    @if (EstaLogueado)
+                    {
+                        <div class="user-menu">
+                            <div class="user-avatar">@GetInitials(UserDisplayName)</div>
+                            <div class="user-info">
+                                <div class="user-name">@UserDisplayName</div>
+                                <div class="user-role">Cliente</div>
+                            </div>
                         </div>
-                    </div>
+                    }
+                    else
+                    {
+                        <div class="auth-buttons">
+                            <button class="btn-login" @onclick="IrALogin">
+                                Iniciar Sesión
+                            </button>
+                            <button class="btn-registro" @onclick="IrARegistro">
+                                Registrarse
+                            </button>
+                        </div>
+                    }
                 </div>
             </div>
             <article class="content" style="overflow-y:auto">
@@ -55,15 +68,68 @@
     </div>
 </div>
 
+<style>
+    .auth-buttons {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+    }
+
+    .btn-login, .btn-registro {
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: none;
+        font-size: 0.9rem;
+    }
+
+    .btn-login {
+        background: transparent;
+        color: #667eea;
+        border: 2px solid #667eea;
+    }
+
+        .btn-login:hover {
+            background: #667eea;
+            color: white;
+        }
+
+    .btn-registro {
+        background: #667eea;
+        color: white;
+    }
+
+        .btn-registro:hover {
+            background: #5568d3;
+        }
+</style>
+
 @code {
-    private string UserDisplayName { get; set; } = "Cliente";
+    private string UserDisplayName { get; set; } = "Invitado";
+    private bool EstaLogueado => !string.IsNullOrEmpty(UserDisplayName) &&
+                                  UserDisplayName != "Cliente" &&
+                                  UserDisplayName != "Usuario" &&
+                                  UserDisplayName != "Invitado";
     private bool isMenuVisible = false;
     private int cantidadCarrito = 0;
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
         Carrito.OnChange += ActualizarContadorCarrito;
         ActualizarContadorCarrito();
+
+        try
+        {
+            var nombre = UsuarioService.ObtenerNombreUsuario();
+            UserDisplayName = string.IsNullOrEmpty(nombre) ? "Invitado" : nombre;
+        }
+        catch (Exception ex)
+        {
+            UserDisplayName = "Invitado";
+            Console.WriteLine($"Error al obtener nombre: {ex.Message}");
+        }
     }
 
     private void ToggleMenu()
@@ -82,28 +148,30 @@
         Navigation.NavigateTo("/carrito");
     }
 
+    private void IrAlInicio()
+    {
+        Navigation.NavigateTo("/");
+    }
+
+    private void IrALogin()
+    {
+        Navigation.NavigateTo("/login");
+    }
+
+    private void IrARegistro()
+    {
+        Navigation.NavigateTo("/registro");
+    }
+
     public void Dispose()
     {
         Carrito.OnChange -= ActualizarContadorCarrito;
     }
 
-    protected override async Task OnInitializedAsync()
-    {
-        try
-        {
-            UserDisplayName = UsuarioService.ObtenerNombreUsuario();
-        }
-        catch (Exception ex)
-        {
-            UserDisplayName = "Usuario";
-            Console.WriteLine($"Error al obtener nombre: {ex.Message}");
-        }
-    }
-
     private string GetInitials(string name)
     {
-        if (string.IsNullOrWhiteSpace(name))
-            return "CL";
+        if (string.IsNullOrWhiteSpace(name) || name == "Invitado")
+            return "IN";
 
         var parts = name.Split(' ', StringSplitOptions.RemoveEmptyEntries);
         if (parts.Length >= 2)

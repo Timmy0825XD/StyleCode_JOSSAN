@@ -12,6 +12,7 @@ namespace BLL.Interfaces
     {
         Task<Response<LoginResponseDTO>> Login(LoginRequestDTO loginRequest);
         string ObtenerNombreUsuario();
+        void CerrarSesion();
         Task<Response<int>> RegistrarUsuario(UsuarioDTO usuario);
         Task<Response<bool>> ActualizarUsuario(UsuarioDTO usuario);
         Task<Response<UsuarioDTO>> ObtenerTodosLosUsuarios();

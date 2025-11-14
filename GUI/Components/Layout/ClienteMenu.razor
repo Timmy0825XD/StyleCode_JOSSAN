@@ -1,6 +1,10 @@
-﻿
+﻿@using BLL.Interfaces
+@inject IUsuarioService UsuarioService
+@inject NavigationManager Navigation
+
 <div class="sidebar-header">
     <div class="sidebar-logo">
+        <div class="logo-icon">🛍️</div>
         <div class="logo-text">
             <span class="logo-title">JOSSAN</span>
             <span class="logo-subtitle">Tu estilo perfecto</span>
@@ -9,62 +13,151 @@
 </div>
 
 <nav class="sidebar-nav">
-    <NavLink class="nav-item" style="display:flex" href="ClienteCatalogo">
+    <NavLink class="nav-item" href="/">
         <span class="nav-icon">🏠</span>
         <span class="nav-text">Inicio</span>
     </NavLink>
-    <NavLink class="nav-item" href="virtual-try-on">
-        <span class="nav-icon">👓</span>
-        <span class="nav-text">Prueba Virtual</span>
-    </NavLink>
-    <NavLink class="nav-item" href="mis-pedidos">
-        <span class="nav-icon">📦</span>
-        <span class="nav-text">Mis Pedidos</span>
-    </NavLink>
-    <NavLink class="nav-item" href="favoritos">
-        <span class="nav-icon">❤️</span>
-        <span class="nav-text">Favoritos</span>
-    </NavLink>
+
+    @if (EstaLogueado)
+    {
+        <NavLink class="nav-item" href="virtual-try-on">
+            <span class="nav-icon">👓</span>
+            <span class="nav-text">Prueba Virtual</span>
+        </NavLink>
+        <NavLink class="nav-item" href="mis-pedidos">
+            <span class="nav-icon">📦</span>
+            <span class="nav-text">Mis Pedidos</span>
+        </NavLink>
+        <NavLink class="nav-item" href="favoritos">
+            <span class="nav-icon">❤️</span>
+            <span class="nav-text">Favoritos</span>
+        </NavLink>
+        <NavLink class="nav-item" href="mi-perfil">
+            <span class="nav-icon">👤</span>
+            <span class="nav-text">Mi Perfil</span>
+        </NavLink>
+    }
 
     <div class="nav-divider"></div>
+
+    <NavLink class="nav-item" href="ofertas">
+        <span class="nav-icon">🏷️</span>
+        <span class="nav-text">Ofertas</span>
+        <span class="badge-new">HOT</span>
+    </NavLink>
 
     <NavLink class="nav-item" href="asistente">
         <span class="nav-icon">💬</span>
         <span class="nav-text">Asistente Virtual</span>
+    </NavLink>
+
+    <NavLink class="nav-item" href="ayuda">
+        <span class="nav-icon">❓</span>
+        <span class="nav-text">Ayuda</span>
     </NavLink>
 </nav>
 
 <div class="sidebar-footer">
     <div class="promo-card">
         <span class="promo-icon">✨</span>
-        <p class="promo-text">¡Descubre nuestra nueva colección!</p>
+        <div class="promo-content">
+            <p class="promo-title">¡Nueva Colección!</p>
+            <p class="promo-text">Descubre las últimas tendencias</p>
+        </div>
     </div>
-    <a href="/" class="logout-btn">
-        <span class="logout-icon">🚪</span>
-        <span>Cerrar Sesión</span>
-    </a>
+
+    @if (EstaLogueado)
+    {
+        <button class="logout-btn" @onclick="CerrarSesion">
+            <span class="logout-icon">🚪</span>
+            <span>Cerrar Sesión</span>
+        </button>
+    }
+    else
+    {
+        <button class="login-btn" @onclick="IrALogin">
+            <span class="login-icon">🔐</span>
+            <span>Iniciar Sesión</span>
+        </button>
+    }
 </div>
 
-    <style>
+<style>
+    .sidebar-header {
+        padding: 24px 20px;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .sidebar-logo {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .logo-icon {
+        font-size: 32px;
+        animation: bounce 2s infinite;
+    }
+
+    @@keyframes bounce {
+        0%, 100% {
+            transform: translateY(0);
+        }
+
+        50% {
+            transform: translateY(-5px);
+        }
+    }
+
+    .logo-text {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .logo-title {
+        font-size: 24px;
+        font-weight: 800;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .logo-subtitle {
+        font-size: 12px;
+        color: #9ca3af;
+        font-weight: 500;
+    }
+
+    .sidebar-nav {
+        padding: 20px 16px;
+        flex: 1;
+        overflow-y: auto;
+    }
+
     .nav-item {
         display: flex;
         align-items: center;
         gap: 15px;
-        padding: 14px 20px;
+        padding: 14px 16px;
         border-radius: 12px;
         color: #6b7280;
         text-decoration: none;
         transition: all 0.3s ease;
+        margin-bottom: 8px;
+        position: relative;
     }
 
         .nav-item:hover {
             background-color: #f3f4f6;
             transform: translateX(5px);
+            color: #667eea;
         }
 
         .nav-item.active {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
         }
 
     .nav-icon {
@@ -82,11 +175,115 @@
 
     .nav-text {
         flex: 1;
+        font-weight: 500;
+        font-size: 14px;
+    }
+
+    .badge-new {
+        background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);
+        color: white;
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 10px;
+        font-weight: 700;
+        animation: pulse 2s infinite;
+    }
+
+    @@keyframes pulse {
+        0%, 100% {
+            opacity: 1;
+        }
+
+        50% {
+            opacity: 0.7;
+        }
     }
 
     .nav-divider {
         height: 1px;
         background: linear-gradient(90deg, transparent, #e5e7eb, transparent);
-        margin: 12px 0;
+        margin: 16px 0;
     }
-    </style>
+
+    .sidebar-footer {
+        padding: 16px;
+        border-top: 1px solid #e5e7eb;
+    }
+
+    .promo-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 16px;
+        padding: 16px;
+        margin-bottom: 12px;
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    }
+
+    .promo-icon {
+        font-size: 28px;
+    }
+
+    .promo-content {
+        flex: 1;
+    }
+
+    .promo-title {
+        color: white;
+        font-weight: 700;
+        font-size: 14px;
+        margin: 0 0 4px 0;
+    }
+
+    .promo-text {
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 12px;
+        margin: 0;
+    }
+
+    .logout-btn, .login-btn {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        padding: 12px;
+        border: none;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        color: white;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 14px;
+    }
+
+    .login-btn {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+        .logout-btn:hover, .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+        }
+
+    .logout-icon, .login-icon {
+        font-size: 18px;
+    }
+</style>
+
+@code {
+    private bool EstaLogueado => !string.IsNullOrEmpty(UsuarioService.ObtenerNombreUsuario());
+
+    private void CerrarSesion()
+    {
+        UsuarioService.CerrarSesion();
+        Navigation.NavigateTo("/", forceLoad: true);
+    }
+
+    private void IrALogin()
+    {
+        Navigation.NavigateTo("/login");
+    }
+}
