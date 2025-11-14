@@ -1,9 +1,11 @@
 ﻿@page "/AdminProductos"
+@using CloudinaryDotNet
 @using ENTITY.Articulos
 @using BLL.Interfaces
 @using ENTITY.Utilidades
 @inject IArticuloServices ArticuloService
 @inject ICategoriaServices CategoriaService
+@inject Cloudinary cloudinary
 
 <div class="container">
     <div class="page-header">
@@ -12,7 +14,24 @@
             <span>➕</span>
             Nuevo Producto
         </button>
+        <!-- desde aqui el codigo agregado-->
+        <label class="btn btn-primary" style="cursor:pointer;">
+            subir imagen
+            <InputFile OnChange="OnFileSelected" accept="image/*" style="display:none" />
+        </label>
+
+        <button class="btn btn-success" @onclick="GuardarImagen" disabled="@(!hayImagenSeleccionada)">
+            Guardar Imagen
+        </button>
+
+    @if (file != null)
+    {
+        <p>Imagen seleccionada: @file.Name</p>
+    }
+    <!-- hasta aca -->
+
     </div>
+
 
     <div class="products-card">
         <div class="toolbar">
@@ -951,4 +970,51 @@
     {
         return estado == "A" ? "Activo" : "Inactivo";
     }
+
+
+    // agregado desde aqui
+    private IBrowserFile? file;
+    private bool hayImagenSeleccionada => file != null;
+    private void OnFileSelected(InputFileChangeEventArgs e)
+    {
+        file = e.File;
+        Console.WriteLine($"imagen seleccionada: {file.Name}");
+    }
+
+
+    private async Task GuardarImagen()
+    {
+        if (file == null)
+        {
+            Console.WriteLine("no hay imagen seleccionada.");
+            return;
+        }
+
+        try
+        {
+            using var stream = file.OpenReadStream(10 * 1024 * 1024);
+
+            var uploadParams = new CloudinaryDotNet.Actions.ImageUploadParams
+            {
+                File = new CloudinaryDotNet.FileDescription(file.Name, stream),
+                Folder = "imagenes_productos"
+            };
+
+            var result = await cloudinary.UploadAsync(uploadParams);
+
+            if (result.StatusCode == System.Net.HttpStatusCode.OK)
+            {
+                Console.WriteLine($"se subio correctamente: {result.SecureUrl}");
+            }
+            else
+            {
+                Console.WriteLine($"error al subir la imagen: {result.Error?.Message}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"ocurrio algo inesperado: {ex.Message}");
+        }
+    }
+    // hasta aqui
 }

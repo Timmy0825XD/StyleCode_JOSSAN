@@ -18,6 +18,7 @@
     <PackageReference Include="Blazorise.Bootstrap5" Version="1.8.5" />
     <PackageReference Include="Blazorise.Charts" Version="1.8.5" />
     <PackageReference Include="Blazorise.Icons.FontAwesome" Version="1.8.5" />
+    <PackageReference Include="CloudinaryDotNet" Version="1.27.8" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.0" />
     <PackageReference Include="Oracle.ManagedDataAccess.Core" Version="23.26.0" />
   </ItemGroup>

@@ -8,6 +8,7 @@ using DAL.Interfaces;
 using GUI.Components;
 using GUI.Services;
 using Oracle.ManagedDataAccess.Client;
+using CloudinaryDotNet;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -59,6 +60,22 @@ builder.Services.AddScoped<IFacturaDAO>(provider =>
     new FacturaDAO(builder.Configuration.GetConnectionString("OracleConnection")));
 
 builder.Services.AddScoped<IFacturaService, FacturaService>();
+
+
+
+///agregado desde aqui
+var cloudinaryUrl = builder.Configuration["Cloudinary:URL"]!;
+var uri = new Uri(cloudinaryUrl.Replace("cloudinary://", "http://"));
+var userInfo = uri.UserInfo.Split(':');
+var cloudName = uri.Host;
+var apiKey = userInfo[0];
+var apiSecret = userInfo[1];
+
+var account = new Account(cloudName, apiKey, apiSecret);
+builder.Services.AddSingleton(new Cloudinary(account));
+/// hasta aca
+
+
 
 var app = builder.Build();
 
