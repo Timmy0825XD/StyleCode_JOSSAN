@@ -8,8 +8,8 @@
 <div class="container py-4">
     <div class="row mb-4">
         <div class="col">
-            <h1 class="display-4">👔 Virtual Try-On</h1>
-            <p class="lead">Prueba prendas virtualmente usando IA</p>
+            <h1 class="display-4">👔 Virtual Try-On v2.0</h1>
+            <p class="lead">Prueba prendas virtualmente usando IA - Ahora con soporte para pantalones 🩳</p>
 
             @if (!isApiHealthy)
             {
@@ -21,7 +21,7 @@
             else
             {
                 <div class="alert alert-success" role="alert">
-                    ✅ Conectado a la API
+                    ✅ Conectado a la API v2.0
                 </div>
             }
         </div>
@@ -36,28 +36,99 @@
                     <div class="card-body">
                         <h5 class="card-title">📊 Estadísticas de Hoy</h5>
                         <div class="row text-center">
-                            <div class="col-3">
+                            <div class="col-md-2">
                                 <h3 class="text-primary">@stats.Stats.Successful</h3>
                                 <small>Exitosas</small>
                             </div>
-                            <div class="col-3">
+                            <div class="col-md-2">
                                 <h3 class="text-success">@stats.Stats.Good_Quality</h3>
                                 <small>Buena Calidad</small>
                             </div>
-                            <div class="col-3">
+                            <div class="col-md-2">
                                 <h3 class="text-danger">@stats.Stats.Failed</h3>
                                 <small>Fallidas</small>
                             </div>
-                            <div class="col-3">
+                            <div class="col-md-2">
                                 <h3 class="text-info">@stats.Stats.Total</h3>
                                 <small>Total</small>
                             </div>
+                            @if (stats.Stats.By_Type != null)
+                            {
+                                <div class="col-md-4">
+                                    <small class="text-muted">Por tipo:</small>
+                                    <div class="d-flex justify-content-around mt-1">
+                                        <span>👕 @(stats.Stats.By_Type.ContainsKey("upper") ? stats.Stats.By_Type["upper"] : 0)</span>
+                                        <span>🩳 @(stats.Stats.By_Type.ContainsKey("lower") ? stats.Stats.By_Type["lower"] : 0)</span>
+                                        <span>👗 @(stats.Stats.By_Type.ContainsKey("dress") ? stats.Stats.By_Type["dress"] : 0)</span>
+                                    </div>
+                                </div>
+                            }
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     }
+
+    @* Selector de Tipo de Prenda (NUEVO) *@
+    <div class="row mb-4">
+        <div class="col">
+            <div class="card border-primary">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">🏷️ Tipo de Prenda</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="garmentType" id="typeUpper"
+                                       checked="@(selectedGarmentType == GarmentType.Upper)"
+                                       @onchange="@(() => OnGarmentTypeChanged(GarmentType.Upper))">
+                                <label class="form-check-label" for="typeUpper">
+                                    <strong>👕 Parte Superior</strong>
+                                    <br />
+                                    <small class="text-muted">Camisas, blusas, tops</small>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="garmentType" id="typeLower"
+                                       checked="@(selectedGarmentType == GarmentType.Lower)"
+                                       @onchange="@(() => OnGarmentTypeChanged(GarmentType.Lower))">
+                                <label class="form-check-label" for="typeLower">
+                                    <strong>🩳 Parte Inferior</strong>
+                                    <br />
+                                    <small class="text-muted">Pantalones, jeans, faldas</small>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="garmentType" id="typeDress"
+                                       checked="@(selectedGarmentType == GarmentType.Dress)"
+                                       @onchange="@(() => OnGarmentTypeChanged(GarmentType.Dress))">
+                                <label class="form-check-label" for="typeDress">
+                                    <strong>👗 Vestido</strong>
+                                    <br />
+                                    <small class="text-muted">Vestidos, monos</small>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    @* Mensaje de advertencia para pantalones/vestidos *@
+                    @if (selectedGarmentType == GarmentType.Lower || selectedGarmentType == GarmentType.Dress)
+                    {
+                        <div class="alert alert-warning mt-3 mb-0" role="alert">
+                            <strong>⚠️ IMPORTANTE:</strong> Para @(selectedGarmentType == GarmentType.Lower ? "pantalones/faldas" : "vestidos"),
+                            la foto de la persona DEBE ser de <strong>CUERPO COMPLETO</strong> con las piernas visibles.
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
 
     <div class="row mb-4">
         @* Columna: Imagen de Persona *@
@@ -71,7 +142,7 @@
                         <label class="form-label">Sube la foto de la persona:</label>
                         <InputFile OnChange="HandlePersonImageSelected" class="form-control" accept="image/*" />
                         <small class="form-text text-muted">
-                            Tips: De frente, brazos separados, fondo simple
+                            @GetPersonImageTip()
                         </small>
                     </div>
 
@@ -95,7 +166,7 @@
         <div class="col-md-6">
             <div class="card h-100">
                 <div class="card-header bg-success text-white">
-                    <h5 class="mb-0">👕 Imagen de la Prenda</h5>
+                    <h5 class="mb-0">@GetGarmentIcon() Imagen de la Prenda</h5>
                 </div>
                 <div class="card-body">
                     <div class="mb-3">
@@ -157,9 +228,10 @@
                             </div>
                             <div class="col-md-3">
                                 <div class="form-check mt-4">
-                                    <input type="checkbox" class="form-check-input" id="autoMask" @bind="autoMask" />
+                                    <input type="checkbox" class="form-check-input" id="autoMask" @bind="autoMask"
+                                           disabled="@(selectedGarmentType == GarmentType.Lower)" />
                                     <label class="form-check-label" for="autoMask">
-                                        Auto-mask (recomendado)
+                                        Auto-mask @(selectedGarmentType == GarmentType.Lower ? "(obligatorio para pantalones)" : "(recomendado)")
                                     </label>
                                 </div>
                             </div>
@@ -183,7 +255,7 @@
                 }
                 else
                 {
-                    <span>✨ Generar Try-On</span>
+                    <span>✨ Generar Try-On (@GetGarmentTypeName())</span>
                 }
             </button>
         </div>
@@ -242,17 +314,33 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <h6 class="text-primary">📸 Foto de la Persona</h6>
-                                <ul>
-                                    <li>✅ De frente, mirando a la cámara</li>
-                                    <li>✅ Brazos ligeramente separados</li>
-                                    <li>✅ Ropa simple y ajustada</li>
-                                    <li>✅ Fondo sólido (blanco/gris)</li>
-                                    <li>❌ Evitar ángulos laterales</li>
-                                    <li>❌ Evitar ropa muy holgada</li>
-                                </ul>
+
+                                @if (selectedGarmentType == GarmentType.Upper)
+                                {
+                                    <p><strong>Para camisas/blusas:</strong></p>
+                                    <ul>
+                                        <li>✅ De frente, mirando a la cámara</li>
+                                        <li>✅ Medio cuerpo o torso visible</li>
+                                        <li>✅ Brazos ligeramente separados</li>
+                                        <li>✅ Ropa simple y ajustada</li>
+                                        <li>✅ Fondo sólido (blanco/gris)</li>
+                                    </ul>
+                                }
+                                else
+                                {
+                                    <p><strong>Para pantalones/vestidos:</strong></p>
+                                    <ul>
+                                        <li>✅ <strong>CUERPO COMPLETO visible</strong></li>
+                                        <li>✅ De frente, mirando a la cámara</li>
+                                        <li>✅ Piernas visibles y rectas</li>
+                                        <li>✅ Ropa simple y ajustada</li>
+                                        <li>✅ Fondo sólido (blanco/gris)</li>
+                                        <li>❌ NO usar fotos de medio cuerpo</li>
+                                    </ul>
+                                }
                             </div>
                             <div class="col-md-6">
-                                <h6 class="text-success">👕 Foto de la Prenda</h6>
+                                <h6 class="text-success">@GetGarmentIcon() Foto de la Prenda</h6>
                                 <ul>
                                     <li>✅ Prenda plana y extendida</li>
                                     <li>✅ Fondo blanco o transparente</li>
@@ -261,6 +349,13 @@
                                     <li>❌ Evitar sombras fuertes</li>
                                     <li>❌ Evitar múltiples prendas</li>
                                 </ul>
+
+                                @if (selectedGarmentType == GarmentType.Lower)
+                                {
+                                    <div class="alert alert-info mt-3">
+                                        <strong>Tip para pantalones:</strong> La detección automática (auto-mask) mejora significativamente los resultados.
+                                    </div>
+                                }
                             </div>
                         </div>
                     </div>
@@ -274,6 +369,9 @@
     // Estado de la API
     private bool isApiHealthy = false;
     private TryOnStats? stats = null;
+
+    // Tipo de prenda (NUEVO)
+    private GarmentType selectedGarmentType = GarmentType.Upper;
 
     // Imágenes
     private byte[]? personImageData = null;
@@ -323,6 +421,50 @@
         {
             Console.WriteLine($"Error cargando estadísticas: {ex.Message}");
         }
+    }
+
+    private void OnGarmentTypeChanged(GarmentType newType)
+    {
+        selectedGarmentType = newType;
+
+        // Para pantalones, forzar auto-mask a true
+        if (selectedGarmentType == GarmentType.Lower)
+        {
+            autoMask = true;
+        }
+
+        StateHasChanged();
+    }
+
+    private string GetGarmentIcon()
+    {
+        return selectedGarmentType switch
+        {
+            GarmentType.Upper => "👕",
+            GarmentType.Lower => "🩳",
+            GarmentType.Dress => "👗",
+            _ => "👕"
+        };
+    }
+
+    private string GetGarmentTypeName()
+    {
+        return selectedGarmentType switch
+        {
+            GarmentType.Upper => "Parte Superior",
+            GarmentType.Lower => "Pantalones/Falda",
+            GarmentType.Dress => "Vestido",
+            _ => "Prenda"
+        };
+    }
+
+    private string GetPersonImageTip()
+    {
+        if (selectedGarmentType == GarmentType.Lower || selectedGarmentType == GarmentType.Dress)
+        {
+            return "⚠️ IMPORTANTE: Foto de CUERPO COMPLETO con piernas visibles";
+        }
+        return "Tips: De frente, brazos separados, fondo simple";
     }
 
     private async Task HandlePersonImageSelected(InputFileChangeEventArgs e)
@@ -409,7 +551,7 @@
         }
 
         isProcessing = true;
-        statusMessage = "🔄 Procesando... Esto puede tardar 1-2 minutos. Por favor espera.";
+        statusMessage = $"🔄 Procesando {GetGarmentTypeName()}... Esto puede tardar 1-2 minutos. Por favor espera.";
         statusAlertClass = "alert-info";
         resultImageUrl = null;
 
@@ -423,6 +565,7 @@
                 personFileName ?? "person.jpg",
                 garmentStream,
                 garmentFileName ?? "garment.jpg",
+                selectedGarmentType,  // ✨ NUEVO PARÁMETRO
                 denoiseSteps,
                 seed,
                 autoCrop,
@@ -432,7 +575,7 @@
             // Convertir resultado a base64 para mostrar
             resultImageUrl = $"data:image/jpeg;base64,{Convert.ToBase64String(resultBytes)}";
 
-            statusMessage = "✅ ¡Try-On completado exitosamente!";
+            statusMessage = $"✅ ¡Try-On de {GetGarmentTypeName()} completado exitosamente!";
             statusAlertClass = "alert-success";
 
             // Recargar estadísticas
@@ -457,7 +600,14 @@
 
     private string GetResultFilename()
     {
-        return $"tryon_result_{DateTime.Now:yyyyMMdd_HHmmss}.jpg";
+        string typePrefix = selectedGarmentType switch
+        {
+            GarmentType.Upper => "upper",
+            GarmentType.Lower => "lower",
+            GarmentType.Dress => "dress",
+            _ => "tryon"
+        };
+        return $"tryon_{typePrefix}_{DateTime.Now:yyyyMMdd_HHmmss}.jpg";
     }
 
     private void ToggleAdvancedSettings()

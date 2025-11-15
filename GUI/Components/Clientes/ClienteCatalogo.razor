@@ -14,14 +14,8 @@
 @implements IDisposable
 
 <section class="catalogo">
-    @if (isLoading)
-    {
-        <div class="loading-container">
-            <div class="spinner"></div>
-            <p>Cargando productos...</p>
-        </div>
-    }
-    else if (errorMessage != null)
+
+     @if (errorMessage != null)
     {
         <div class="error-container">
             <p>@errorMessage</p>
@@ -30,13 +24,12 @@
     }
     else
     {
-        <!-- Hero Carousel -->
         <div class="hero-carousel">
             <div class="carousel-container">
                 <div class="carousel-slide @(currentSlide == 0 ? "active" : "")">
                     <div class="slide-content">
                         <div class="slide-text">
-                            <span class="slide-badge">✨ Nueva Colección</span>
+                            <span class="slide-badge">Nueva Colección</span>
                             <h1 class="slide-title">Descubre Tu Estilo</h1>
                             <p class="slide-description">Las mejores marcas y tendencias en un solo lugar</p>
                             <button class="btn-hero" @onclick='() => SetCategoriaTipo("Reloj")'>Explorar Ahora →</button>
@@ -49,7 +42,7 @@
                 <div class="carousel-slide @(currentSlide == 1 ? "active" : "")">
                     <div class="slide-content">
                         <div class="slide-text">
-                            <span class="slide-badge">🎁 Ofertas Especiales</span>
+                            <span class="slide-badge">Ofertas Especiales</span>
                             <h1 class="slide-title">Hasta 50% OFF</h1>
                             <p class="slide-description">En productos seleccionados por tiempo limitado</p>
                             <button class="btn-hero" @onclick="ScrollToProducts">Ver Ofertas →</button>
@@ -62,7 +55,7 @@
                 <div class="carousel-slide @(currentSlide == 2 ? "active" : "")">
                     <div class="slide-content">
                         <div class="slide-text">
-                            <span class="slide-badge">🚚 Envío Gratis</span>
+                            <span class="slide-badge">Envío Gratis</span>
                             <h1 class="slide-title">Compra Sin Límites</h1>
                             <p class="slide-description">Envío gratuito a toda Colombia en todos tus pedidos</p>
                             <button class="btn-hero" @onclick="ScrollToProducts">Comprar Ahora →</button>
@@ -74,7 +67,6 @@
                 </div>
             </div>
             <div class="carousel-controls">
-                <button class="carousel-btn" @onclick="PrevSlide">‹</button>
                 <div class="carousel-indicators">
                     @for (int i = 0; i < 3; i++)
                     {
@@ -83,11 +75,10 @@
                                 @onclick="() => currentSlide = index"></button>
                     }
                 </div>
-                <button class="carousel-btn" @onclick="NextSlide">›</button>
             </div>
         </div>
 
-        <!-- Características -->
+
         <div class="features-section">
             <div class="feature-card">
                 <span class="feature-icon">🚚</span>
@@ -111,21 +102,8 @@
             </div>
         </div>
 
-        <!-- Categorías Destacadas -->
-        <div class="categories-showcase">
-            <h2 class="section-title">Explora por Categoría</h2>
-            <div class="categories-grid">
-                @foreach (var tipo in categoriasTipo.Take(6))
-                {
-                    <div class="category-card" @onclick='() => SetCategoriaTipo(tipo)'>
-                        <div class="category-overlay"></div>
-                        <span class="category-name">@tipo</span>
-                    </div>
-                }
-            </div>
-        </div>
 
-        <!-- Banner de Descuento -->
+
         <div class="discount-banner">
             <div class="banner-content">
                 <span class="banner-icon">🎉</span>
@@ -137,13 +115,10 @@
             </div>
         </div>
 
-        <!-- Filtros y Búsqueda -->
+
         <div class="toolbar" id="products-section">
-            <div class="search">
-                <span class="search-icon">🔍</span>
-                <input class="input" type="text" placeholder="Buscar productos, marcas..."
+                <input class="input mb-3" type="text" placeholder="Buscar productos, marcas..."
                        @bind="searchText" @bind:event="oninput" />
-            </div>
 
             <div class="filters">
                 <select class="select" @bind="selectedCategoriaTipo">
@@ -445,23 +420,6 @@
         z-index: 10;
     }
 
-    .carousel-btn {
-        background: rgba(255, 255, 255, 0.3);
-        backdrop-filter: blur(10px);
-        border: none;
-        width: 48px;
-        height: 48px;
-        border-radius: 50%;
-        color: white;
-        font-size: 24px;
-        cursor: pointer;
-        transition: all 0.3s ease;
-    }
-
-        .carousel-btn:hover {
-            background: rgba(255, 255, 255, 0.5);
-        }
-
     .carousel-indicators {
         display: flex;
         gap: 10px;
@@ -522,62 +480,6 @@
         margin: 0;
         color: #666;
         font-size: 14px;
-    }
-
-    /* Categories Showcase */
-    .categories-showcase {
-        margin: 60px 0;
-        padding: 0 20px;
-    }
-
-    .section-title {
-        font-size: 32px;
-        font-weight: 800;
-        text-align: center;
-        margin-bottom: 32px;
-        color: #333;
-    }
-
-    .categories-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 20px;
-    }
-
-    .category-card {
-        position: relative;
-        height: 200px;
-        border-radius: 16px;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        cursor: pointer;
-        overflow: hidden;
-        transition: all 0.3s ease;
-    }
-
-        .category-card:hover {
-            transform: scale(1.05);
-            box-shadow: 0 12px 32px rgba(102, 126, 234, 0.3);
-        }
-
-    .category-overlay {
-        position: absolute;
-        inset: 0;
-        background: rgba(0, 0, 0, 0.2);
-        transition: all 0.3s ease;
-    }
-
-    .category-card:hover .category-overlay {
-        background: rgba(0, 0, 0, 0.1);
-    }
-
-    .category-name {
-        position: absolute;
-        bottom: 24px;
-        left: 24px;
-        color: white;
-        font-size: 24px;
-        font-weight: 700;
-        z-index: 2;
     }
 
     /* Discount Banner */
@@ -644,19 +546,6 @@
         border-radius: 16px;
         margin: 40px 20px 24px 20px;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-    }
-
-    .search {
-        position: relative;
-        margin-bottom: 20px;
-    }
-
-    .search-icon {
-        position: absolute;
-        left: 16px;
-        top: 50%;
-        transform: translateY(-50%);
-        font-size: 20px;
     }
 
     .input {
@@ -1084,31 +973,6 @@
             box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
         }
 
-    /* Loading & Error */
-    .loading-container, .error-container {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        min-height: 400px;
-        text-align: center;
-    }
-
-    .spinner {
-        width: 60px;
-        height: 60px;
-        border: 6px solid #f3f4f6;
-        border-top-color: #667eea;
-        border-radius: 50%;
-        animation: spin 1s linear infinite;
-    }
-
-    @@keyframes spin {
-        to {
-            transform: rotate(360deg);
-        }
-    }
-
     /* Responsive */
     @@media (max-width: 768px) {
         .slide-content {
@@ -1321,11 +1185,6 @@
             currentPage++;
             ScrollToProducts();
         }
-    }
-
-    private void PrevSlide()
-    {
-        currentSlide = currentSlide > 0 ? currentSlide - 1 : 2;
     }
 
     private void NextSlide()

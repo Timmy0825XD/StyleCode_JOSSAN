@@ -23,6 +23,28 @@ namespace GUI.Services
             public int Successful { get; set; }
             public int Failed { get; set; }
             public int Good_Quality { get; set; }
+            public Dictionary<string, int> By_Type { get; set; }
+        }
+
+        /// <summary>
+        /// Tipos de prendas soportados
+        /// </summary>
+        public enum GarmentType
+        {
+            Upper,  // Camisas, blusas, tops
+            Lower,  // Pantalones, faldas
+            Dress   // Vestidos, monos
+        }
+
+        /// <summary>
+        /// Información sobre un tipo de prenda
+        /// </summary>
+        public class GarmentTypeInfo
+        {
+            public string Name { get; set; }
+            public List<string> Examples { get; set; }
+            public string Recommendation { get; set; }
+            public string Tip { get; set; }
         }
 
         /// <summary>
@@ -76,22 +98,38 @@ namespace GUI.Services
             }
 
             /// <summary>
+            /// Convierte el enum GarmentType a string para la API
+            /// </summary>
+            private string GarmentTypeToString(GarmentType type)
+            {
+                return type switch
+                {
+                    GarmentType.Upper => "upper",
+                    GarmentType.Lower => "lower",
+                    GarmentType.Dress => "dress",
+                    _ => "upper"
+                };
+            }
+
+            /// <summary>
             /// Procesa el virtual try-on
             /// </summary>
             /// <param name="personImageStream">Stream de la imagen de la persona</param>
             /// <param name="personFileName">Nombre del archivo de la persona</param>
             /// <param name="garmentImageStream">Stream de la imagen de la prenda</param>
             /// <param name="garmentFileName">Nombre del archivo de la prenda</param>
+            /// <param name="garmentType">Tipo de prenda (upper, lower, dress)</param>
             /// <param name="denoiseSteps">Pasos de denoise (20-40, default: 30)</param>
             /// <param name="seed">Seed para reproducibilidad (default: 42)</param>
             /// <param name="autoCrop">Auto-crop (default: false)</param>
-            /// <param name="autoMask">Auto-mask (default: true)</param>
+            /// <param name="autoMask">Auto-mask (default: true, crítico para pantalones)</param>
             /// <returns>Byte array de la imagen resultante</returns>
             public async Task<byte[]> ProcessTryOnAsync(
                 Stream personImageStream,
                 string personFileName,
                 Stream garmentImageStream,
                 string garmentFileName,
+                GarmentType garmentType = GarmentType.Upper,
                 int denoiseSteps = 30,
                 int seed = 42,
                 bool autoCrop = false,
@@ -110,6 +148,9 @@ namespace GUI.Services
                     var garmentContent = new StreamContent(garmentImageStream);
                     garmentContent.Headers.ContentType = new MediaTypeHeaderValue("image/jpeg");
                     content.Add(garmentContent, "garment_image", garmentFileName);
+
+                    // Agregar tipo de prenda (NUEVO)
+                    content.Add(new StringContent(GarmentTypeToString(garmentType)), "garment_type");
 
                     // Agregar parámetros
                     content.Add(new StringContent(denoiseSteps.ToString()), "denoise_steps");
@@ -171,6 +212,46 @@ namespace GUI.Services
                     Console.WriteLine($"Error eliminando resultado: {ex.Message}");
                     return false;
                 }
+            }
+
+            /// <summary>
+            /// Obtiene información sobre los tipos de prendas soportados (NUEVO)
+            /// </summary>
+            public Dictionary<GarmentType, GarmentTypeInfo> GetGarmentTypesInfo()
+            {
+                return new Dictionary<GarmentType, GarmentTypeInfo>
+                {
+                    {
+                        GarmentType.Upper,
+                        new GarmentTypeInfo
+                        {
+                            Name = "Parte Superior",
+                            Examples = new List<string> { "Camisas", "Blusas", "T-shirts", "Suéteres", "Chaquetas" },
+                            Recommendation = "Foto de medio cuerpo o torso",
+                            Tip = "Funciona mejor con fotos de frente, brazos visibles"
+                        }
+                    },
+                    {
+                        GarmentType.Lower,
+                        new GarmentTypeInfo
+                        {
+                            Name = "Parte Inferior",
+                            Examples = new List<string> { "Pantalones", "Jeans", "Faldas", "Shorts" },
+                            Recommendation = "⚠️ Foto de CUERPO COMPLETO requerida",
+                            Tip = "Requiere foto de cuerpo completo, piernas visibles y rectas. Auto-mask debe estar activado."
+                        }
+                    },
+                    {
+                        GarmentType.Dress,
+                        new GarmentTypeInfo
+                        {
+                            Name = "Vestido Completo",
+                            Examples = new List<string> { "Vestidos", "Monos", "Prendas de cuerpo entero" },
+                            Recommendation = "⚠️ Foto de CUERPO COMPLETO requerida",
+                            Tip = "Requiere foto de cuerpo completo, preferiblemente de frente"
+                        }
+                    }
+                };
             }
         }
     }

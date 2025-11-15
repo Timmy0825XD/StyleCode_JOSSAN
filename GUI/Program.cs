@@ -40,6 +40,8 @@ builder.Services.AddScoped<IArticuloDAO>(sp => new ArticuloDAO(connectionString)
 builder.Services.AddScoped<ICategoriaDAO>(sp => new CategoriaDAO(connectionString));
 builder.Services.AddScoped<IDireccionDAO>(sp => new DireccionDAO(connectionString));
 builder.Services.AddScoped<IPedidoDAO>(sp => new PedidoDAO(connectionString));
+// ===== NUEVO: REGISTRAR SERVICIOS DE EMAIL =====
+builder.Services.AddScoped<IEmailDAO>(sp => new EmailDAO(connectionString));
 
 // ===== REGISTRAR SERVICIOS DE LA CAPA BLL =====
 builder.Services.AddScoped<IUsuarioService, UsuarioService>();
@@ -48,10 +50,14 @@ builder.Services.AddScoped<IArticuloServices, ArticuloServices>();
 builder.Services.AddScoped<ICategoriaServices, CategoriaServices>();
 builder.Services.AddScoped<IDireccionService, DireccionService>();
 builder.Services.AddScoped<IPedidoService, PedidoService>();
+// ===== NUEVO: REGISTRAR SERVICIO DE EMAIL =====
+builder.Services.AddScoped<IEmailService, EmailService>();
 
 // ===== SERVICIOS AUXILIARES =====
 builder.Services.AddScoped<SesionService>();
 builder.Services.AddScoped<CarritoService>();
+// ===== NUEVO: REGISTRAR BACKGROUND SERVICE PARA EMAILS =====
+builder.Services.AddHostedService<EmailBackgroundService>();
 
 // Registrar DAOs y Services de Facturación
 builder.Services.AddScoped<IFacturaDAO>(provider =>
