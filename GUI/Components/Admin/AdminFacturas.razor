@@ -1,120 +1,199 @@
 ﻿@page "/AdminFacturas"
-@using System.Collections.Generic
+@using ENTITY.Facturas
+@using ENTITY.Utilidades
+@using BLL.Interfaces
+@inject IFacturaService FacturaService
+@inject IJSRuntime JS
+@inject NavigationManager Navigation
 
 <div class="container">
     <div class="header-section">
         <h2 class="page-title">Gestión de Facturas Electrónicas</h2>
-        <button class="btn-secondary">
-            <span class="icon">📥</span>
-            Exportar
-        </button>
+        <div class="header-actions">
+            <button class="btn-refresh" @onclick="CargarFacturas" disabled="@cargando">
+                <span class="icon">🔄</span>
+                Actualizar
+            </button>
+            <button class="btn-secondary" @onclick="ExportarFacturas">
+                <span class="icon">📥</span>
+                Exportar
+            </button>
+        </div>
     </div>
 
-    <div class="content-card">
-        <div class="filters-row">
-            <div class="search-box">
-                <span class="search-icon">🔍</span>
-                <input type="text"
-                       placeholder="Buscar por ID, CUFE o cliente..."
-                       class="search-input"
-                       @bind="searchTerm"
-                       @bind:event="oninput" />
-            </div>
-            <div class="filter-group">
-                <select class="filter-select" @bind="filterEstado">
-                    <option value="">Todos los estados</option>
-                    <option value="emitida">Emitidas</option>
-                    <option value="anulada">Anuladas</option>
-                    <option value="pendiente">Pendientes</option>
-                </select>
-                <input type="date" class="filter-date" />
-            </div>
+    @if (cargando)
+    {
+        <div class="loading-container">
+            <div class="spinner"></div>
+            <p>Cargando facturas...</p>
         </div>
+    }
+    else if (!string.IsNullOrEmpty(mensajeError))
+    {
+        <div class="error-message">
+            <span class="error-icon">⚠️</span>
+            <span>@mensajeError</span>
+            <button class="btn-retry" @onclick="CargarFacturas">Reintentar</button>
+        </div>
+    }
+    else
+    {
+        <div class="content-card">
+            <div class="stats-row">
+                <div class="stat-card stat-total">
+                    <span class="stat-icon">📊</span>
+                    <div class="stat-info">
+                        <span class="stat-label">Total Facturas</span>
+                        <span class="stat-value">@facturas.Count</span>
+                    </div>
+                </div>
+                <div class="stat-card stat-aprobadas">
+                    <span class="stat-icon">✅</span>
+                    <div class="stat-info">
+                        <span class="stat-label">Aprobadas</span>
+                        <span class="stat-value">@facturas.Count(f => f.EstadoDian == "Aprobada")</span>
+                    </div>
+                </div>
+                <div class="stat-card stat-pendientes">
+                    <span class="stat-icon">⏳</span>
+                    <div class="stat-info">
+                        <span class="stat-label">Pendientes</span>
+                        <span class="stat-value">@facturas.Count(f => f.EstadoDian != "Aprobada")</span>
+                    </div>
+                </div>
+            </div>
 
-        <div class="table-wrapper">
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th>ID Factura</th>
-                        <th>Fecha Emisión</th>
-                        <th>Cliente</th>
-                        <th>CUFE</th>
-                        <th>Valor Total</th>
-                        <th>Estado</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var factura in FacturasFiltradas)
-                    {
-                        <tr class="table-row">
-                            <td class="invoice-id">@factura.Id</td>
-                            <td class="invoice-date">@factura.FechaEmision.ToString("dd/MM/yyyy HH:mm")</td>
-                            <td class="customer-name">@factura.NombreCliente</td>
-                            <td class="cufe-cell">
-                                <div class="cufe-container">
-                                    <span class="cufe-text">@factura.CUFE.Substring(0, 20)...</span>
-                                    <button class="btn-copy-mini" @onclick="() => CopiarCUFE(factura.CUFE)" title="Copiar CUFE">
-                                        📋
-                                    </button>
-                                </div>
-                            </td>
-                            <td class="invoice-total">$@factura.ValorTotal.ToString("N2")</td>
-                            <td>
-                                <span class="status-badge @factura.Estado">
-                                    @GetEstadoText(factura.Estado)
-                                </span>
-                            </td>
-                            <td>
-                                <div class="action-buttons">
-                                    <button class="btn-action btn-dian" @onclick="() => VerEnDIAN(factura.CUFE)" title="Ver en DIAN">
-                                        <span>🏛️</span>
-                                    </button>
-                                    <button class="btn-action btn-copy" @onclick="() => CopiarCUFE(factura.CUFE)" title="Copiar CUFE">
-                                        <span>📋</span>
-                                    </button>
-                                    <button class="btn-action btn-view" @onclick="() => VerDetalles(factura)" title="Ver Detalles">
-                                        <span>👁️</span>
-                                    </button>
-                                    <button class="btn-action btn-download" @onclick="() => DescargarPDF(factura)" title="Descargar PDF">
-                                        <span>📄</span>
-                                    </button>
-                                </div>
-                            </td>
+            <div class="filters-row">
+                <div class="search-box">
+                    <span class="search-icon">🔍</span>
+                    <input type="text"
+                           placeholder="Buscar por número, CUFE o pedido..."
+                           class="search-input"
+                           @bind="searchTerm"
+                           @bind:event="oninput" />
+                </div>
+                <div class="filter-group">
+                    <select class="filter-select" @bind="filterEstado">
+                        <option value="">Todos los estados</option>
+                        <option value="Aprobada">Aprobadas DIAN</option>
+                        <option value="Rechazada">Rechazadas</option>
+                        <option value="Pendiente">Pendientes</option>
+                    </select>
+                    <input type="date" class="filter-date" @bind="filterFecha" />
+                </div>
+            </div>
+
+            <div class="table-wrapper">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Número Factura</th>
+                            <th>Fecha Emisión</th>
+                            <th>ID Pedido</th>
+                            <th>Usuario</th>
+                            <th>CUFE</th>
+                            <th>Subtotal</th>
+                            <th>IVA</th>
+                            <th>Total</th>
+                            <th>Estado DIAN</th>
+                            <th>Acciones</th>
                         </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
-
-        @if (!FacturasFiltradas.Any())
-        {
-            <div class="empty-state">
-                <span class="empty-icon">📄</span>
-                <p>No se encontraron facturas</p>
+                    </thead>
+                    <tbody>
+                        @if (FacturasFiltradas.Any())
+                        {
+                            @foreach (var factura in FacturasFiltradas)
+                            {
+                                <tr class="table-row">
+                                    <td class="invoice-id">#@factura.Id</td>
+                                    <td class="invoice-number">@factura.NumeroFactura</td>
+                                    <td class="invoice-date">@factura.FechaEmision.ToString("dd/MM/yyyy HH:mm")</td>
+                                    <td class="pedido-id">PED-@factura.IdPedido</td>
+                                    <td class="user-id">Usuario #@factura.IdUsuario</td>
+                                    <td class="cufe-cell">
+                                        @if (!string.IsNullOrEmpty(factura.Cufe))
+                                        {
+                                            <div class="cufe-container">
+                                                <span class="cufe-text" title="@factura.Cufe">
+                                                    @(factura.Cufe.Length > 25 ? factura.Cufe.Substring(0, 25) + "..." : factura.Cufe)
+                                                </span>
+                                                <button class="btn-copy-mini" @onclick="() => CopiarCUFE(factura.Cufe)" title="Copiar CUFE">
+                                                    📋
+                                                </button>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">N/A</span>
+                                        }
+                                    </td>
+                                    <td class="invoice-amount">$@factura.Subtotal.ToString("N2")</td>
+                                    <td class="invoice-tax">$@factura.Impuesto.ToString("N2")</td>
+                                    <td class="invoice-total">$@factura.Total.ToString("N2")</td>
+                                    <td>
+                                        <span class="status-badge @GetEstadoClass(factura.EstadoDian)">
+                                            @(string.IsNullOrEmpty(factura.EstadoDian) ? "Sin estado" : factura.EstadoDian)
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="action-buttons">
+                                            @if (!string.IsNullOrEmpty(factura.Cufe))
+                                            {
+                                                <button class="btn-action btn-dian"
+                                                        @onclick="() => VerEnDIAN(factura.Cufe)"
+                                                        title="Ver en DIAN">
+                                                    <span>🏛️</span>
+                                                </button>
+                                            }
+                                            @if (!string.IsNullOrEmpty(factura.Cufe))
+                                            {
+                                                <button class="btn-action btn-copy"
+                                                        @onclick="() => CopiarCUFE(factura.Cufe)"
+                                                        title="Copiar CUFE">
+                                                    <span>📋</span>
+                                                </button>
+                                            }
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
             </div>
-        }
-    </div>
+
+            @if (!FacturasFiltradas.Any())
+            {
+                <div class="empty-state">
+                    <span class="empty-icon">📄</span>
+                    <p>No se encontraron facturas con los filtros aplicados</p>
+                    @if (!string.IsNullOrEmpty(searchTerm) || !string.IsNullOrEmpty(filterEstado) || !string.IsNullOrEmpty(filterFechaStr))
+                    {
+                        <button class="btn-clear-filters" @onclick="LimpiarFiltros">Limpiar filtros</button>
+                    }
+                </div>
+            }
+        </div>
+    }
 
     @if (mostrarMensaje)
     {
-        <div class="toast-notification">
-            <span>✅</span>
-            <span>CUFE copiado al portapapeles</span>
+        <div class="toast-notification @tipoMensaje">
+            <span>@(tipoMensaje == "success" ? "✅" : tipoMensaje == "error" ? "❌" : "ℹ️")</span>
+            <span>@textoMensaje</span>
         </div>
     }
 </div>
 
 <style>
-    .container {
-        padding: 24px;
-    }
 
     .header-section {
         display: flex;
         justify-content: space-between;
         align-items: center;
         margin-bottom: 24px;
+        flex-wrap: wrap;
     }
 
     .page-title {
@@ -124,7 +203,12 @@
         margin: 0;
     }
 
-    .btn-secondary {
+    .header-actions {
+        display: flex;
+        gap: 12px;
+    }
+
+    .btn-secondary, .btn-refresh {
         padding: 12px 24px;
         border: 1px solid #e5e7eb;
         border-radius: 12px;
@@ -134,16 +218,129 @@
         align-items: center;
         gap: 8px;
         transition: all 0.2s ease;
+        font-size: 14px;
+        font-weight: 500;
     }
 
-        .btn-secondary:hover {
+        .btn-secondary:hover, .btn-refresh:hover {
             background: #f9fafb;
+            transform: translateY(-1px);
         }
+
+        .btn-refresh:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+    .loading-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 60px 20px;
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .spinner {
+        width: 50px;
+        height: 50px;
+        border: 4px solid #f3f4f6;
+        border-top: 4px solid #a855f7;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+
+    @@keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+    .error-message {
+        background: #fee2e2;
+        border: 1px solid #fecaca;
+        border-radius: 12px;
+        padding: 20px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        color: #991b1b;
+    }
+
+    .error-icon {
+        font-size: 24px;
+    }
+
+    .btn-retry {
+        margin-left: auto;
+        padding: 8px 16px;
+        background: #dc2626;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+    }
+
+    .stats-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+
+    .stat-card {
+        background: white;
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        border-left: 4px solid;
+    }
+
+    .stat-total {
+        border-color: #a855f7;
+    }
+
+    .stat-aprobadas {
+        border-color: #10b981;
+    }
+
+    .stat-pendientes {
+        border-color: #f59e0b;
+    }
+
+    .stat-icon {
+        font-size: 32px;
+    }
+
+    .stat-info {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .stat-label {
+        font-size: 12px;
+        color: #6b7280;
+        font-weight: 500;
+    }
+
+    .stat-value {
+        font-size: 24px;
+        font-weight: bold;
+        color: #1f2937;
+    }
 
     .content-card {
         background: white;
         border-radius: 16px;
-        padding: 24px;
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     }
 
@@ -154,7 +351,7 @@
         margin-bottom: 24px;
     }
 
-    @@media (min-width: 640px) {
+    @@media (min-width: 768px) {
         .filters-row {
             flex-direction: row;
             align-items: center;
@@ -192,6 +389,7 @@
     .filter-group {
         display: flex;
         gap: 12px;
+        flex-wrap: wrap;
     }
 
     .filter-select, .filter-date {
@@ -204,11 +402,13 @@
 
     .table-wrapper {
         overflow-x: auto;
+        margin-bottom: 16px;
     }
 
     .data-table {
         width: 100%;
         border-collapse: collapse;
+        min-width: 1200px;
     }
 
         .data-table thead tr {
@@ -220,7 +420,8 @@
             padding: 12px;
             color: #6b7280;
             font-weight: 600;
-            font-size: 14px;
+            font-size: 13px;
+            white-space: nowrap;
         }
 
     .table-row {
@@ -238,8 +439,13 @@
         }
 
     .invoice-id {
-        font-weight: 600;
+        font-weight: 700;
         color: #a855f7;
+    }
+
+    .invoice-number {
+        font-weight: 600;
+        color: #1f2937;
     }
 
     .invoice-date {
@@ -247,13 +453,13 @@
         font-size: 13px;
     }
 
-    .customer-name {
-        font-weight: 500;
-        color: #1f2937;
+    .pedido-id, .user-id {
+        color: #6b7280;
+        font-size: 13px;
     }
 
     .cufe-cell {
-        max-width: 250px;
+        max-width: 200px;
     }
 
     .cufe-container {
@@ -264,7 +470,7 @@
 
     .cufe-text {
         font-family: monospace;
-        font-size: 12px;
+        font-size: 11px;
         color: #6b7280;
         white-space: nowrap;
         overflow: hidden;
@@ -279,16 +485,22 @@
         cursor: pointer;
         font-size: 12px;
         transition: all 0.2s ease;
+        flex-shrink: 0;
     }
 
         .btn-copy-mini:hover {
             background: #e5e7eb;
         }
 
+    .invoice-amount, .invoice-tax {
+        color: #6b7280;
+        font-weight: 500;
+    }
+
     .invoice-total {
         font-weight: 700;
         color: #1f2937;
-        font-size: 16px;
+        font-size: 15px;
     }
 
     .status-badge {
@@ -300,12 +512,12 @@
         text-transform: uppercase;
     }
 
-        .status-badge.emitida {
+        .status-badge.aprobada {
             background-color: #d1fae5;
             color: #065f46;
         }
 
-        .status-badge.anulada {
+        .status-badge.rechazada {
             background-color: #fee2e2;
             color: #991b1b;
         }
@@ -315,9 +527,15 @@
             color: #92400e;
         }
 
+        .status-badge.default {
+            background-color: #f3f4f6;
+            color: #6b7280;
+        }
+
     .action-buttons {
         display: flex;
-        gap: 8px;
+        gap: 6px;
+        flex-wrap: wrap;
     }
 
     .btn-action {
@@ -347,24 +565,6 @@
             background: #bfdbfe;
         }
 
-    .btn-view {
-        background: #f3e8ff;
-        color: #7c3aed;
-    }
-
-        .btn-view:hover {
-            background: #e9d5ff;
-        }
-
-    .btn-download {
-        background: #d1fae5;
-        color: #065f46;
-    }
-
-        .btn-download:hover {
-            background: #a7f3d0;
-        }
-
     .empty-state {
         text-align: center;
         padding: 48px 24px;
@@ -377,11 +577,20 @@
         margin-bottom: 16px;
     }
 
+    .btn-clear-filters {
+        margin-top: 16px;
+        padding: 10px 20px;
+        background: #a855f7;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+    }
+
     .toast-notification {
         position: fixed;
         bottom: 24px;
         right: 24px;
-        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
         color: white;
         padding: 16px 24px;
         border-radius: 12px;
@@ -394,6 +603,18 @@
         z-index: 1000;
     }
 
+        .toast-notification.success {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+
+        .toast-notification.error {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        }
+
+        .toast-notification.info {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+        }
+
     @@keyframes slideIn {
         from {
             transform: translateX(400px);
@@ -405,52 +626,65 @@
             opacity: 1;
         }
     }
-
-    .icon {
-        font-size: 18px;
-    }
 </style>
 
 @code {
-    public class Factura
-    {
-        public string Id { get; set; }
-        public DateTime FechaEmision { get; set; }
-        public string NombreCliente { get; set; }
-        public string CUFE { get; set; }
-        public decimal ValorTotal { get; set; }
-        public string Estado { get; set; }
-    }
-
-    private List<Factura> facturas = new();
+    private List<FacturaDTO> facturas = new();
     private string searchTerm = "";
     private string filterEstado = "";
-    private string filterFecha = "";
+    private string filterFechaStr = "";
+    private bool cargando = true;
+    private string? mensajeError = null;
     private bool mostrarMensaje = false;
+    private string textoMensaje = "";
+    private string tipoMensaje = "success";
+    private bool mostrarQR = false;
+    private FacturaDTO? facturaSeleccionada = null;
+    private DateTime? filterFecha { get; set; }
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        CargarFacturas();
+        await CargarFacturas();
     }
 
-    private void CargarFacturas()
+    private async Task CargarFacturas()
     {
-        facturas = new List<Factura>
+        try
         {
-            new Factura { Id = "FE-001", FechaEmision = DateTime.Now.AddDays(-1), NombreCliente = "Juan Pérez",
-                CUFE = "a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6", ValorTotal = 450.00m, Estado = "emitida" },
-            new Factura { Id = "FE-002", FechaEmision = DateTime.Now.AddDays(-2), NombreCliente = "María García",
-                CUFE = "z6y5x4w3v2u1t0s9r8q7p6o5n4m3l2k1j0i9h8g7f6e5d4c3b2a1", ValorTotal = 280.50m, Estado = "emitida" },
-            new Factura { Id = "FE-003", FechaEmision = DateTime.Now.AddHours(-5), NombreCliente = "Carlos López",
-                CUFE = "1a2b3c4d5e6f7g8h9i0j1k2l3m4n5o6p7q8r9s0t1u2v3w4x5y6z", ValorTotal = 820.00m, Estado = "pendiente" },
-            new Factura { Id = "FE-004", FechaEmision = DateTime.Now.AddDays(-10), NombreCliente = "Ana Martínez",
-                CUFE = "6z5y4x3w2v1u0t9s8r7q6p5o4n3m2l1k0j9i8h7g6f5e4d3c2b1a", ValorTotal = 195.00m, Estado = "anulada" },
-            new Factura { Id = "FE-005", FechaEmision = DateTime.Now.AddDays(-3), NombreCliente = "Luis Rodríguez",
-                CUFE = "q1w2e3r4t5y6u7i8o9p0a1s2d3f4g5h6j7k8l9z0x1c2v3b4n5m6", ValorTotal = 310.75m, Estado = "emitida" }
-        };
+            cargando = true;
+            mensajeError = null;
+            StateHasChanged();
+
+            var response = await FacturaService.ObtenerTodasFacturas();
+
+            if (response.IsSuccess)
+            {
+                facturas = response.ListObject?.ToList() ?? new List<FacturaDTO>();
+
+                if (!facturas.Any())
+                {
+                    MostrarNotificacion("No hay facturas registradas en el sistema", "info");
+                }
+            }
+            else
+            {
+                mensajeError = response.Message ?? "Error al cargar las facturas";
+                MostrarNotificacion(mensajeError, "error");
+            }
+        }
+        catch (Exception ex)
+        {
+            mensajeError = $"Error inesperado: {ex.Message}";
+            MostrarNotificacion(mensajeError, "error");
+        }
+        finally
+        {
+            cargando = false;
+            StateHasChanged();
+        }
     }
 
-    private IEnumerable<Factura> FacturasFiltradas
+    private IEnumerable<FacturaDTO> FacturasFiltradas
     {
         get
         {
@@ -459,63 +693,99 @@
             if (!string.IsNullOrWhiteSpace(searchTerm))
             {
                 resultado = resultado.Where(f =>
-                    f.Id.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
-                    f.NombreCliente.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
-                    f.CUFE.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)
+                    f.NumeroFactura.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                    f.IdPedido.ToString().Contains(searchTerm) ||
+                    (f.Cufe != null && f.Cufe.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
                 );
             }
 
             if (!string.IsNullOrWhiteSpace(filterEstado))
             {
-                resultado = resultado.Where(f => f.Estado == filterEstado);
+                resultado = resultado.Where(f =>
+                    f.EstadoDian != null &&
+                    f.EstadoDian.Equals(filterEstado, StringComparison.OrdinalIgnoreCase)
+                );
             }
 
-            if (!string.IsNullOrWhiteSpace(filterFecha))
+            if (!string.IsNullOrWhiteSpace(filterFechaStr) && DateTime.TryParse(filterFechaStr, out var fechaFiltro))
             {
-                var fecha = DateTime.Parse(filterFecha);
-                resultado = resultado.Where(f => f.FechaEmision.Date == fecha.Date);
+                resultado = resultado.Where(f => f.FechaEmision.Date == fechaFiltro.Date);
             }
 
             return resultado.OrderByDescending(f => f.FechaEmision);
         }
     }
 
-    private async Task CopiarCUFE(string cufe)
+    private async Task CopiarCUFE(string? cufe)
     {
-        // Simulación de copiar al portapapeles
-        Console.WriteLine($"CUFE copiado: {cufe}");
+        if (string.IsNullOrEmpty(cufe))
+        {
+            MostrarNotificacion("No hay CUFE disponible para copiar", "error");
+            return;
+        }
+
+        try
+        {
+            await JS.InvokeVoidAsync("navigator.clipboard.writeText", cufe);
+            MostrarNotificacion("CUFE copiado al portapapeles", "success");
+        }
+        catch (Exception)
+        {
+            MostrarNotificacion("Error al copiar CUFE", "error");
+        }
+    }
+
+    private void VerEnDIAN(string? cufe)
+    {
+        if (string.IsNullOrEmpty(cufe))
+        {
+            MostrarNotificacion("No hay CUFE disponible", "error");
+            return;
+        }
+
+        var url = $"https://catalogo-vpfe.dian.gov.co/document/searchqr?documentkey={cufe}";
+        Navigation.NavigateTo(url, true);
+    }
+
+    private void LimpiarFiltros()
+    {
+        searchTerm = "";
+        filterEstado = "";
+        filterFechaStr = "";
+        StateHasChanged();
+    }
+
+    private async Task ExportarFacturas()
+    {
+        MostrarNotificacion("Función de exportación en desarrollo", "info");
+        // Implementar lógica de exportación a Excel/CSV
+    }
+
+    private void MostrarNotificacion(string mensaje, string tipo = "success")
+    {
+        textoMensaje = mensaje;
+        tipoMensaje = tipo;
         mostrarMensaje = true;
         StateHasChanged();
-        await Task.Delay(3000);
-        mostrarMensaje = false;
-        StateHasChanged();
-    }
 
-    private void VerEnDIAN(string cufe)
-    {
-        var url = $"https://catalogo-vpfe.dian.gov.co/document/searchqr?documentkey={cufe}";
-        Console.WriteLine($"Redirigiendo a DIAN: {url}");
-        // NavigationManager.NavigateTo(url, true);
-    }
-
-    private void VerDetalles(Factura factura)
-    {
-        Console.WriteLine($"Ver detalles de factura: {factura.Id}");
-    }
-
-    private void DescargarPDF(Factura factura)
-    {
-        Console.WriteLine($"Descargando PDF de factura: {factura.Id}");
-    }
-
-    private string GetEstadoText(string estado)
-    {
-        return estado switch
+        Task.Delay(3000).ContinueWith(_ =>
         {
-            "emitida" => "Emitida",
-            "anulada" => "Anulada",
-            "pendiente" => "Pendiente",
-            _ => "Desconocido"
+            mostrarMensaje = false;
+            InvokeAsync(StateHasChanged);
+        });
+    }
+
+    private string GetEstadoClass(string? estado)
+    {
+        if (string.IsNullOrEmpty(estado))
+            return "default";
+
+        return estado.ToLower() switch
+        {
+            "aprobada" => "aprobada",
+            "rechazada" => "rechazada",
+            "pendiente" => "pendiente",
+            _ => "default"
         };
     }
 }

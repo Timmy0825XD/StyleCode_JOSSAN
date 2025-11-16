@@ -1,86 +1,248 @@
 ﻿@page "/AdminDashboard"
 @layout AdminLayout
+@using Blazorise
 @using Blazorise.Charts
 @using System.Collections.Generic
 @using GUI.Components.Layout
+@using BLL.Interfaces
+@using ENTITY.Estadisticas
+@using ENTITY.Utilidades
+@inject IEstadisticaService EstadisticaService
 
 <section style="padding: 24px">
 
-    <div class="stats-grid">
-        @foreach (var stat in stats)
+    @if (isLoading)
+    {
+        <div style="display: flex; justify-content: center; align-items: center; min-height: 400px;">
+            <div class="loading-spinner">Cargando estadísticas...</div>
+        </div>
+    }
+    else if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="alert alert-danger" role="alert">
+            <strong>Error:</strong> @errorMessage
+        </div>
+    }
+    else
+    {
+        <!-- Stats Cards Grid -->
+        <div class="stats-grid">
+            @foreach (var stat in stats)
+            {
+                <div class="stat-card">
+                    <div class="stat-content">
+                        <div class="stat-info">
+                            <p style="color: grey;">@stat.Title</p>
+                            <h3 style="font-weight:bold">@stat.Value</h3>
+                            @if (!string.IsNullOrEmpty(stat.Subtitle))
+                            {
+                                <p class="stat-subtitle">@stat.Subtitle</p>
+                            }
+                        </div>
+                        <div class="stat-icon @stat.ColorClass">
+                            <Icon Name="@stat.IconName" />
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- Charts Grid -->
+        <div class="charts-grid">
+            <!-- Ventas por Categoría -->
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h3>Ventas por Categoría</h3>
+                    <button class="view-more-btn" @onclick="RefreshVentasCategoria">Actualizar</button>
+                </div>
+                <div class="chart-content">
+                    <BarChart @ref="barChartCategoria" TItem="double" />
+                </div>
+            </div>
+
+            <!-- Ventas por Género -->
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h3>Ventas por Género</h3>
+                    <button class="view-more-btn" @onclick="RefreshVentasGenero">Actualizar</button>
+                </div>
+                <div class="chart-content">
+                    <BarChart @ref="barChartGenero" TItem="double" />
+                </div>
+            </div>
+        </div>
+
+        <!-- Orders Table -->
+        <div class="orders-card">
+            <h3 class="orders-title">Pedidos Recientes</h3>
+            <div class="table-container">
+                <table class="orders-table">
+                    <thead>
+                        <tr>
+                            <th>Número Pedido</th>
+                            <th>Cliente</th>
+                            <th>Productos</th>
+                            <th>Total</th>
+                            <th>Método Pago</th>
+                            <th>Estado</th>
+                            <th>Fecha</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (pedidosRecientes != null && pedidosRecientes.Any())
+                        {
+                            @foreach (var pedido in pedidosRecientes.Take(10))
+                            {
+                                <tr>
+                                    <td class="order-id">@pedido.NumeroPedido</td>
+                                    <td>
+                                        <div class="customer-info">
+                                            <div>@pedido.Cliente</div>
+                                            <div class="customer-email">@pedido.EmailCliente</div>
+                                        </div>
+                                    </td>
+                                    <td>@pedido.CantidadProductos</td>
+                                    <td class="order-total">$@pedido.Total.ToString("N2")</td>
+                                    <td>@pedido.MetodoPago</td>
+                                    <td>
+                                        <span class="status-badge @GetStatusClass(pedido.Estado)">
+                                            @GetStatusText(pedido.Estado)
+                                        </span>
+                                    </td>
+                                    <td class="order-date">@pedido.FechaPedido.ToString("dd/MM/yyyy HH:mm")</td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="7" style="text-align: center; padding: 24px; color: #6b7280;">
+                                    No hay pedidos recientes
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Top Products Section -->
+        @if (topProductos != null && topProductos.Any())
         {
-            <div class="stat-card">
-                <div class="stat-content">
-                    <div class="stat-info">
-                        <p style="color: grey;">@stat.Title</p>
-                        <h3 style="font-weight:bold">@stat.Value</h3>
-                    </div>
-                    <div class="stat-icon @stat.ColorClass">
-                        <span>@stat.IconText</span>
-                    </div>
+            <div class="orders-card" style="margin-top: 24px;">
+                <h3 class="orders-title">Top 10 Productos Más Vendidos</h3>
+                <div class="products-grid">
+                    @foreach (var producto in topProductos.Take(10))
+                    {
+                        <div class="product-card">
+                            @if (!string.IsNullOrEmpty(producto.Imagen))
+                            {
+                                <img src="@producto.Imagen" alt="@producto.Nombre" class="product-image" />
+                            }
+                            else
+                            {
+                                <div class="product-image-placeholder">📦</div>
+                            }
+                            <div class="product-info">
+                                <h4>@producto.Nombre</h4>
+                                <p class="product-brand">@producto.Marca</p>
+                                <div class="product-stats">
+                                    <span>$@producto.PrecioBase.ToString("N2")</span>
+                                    <span>@producto.UnidadesVendidas vendidas</span>
+                                </div>
+                                <div class="product-revenue">
+                                    Ingresos: $@producto.IngresosGenerados.ToString("N2")
+                                </div>
+                            </div>
+                        </div>
+                    }
                 </div>
             </div>
         }
-    </div>
 
-    <div class="charts-grid">
+        <!-- Low Stock Alert -->
+        @if (productosStockBajo != null && productosStockBajo.Any())
+        {
+            <div class="orders-card alert-card" style="margin-top: 24px;">
+                <h3 class="orders-title" style="color: #dc2626;">Productos con Stock Bajo</h3>
+                <div class="table-container">
+                    <table class="orders-table">
+                        <thead>
+                            <tr>
+                                <th>SKU</th>
+                                <th>Producto</th>
+                                <th>Marca</th>
+                                <th>Talla</th>
+                                <th>Color</th>
+                                <th>Stock</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var producto in productosStockBajo)
+                            {
+                                <tr>
+                                    <td class="order-id">@producto.CodigoSku</td>
+                                    <td>@producto.Nombre</td>
+                                    <td>@producto.Marca</td>
+                                    <td>@producto.Talla</td>
+                                    <td>@producto.Color</td>
+                                    <td>
+                                        <span class="stock-badge">@producto.Stock unidades</span>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        }
 
-        <div class="chart-card">
-            <div class="chart-header">
-                <h3>Ventas Mensuales</h3>
-                <button class="view-more-btn">Ver más</button>
+        <!-- Top Clients Section -->
+        @if (topClientes != null && topClientes.Any())
+        {
+            <div class="orders-card" style="margin-top: 24px;">
+                <h3 class="orders-title">Top 10 Mejores Clientes</h3>
+                <div class="table-container">
+                    <table class="orders-table">
+                        <thead>
+                            <tr>
+                                <th>Cliente</th>
+                                <th>Correo</th>
+                                <th>Teléfono</th>
+                                <th>Total Pedidos</th>
+                                <th>Total Gastado</th>
+                                <th>Ticket Promedio</th>
+                                <th>Última Compra</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var cliente in topClientes.Take(10))
+                            {
+                                <tr>
+                                    <td>@cliente.NombreCompleto</td>
+                                    <td class="customer-email">@cliente.Correo</td>
+                                    <td>@cliente.TelefonoPrincipal</td>
+                                    <td>@cliente.TotalPedidos</td>
+                                    <td class="order-total">$@cliente.TotalGastado.ToString("N2")</td>
+                                    <td>$@cliente.TicketPromedio.ToString("N2")</td>
+                                    <td class="order-date">@cliente.UltimaCompra.ToString("dd/MM/yyyy")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
             </div>
-            <div class="chart-content">
-                <LineChart @ref="lineChart" TItem="double" />
-            </div>
-        </div>
-
-        <div class="chart-card">
-            <div class="chart-header">
-                <h3>Ventas por Categoría</h3>
-                <button class="view-more-btn">Ver más</button>
-            </div>
-            <div class="chart-content">
-                <DoughnutChart @ref="doughnutChart" TItem="int" style="width:50%" />
-            </div>
-        </div>
-    </div>
-
-    <div class="orders-card">
-        <h3 class="orders-title">Pedidos Recientes</h3>
-        <div class="table-container">
-            <table class="orders-table">
-                <thead>
-                    <tr>
-                        <th>ID Pedido</th>
-                        <th>Cliente</th>
-                        <th>Total</th>
-                        <th>Estado</th>
-                        <th>Fecha</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var order in orders.Take(5))
-                    {
-                        <tr>
-                            <td class="order-id">@order.Id</td>
-                            <td>@order.Customer</td>
-                            <td class="order-total">$@order.Total</td>
-                            <td>
-                                <span class="status-badge @GetStatusClass(order.Status)">
-                                    @GetStatusText(order.Status)
-                                </span>
-                            </td>
-                            <td class="order-date">@order.Date</td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
-    </div>
+        }
+    }
 </section>
 
 <style>
+    .loading-spinner {
+        font-size: 18px;
+        color: #8b5cf6;
+        font-weight: 500;
+    }
+
     .stats-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -119,6 +281,12 @@
         font-weight: 500;
     }
 
+    .stat-subtitle {
+        font-size: 12px;
+        color: #6b7280;
+        margin-top: 4px;
+    }
+
     .stat-icon {
         width: 60px;
         height: 60px;
@@ -127,6 +295,7 @@
         align-items: center;
         justify-content: center;
         font-size: 28px;
+        color: white;
     }
 
         .stat-icon.purple {
@@ -143,6 +312,14 @@
 
         .stat-icon.orange {
             background: linear-gradient(135deg, #f59e0b 0%, #fb923c 100%);
+        }
+
+        .stat-icon.red {
+            background: linear-gradient(135deg, #ef4444 0%, #f87171 100%);
+        }
+
+        .stat-icon.indigo {
+            background: linear-gradient(135deg, #6366f1 0%, #818cf8 100%);
         }
 
     /* Charts Grid */
@@ -191,8 +368,8 @@
 
     .chart-content {
         height: 300px;
-        display:flex;
-        justify-content:center;
+        display: flex;
+        justify-content: center;
     }
 
     /* Orders Table */
@@ -201,6 +378,10 @@
         border-radius: 16px;
         padding: 24px;
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .alert-card {
+        border: 2px solid #fecaca;
     }
 
     .orders-title {
@@ -252,9 +433,21 @@
 
     .order-total {
         font-weight: 600;
+        color: #10b981;
     }
 
     .order-date {
+        color: #6b7280;
+    }
+
+    .customer-info {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .customer-email {
+        font-size: 12px;
         color: #6b7280;
     }
 
@@ -266,146 +459,406 @@
         font-weight: 500;
     }
 
-        .status-badge.pending {
+        .status-badge.pending, .status-badge.pendiente {
             background-color: #fef3c7;
             color: #92400e;
         }
 
-        .status-badge.completed {
+        .status-badge.completed, .status-badge.completado, .status-badge.entregado {
             background-color: #d1fae5;
             color: #065f46;
         }
 
-        .status-badge.processing {
+        .status-badge.processing, .status-badge.en-proceso {
             background-color: #dbeafe;
             color: #1e40af;
         }
 
-        .status-badge.cancelled {
+        .status-badge.cancelled, .status-badge.cancelado {
             background-color: #fee2e2;
             color: #991b1b;
         }
+
+    .stock-badge {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 9999px;
+        font-size: 12px;
+        font-weight: 600;
+        background-color: #fee2e2;
+        color: #991b1b;
+    }
+
+    /* Products Grid */
+    .products-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 16px;
+        margin-top: 16px;
+    }
+
+    .product-card {
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 16px;
+        transition: all 0.2s ease;
+    }
+
+        .product-card:hover {
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+        }
+
+    .product-image {
+        width: 100%;
+        height: 150px;
+        object-fit: cover;
+        border-radius: 8px;
+        margin-bottom: 12px;
+    }
+
+    .product-image-placeholder {
+        width: 100%;
+        height: 150px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #f3f4f6;
+        border-radius: 8px;
+        font-size: 48px;
+        margin-bottom: 12px;
+    }
+
+    .product-info h4 {
+        font-size: 14px;
+        font-weight: 600;
+        color: #1f2937;
+        margin: 0 0 4px 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .product-brand {
+        font-size: 12px;
+        color: #6b7280;
+        margin: 0 0 8px 0;
+    }
+
+    .product-stats {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        font-size: 12px;
+        color: #4b5563;
+        margin-bottom: 8px;
+    }
+
+    .product-revenue {
+        font-size: 14px;
+        font-weight: 600;
+        color: #10b981;
+        margin-top: 8px;
+        padding-top: 8px;
+        border-top: 1px solid #e5e7eb;
+    }
 </style>
 
 @code {
-    private LineChart<double> lineChart;
-    private DoughnutChart<int> doughnutChart;
+    private BarChart<double> barChartCategoria;
+    private BarChart<double> barChartGenero;
+    private LineChart<int> lineChartEstado;
 
+    private bool isLoading = true;
+    private string errorMessage = string.Empty;
+
+    // Data Models
     public class StatCard
     {
         public string Title { get; set; }
         public string Value { get; set; }
         public string ColorClass { get; set; }
-        public string IconText { get; set; }
+        public IconName IconName { get; set; }
+        public string Subtitle { get; set; }
     }
 
-    public class Order
+    // Statistics data
+    private List<StatCard> stats = new List<StatCard>();
+    private List<PedidoRecienteDTO> pedidosRecientes = new List<PedidoRecienteDTO>();
+    private List<TopProductoDTO> topProductos = new List<TopProductoDTO>();
+    private List<ProductoStockBajoDTO> productosStockBajo = new List<ProductoStockBajoDTO>();
+    private List<TopClienteDTO> topClientes = new List<TopClienteDTO>();
+
+    // Chart data
+    private List<VentaCategoriaDTO> ventasPorCategoria = new List<VentaCategoriaDTO>();
+    private List<VentaGeneroDTO> ventasPorGenero = new List<VentaGeneroDTO>();
+
+    protected override async Task OnInitializedAsync()
     {
-        public string Id { get; set; }
-        public string Customer { get; set; }
-        public decimal Total { get; set; }
-        public string Status { get; set; }
-        public string Date { get; set; }
+        await CargarDatosCompletos();
     }
-
-    private List<StatCard> stats = new List<StatCard>
-    {
-        new StatCard { Title = "Ventas Totales", Value = "$45,231", ColorClass = "purple", IconText = "💰" },
-        new StatCard { Title = "Pedidos", Value = "1,234", ColorClass = "blue", IconText = "📦" },
-        new StatCard { Title = "Clientes", Value = "823", ColorClass = "green", IconText = "👥" },
-        new StatCard { Title = "Productos", Value = "456", ColorClass = "orange", IconText = "📊" }
-    };
-
-    private List<Order> orders = new List<Order>
-    {
-        new Order { Id = "#ORD-001", Customer = "Juan Pérez", Total = 250.00m, Status = "completed", Date = "2025-11-07" },
-        new Order { Id = "#ORD-002", Customer = "María García", Total = 180.50m, Status = "processing", Date = "2025-11-06" },
-        new Order { Id = "#ORD-003", Customer = "Carlos López", Total = 420.00m, Status = "pending", Date = "2025-11-06" },
-        new Order { Id = "#ORD-004", Customer = "Ana Martínez", Total = 95.00m, Status = "completed", Date = "2025-11-05" },
-        new Order { Id = "#ORD-005", Customer = "Luis Rodríguez", Total = 310.75m, Status = "cancelled", Date = "2025-11-05" }
-    };
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender)
+        if (firstRender && !isLoading)
         {
-            await HandleRedraw();
+            await RenderizarGraficos();
         }
     }
 
-    private async Task HandleRedraw()
+    private async Task CargarDatosCompletos()
     {
-        //gráfico de líneas
-        await lineChart.Clear();
+        try
+        {
+            isLoading = true;
+            errorMessage = string.Empty;
 
-        await lineChart.AddLabelsDatasetsAndUpdate(
-            new[] { "Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov" },
-            GetLineChartDataset()
-        );
+            // Cargar todas las estadísticas en paralelo
+            var tasks = new List<Task>
+            {
+                CargarMetricasDashboard(),
+                CargarVentasPorCategoria(),
+                CargarVentasPorGenero(),
+                CargarPedidosRecientes(),
+                CargarTopProductos(),
+                CargarTopClientes(),
+                CargarProductosStockBajo()
+            };
 
-        // gráfico de dona
-        await doughnutChart.Clear();
-
-        await doughnutChart.AddLabelsDatasetsAndUpdate(
-            new[] { "Electrónica", "Ropa", "Alimentos", "Otros" },
-            GetDoughnutChartDataset()
-        );
+            await Task.WhenAll(tasks);
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error al cargar las estadísticas: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
     }
 
-    private LineChartDataset<double> GetLineChartDataset()
+    private async Task CargarMetricasDashboard()
     {
-        return new LineChartDataset<double>
+        var response = await EstadisticaService.ObtenerMetricasDashboard();
+
+        if (response.IsSuccess && response.Object != null)
         {
-            Label = "Ventas ($)",
-            Data = new List<double> { 12500, 15200, 18900, 22300, 19800, 25400, 28900, 32100, 29500, 35200, 38900 },
-            BackgroundColor = new List<string> { "rgba(168, 85, 247, 0.2)" },
-            BorderColor = new List<string> { "rgba(168, 85, 247, 1)" },
-            Fill = true,
-            PointRadius = 3,
-            BorderWidth = 2,
-            Tension = 4,
-        };
+            var metricas = response.Object;
+
+            stats = new List<StatCard>
+            {
+                new StatCard
+                {
+                    Title = "Ventas Totales (Mes)",
+                    Value = $"${metricas.VentasMesActual:N2}",
+                    ColorClass = "purple",
+                    IconName = IconName.ShoppingCart,
+                    Subtitle = $"Hoy: ${metricas.VentasHoy:N2}",
+                },
+                new StatCard
+                {
+                    Title = "Pedidos Totales",
+                    Value = metricas.TotalPedidosMes.ToString("N0"),
+                    ColorClass = "blue",
+                    IconName = IconName.File,
+                    Subtitle = $"Pendientes: {metricas.PedidosPendientes}",
+                },
+                new StatCard
+                {
+                    Title = "Clientes",
+                    Value = metricas.TotalClientes.ToString("N0"),
+                    ColorClass = "green",
+                    IconName = IconName.Users,
+                    Subtitle = $"Nuevos: {metricas.ClientesNuevosMes} este mes"
+                },
+                new StatCard
+                {
+                    Title = "Productos Activos",
+                    Value = metricas.TotalProductosActivos.ToString("N0"),
+                    ColorClass = "orange",
+                    IconName = IconName.Archive,
+                    Subtitle = $"Stock bajo: {metricas.ProductosStockBajo}"
+                },
+                new StatCard
+                {
+                    Title = "Ticket Promedio",
+                    Value = $"${metricas.TicketPromedio:N2}",
+                    ColorClass = "indigo",
+                    IconName = IconName.DollarSign
+                },
+            };
+        }
     }
 
-    private DoughnutChartDataset<int> GetDoughnutChartDataset()
+    private async Task CargarVentasPorCategoria()
     {
-        return new DoughnutChartDataset<int>
+        var response = await EstadisticaService.ObtenerVentasPorCategoria();
+
+        if (response.IsSuccess && response.ListObject != null)
         {
-            Label = "Ventas por Categoría",
-            Data = new List<int> { 35, 28, 22, 15 },
+            ventasPorCategoria = response.ListObject.ToList();
+        }
+    }
+
+    private async Task CargarVentasPorGenero()
+    {
+        var response = await EstadisticaService.ObtenerVentasPorGenero();
+
+        if (response.IsSuccess && response.ListObject != null)
+        {
+            ventasPorGenero = response.ListObject.ToList();
+        }
+    }
+
+    private async Task CargarPedidosRecientes()
+    {
+        var response = await EstadisticaService.ObtenerPedidosRecientes(10);
+
+        if (response.IsSuccess && response.ListObject != null)
+        {
+            pedidosRecientes = response.ListObject.ToList();
+        }
+    }
+
+    private async Task CargarTopProductos()
+    {
+        var response = await EstadisticaService.ObtenerTopProductos(10);
+
+        if (response.IsSuccess && response.ListObject != null)
+        {
+            topProductos = response.ListObject.ToList();
+        }
+    }
+
+    private async Task CargarTopClientes()
+    {
+        var response = await EstadisticaService.ObtenerTopClientes(10);
+
+        if (response.IsSuccess && response.ListObject != null)
+        {
+            topClientes = response.ListObject.ToList();
+        }
+    }
+
+    private async Task CargarProductosStockBajo()
+    {
+        var response = await EstadisticaService.ObtenerProductosStockBajo(10);
+
+        if (response.IsSuccess && response.ListObject != null)
+        {
+            productosStockBajo = response.ListObject.ToList();
+        }
+    }
+
+    private async Task RenderizarGraficos()
+    {
+        await RenderizarVentasPorCategoria();
+        await RenderizarVentasPorGenero();
+    }
+
+    private async Task RenderizarVentasPorCategoria()
+    {
+        if (barChartCategoria == null || !ventasPorCategoria.Any()) return;
+
+        await barChartCategoria.Clear();
+
+        var labels = ventasPorCategoria.Select(v => v.Categoria).ToArray();
+        var data = ventasPorCategoria.Select(v => (double)v.TotalVentas).ToList();
+
+        await barChartCategoria.AddLabelsDatasetsAndUpdate(labels, GetBarChartDataset(data, "Ventas por Categoría"));
+    }
+
+    private async Task RenderizarVentasPorGenero()
+    {
+        if (barChartGenero == null || !ventasPorGenero.Any()) return;
+
+        await barChartGenero.Clear();
+
+        var labels = ventasPorGenero.Select(v => v.Genero).ToArray();
+        var data = ventasPorGenero.Select(v => (double)v.TotalVentas).ToList();
+
+        await barChartGenero.AddLabelsDatasetsAndUpdate(labels, GetBarChartDataset(data, "Ventas por Género"));
+    }
+
+    // Chart Dataset Generators
+    private BarChartDataset<double> GetBarChartDataset(List<double> data, string label)
+    {
+        return new BarChartDataset<double>
+        {
+            Label = label,
+            Data = data,
             BackgroundColor = new List<string>
             {
                 "rgba(168, 85, 247, 0.8)",
                 "rgba(59, 130, 246, 0.8)",
                 "rgba(16, 185, 129, 0.8)",
-                "rgba(245, 158, 11, 0.8)" 
+                "rgba(245, 158, 11, 0.8)",
+                "rgba(239, 68, 68, 0.8)"
             },
-            BorderColor = new List<string> { "#fff" },
+            BorderColor = new List<string>
+            {
+                "rgba(168, 85, 247, 1)",
+                "rgba(59, 130, 246, 1)",
+                "rgba(16, 185, 129, 1)",
+                "rgba(245, 158, 11, 1)",
+                "rgba(239, 68, 68, 1)"
+            },
             BorderWidth = 2
         };
     }
 
+    private LineChartDataset<int> GetLineChartDataset(List<int> data)
+    {
+        return new LineChartDataset<int>
+        {
+            Label = "Pedidos",
+            Data = data,
+            BackgroundColor = new List<string> { "rgba(168, 85, 247, 0.2)" },
+            BorderColor = new List<string> { "rgba(168, 85, 247, 1)" },
+            Fill = true,
+            PointRadius = 5,
+            PointHoverRadius = 7,
+            BorderWidth = 3,
+        };
+    }
+
+    // Refresh Methods
+    private async Task RefreshVentasCategoria()
+    {
+        await CargarVentasPorCategoria();
+        await RenderizarVentasPorCategoria();
+    }
+
+    private async Task RefreshVentasGenero()
+    {
+        await CargarVentasPorGenero();
+        await RenderizarVentasPorGenero();
+    }
+
+    // Status Helper Methods
     private string GetStatusClass(string status)
     {
-        return status switch
+        return status.ToLower() switch
         {
-            "completed" => "completed",
-            "processing" => "processing",
-            "pending" => "pending",
-            "cancelled" => "cancelled",
+            "completado" or "completed" or "entregado" => "completed",
+            "en proceso" or "processing" or "en-proceso" => "processing",
+            "pendiente" or "pending" => "pending",
+            "cancelado" or "cancelled" => "cancelled",
             _ => "pending"
         };
     }
 
     private string GetStatusText(string status)
     {
-        return status switch
+        return status.ToLower() switch
         {
-            "completed" => "Completado",
-            "processing" => "En Proceso",
-            "pending" => "Pendiente",
-            "cancelled" => "Cancelado",
-            _ => "Desconocido"
+            "completado" or "completed" or "entregado" => "Completado",
+            "en proceso" or "processing" or "en-proceso" => "En Proceso",
+            "pendiente" or "pending" => "Pendiente",
+            "cancelado" or "cancelled" => "Cancelado",
+            _ => status
         };
     }
 }
