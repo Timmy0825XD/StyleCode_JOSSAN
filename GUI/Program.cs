@@ -25,10 +25,6 @@ builder.Services
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
-// Configurar Wallet PRIMERO, antes de cualquier conexión
-var walletLocation = builder.Configuration["OracleWallet:Location"]!;
-OracleConfiguration.TnsAdmin = walletLocation;
-OracleConfiguration.WalletLocation = walletLocation;
 
 // Obtener la cadena de conexión
 var connectionString = builder.Configuration.GetConnectionString("OracleConnection")!;
