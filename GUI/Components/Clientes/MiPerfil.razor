@@ -1,0 +1,857 @@
+﻿@page "/mi-perfil"
+@using BLL.Interfaces
+@using ENTITY.Usuarios
+@using ENTITY.Direcciones
+@using ENTITY.Utilidades
+@using GUI.Components.Layout
+@using GUI.Services
+@inject IUsuarioService UsuarioService
+@inject IDireccionService DireccionService
+@inject SesionService SesionService
+@inject NavigationManager Navigation
+@layout ClienteLayout
+
+<div class="container">
+    <h2 class="page-title">Mi Perfil</h2>
+
+    @if (cargando)
+    {
+        <div class="empty-state">
+            <span class="empty-icon">⏳</span>
+            <p>Cargando información...</p>
+        </div>
+    }
+    else if (usuario == null)
+    {
+        <div class="empty-state">
+            <span class="empty-icon">⚠️</span>
+            <p>No se pudo cargar la información del usuario</p>
+            <button class="btn-primary" @onclick="@(() => Navigation.NavigateTo("/login"))">
+                Iniciar Sesión
+            </button>
+        </div>
+    }
+    else
+    {
+        <!-- Información Personal -->
+        <div class="content-card">
+            <div class="card-header">
+                <div class="header-content">
+                    <span class="header-icon">👤</span>
+                    <h3 class="card-title">Información Personal</h3>
+                </div>
+                @if (!editandoPersonal)
+                {
+                    <button class="btn-edit" @onclick="() => editandoPersonal = true">
+                        <span>✏️</span> Editar
+                    </button>
+                }
+            </div>
+
+            <div class="form-grid">
+                <div class="form-group">
+                    <label class="form-label">Cédula</label>
+                    <input type="text" class="form-input" @bind="usuario.Cedula" disabled="@(!editandoPersonal)" />
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Primer Nombre</label>
+                    <input type="text" class="form-input" @bind="usuario.PrimerNombre" disabled="@(!editandoPersonal)" />
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Segundo Nombre</label>
+                    <input type="text" class="form-input" @bind="usuario.SegundoNombre" disabled="@(!editandoPersonal)" placeholder="Opcional" />
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Apellido Paterno</label>
+                    <input type="text" class="form-input" @bind="usuario.ApellidoPaterno" disabled="@(!editandoPersonal)" />
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Apellido Materno</label>
+                    <input type="text" class="form-input" @bind="usuario.ApellidoMaterno" disabled="@(!editandoPersonal)" placeholder="Opcional" />
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Correo Electrónico</label>
+                    <input type="email" class="form-input" @bind="usuario.Correo" disabled="@(!editandoPersonal)" />
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Teléfono Principal</label>
+                    <input type="tel" class="form-input" @bind="usuario.TelefonoPrincipal" disabled="@(!editandoPersonal)" />
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Teléfono Secundario</label>
+                    <input type="tel" class="form-input" @bind="usuario.TelefonoSecundario" disabled="@(!editandoPersonal)" placeholder="Opcional" />
+                </div>
+            </div>
+
+            @if (editandoPersonal)
+            {
+                <div class="form-group">
+                    <label class="form-label">Nueva Contraseña (dejar en blanco para no cambiar)</label>
+                    <input type="password" class="form-input" @bind="nuevaContrasena" placeholder="Mínimo 6 caracteres" />
+                </div>
+
+                <div class="action-buttons">
+                    <button class="btn-primary" @onclick="GuardarCambiosPersonales" disabled="@guardandoPersonal">
+                        @if (guardandoPersonal)
+                        {
+                            <span>⏳ Guardando...</span>
+                        }
+                        else
+                        {
+                            <span>💾 Guardar Cambios</span>
+                        }
+                    </button>
+                    <button class="btn-secondary" @onclick="CancelarEdicionPersonal" disabled="@guardandoPersonal">
+                        ❌ Cancelar
+                    </button>
+                </div>
+            }
+
+            @if (!string.IsNullOrEmpty(mensajePersonal))
+            {
+                <div class="alert @(mensajePersonalExito ? "alert-success" : "alert-error")">
+                    @mensajePersonal
+                </div>
+            }
+        </div>
+
+        <!-- Información de Dirección -->
+        <div class="content-card mt-4">
+            <div class="card-header">
+                <div class="header-content">
+                    <span class="header-icon">📍</span>
+                    <h3 class="card-title">Dirección de Envío</h3>
+                </div>
+                @if (!editandoDireccion && direccion != null)
+                {
+                    <button class="btn-edit" @onclick="() => editandoDireccion = true">
+                        <span>✏️</span> Editar
+                    </button>
+                }
+            </div>
+
+            @if (direccion == null && !editandoDireccion)
+            {
+                <div class="empty-state-small">
+                    <p>No tienes una dirección registrada</p>
+                    <button class="btn-primary" @onclick="CrearNuevaDireccion">
+                        ➕ Agregar Dirección
+                    </button>
+                </div>
+            }
+            else
+            {
+                <div class="form-grid">
+                    <div class="form-group full-width">
+                        <label class="form-label">Ciudad</label>
+                        @if (editandoDireccion)
+                        {
+                            <select class="form-input" @bind="direccionEditar.CiudadId">
+                                <option value="0">Seleccione una ciudad</option>
+                                @foreach (var ciudad in ciudades)
+                                {
+                                    <option value="@ciudad.Id">@ciudad.Nombre - @ciudad.Departamento</option>
+                                }
+                            </select>
+                        }
+                        else
+                        {
+                            <input type="text" class="form-input" value="@ObtenerNombreCiudadCompleto()" disabled />
+                        }
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label class="form-label">Dirección Completa</label>
+                        <textarea class="form-textarea" rows="3" @bind="direccionEditar.DireccionCompleta"
+                                  disabled="@(!editandoDireccion)" placeholder="Ej: Calle 123 #45-67"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Barrio</label>
+                        <input type="text" class="form-input" @bind="direccionEditar.Barrio"
+                               disabled="@(!editandoDireccion)" placeholder="Nombre del barrio" />
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Referencia (Opcional)</label>
+                        <input type="text" class="form-input" @bind="direccionEditar.Referencia"
+                               disabled="@(!editandoDireccion)" placeholder="Ej: Casa de color azul" />
+                    </div>
+                </div>
+
+                @if (editandoDireccion)
+                {
+                    <div class="action-buttons">
+                        <button class="btn-primary" @onclick="GuardarCambiosDireccion" disabled="@guardandoDireccion">
+                            @if (guardandoDireccion)
+                            {
+                                <span>⏳ Guardando...</span>
+                            }
+                            else
+                            {
+                                <span>💾 Guardar Dirección</span>
+                            }
+                        </button>
+                        <button class="btn-secondary" @onclick="CancelarEdicionDireccion" disabled="@guardandoDireccion">
+                            ❌ Cancelar
+                        </button>
+                    </div>
+                }
+
+                @if (!string.IsNullOrEmpty(mensajeDireccion))
+                {
+                    <div class="alert @(mensajeDireccionExito ? "alert-success" : "alert-error")">
+                        @mensajeDireccion
+                    </div>
+                }
+            }
+        </div>
+
+        <!-- Información de Cuenta -->
+        <div class="content-card mt-4">
+            <div class="card-header">
+                <div class="header-content">
+                    <span class="header-icon">ℹ️</span>
+                    <h3 class="card-title">Información de Cuenta</h3>
+                </div>
+            </div>
+
+            <div class="info-grid">
+                <div class="info-item">
+                    <span class="info-label">Estado de Cuenta:</span>
+                    <span class="status-badge @(usuario.Estado == "A" ? "activo" : "inactivo")">
+                        @(usuario.Estado == "A" ? "Activa" : "Inactiva")
+                    </span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Fecha de Registro:</span>
+                    <span class="info-value">@usuario.FechaRegistro.ToString("dd/MM/yyyy")</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">ID de Usuario:</span>
+                    <span class="info-value">@usuario.Id</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Rol:</span>
+                    <span class="info-value">@(usuario.RolId == 1 ? "Administrador" : "Cliente")</span>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<style>
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+
+    .page-title {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #1a202c;
+        margin-bottom: 2rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .content-card {
+        background: white;
+        border-radius: 16px;
+        padding: 2rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+        margin-bottom: 2rem;
+    }
+
+    .mt-4 {
+        margin-top: 2rem;
+    }
+
+    .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid #e5e7eb;
+    }
+
+    .header-content {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .header-icon {
+        font-size: 1.5rem;
+    }
+
+    .card-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #1a202c;
+        margin: 0;
+    }
+
+    .btn-edit {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.625rem 1.25rem;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 0.9rem;
+    }
+
+        .btn-edit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+    .form-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+    }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+    .form-label {
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 0.5rem;
+        font-size: 0.9rem;
+    }
+
+    .form-input, .form-textarea {
+        padding: 0.75rem;
+        border: 2px solid #e5e7eb;
+        border-radius: 8px;
+        font-size: 0.95rem;
+        transition: all 0.3s ease;
+        font-family: inherit;
+    }
+
+        .form-input:focus, .form-textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-input:disabled, .form-textarea:disabled {
+            background-color: #f9fafb;
+            color: #6b7280;
+            cursor: not-allowed;
+        }
+
+    .form-textarea {
+        resize: vertical;
+        min-height: 80px;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 1rem;
+        margin-top: 2rem;
+    }
+
+    .btn-primary, .btn-secondary {
+        padding: 0.875rem 1.75rem;
+        border: none;
+        border-radius: 10px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+    .btn-secondary {
+        background: #f3f4f6;
+        color: #374151;
+        border: 2px solid #e5e7eb;
+    }
+
+        .btn-secondary:hover:not(:disabled) {
+            background: #e5e7eb;
+            border-color: #cbd5e0;
+        }
+
+    .alert {
+        padding: 1rem;
+        border-radius: 8px;
+        margin-top: 1rem;
+        font-weight: 500;
+    }
+
+    .alert-success {
+        background: #d1fae5;
+        color: #065f46;
+        border: 1px solid #6ee7b7;
+    }
+
+    .alert-error {
+        background: #fee2e2;
+        color: #991b1b;
+        border: 1px solid #fca5a5;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem 1rem;
+    }
+
+    .empty-state-small {
+        text-align: center;
+        padding: 2rem 1rem;
+    }
+
+    .empty-icon {
+        font-size: 4rem;
+        display: block;
+        margin-bottom: 1rem;
+    }
+
+    .empty-state p, .empty-state-small p {
+        color: #6b7280;
+        font-size: 1.1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .info-item {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .info-label {
+        font-weight: 600;
+        color: #6b7280;
+        font-size: 0.9rem;
+    }
+
+    .info-value {
+        color: #1a202c;
+        font-size: 1rem;
+    }
+
+    .status-badge {
+        display: inline-block;
+        padding: 0.375rem 0.875rem;
+        border-radius: 20px;
+        font-size: 0.875rem;
+        font-weight: 600;
+        text-align: center;
+    }
+
+        .status-badge.activo {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .status-badge.inactivo {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+    @@media (max-width: 768px) {
+        .container {
+            padding: 1rem;
+        }
+
+        .form-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .action-buttons {
+            flex-direction: column;
+        }
+
+        .card-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+    }
+</style>
+
+@code {
+    private UsuarioDTO? usuario;
+    private DireccionDetalleDTO? direccion;
+    private List<CiudadDTO> ciudades = new();
+
+    private bool cargando = true;
+    private bool editandoPersonal = false;
+    private bool editandoDireccion = false;
+    private bool guardandoPersonal = false;
+    private bool guardandoDireccion = false;
+
+    private string mensajePersonal = "";
+    private bool mensajePersonalExito = false;
+    private string mensajeDireccion = "";
+    private bool mensajeDireccionExito = false;
+
+    private string nuevaContrasena = "";
+    private UsuarioDTO usuarioOriginal = new();
+    private DireccionActualizacionDTO direccionEditar = new();
+    private bool esNuevaDireccion = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarDatos();
+    }
+
+    private async Task CargarDatos()
+    {
+        cargando = true;
+
+        try
+        {
+            var idUsuario = await SesionService.ObtenerIdUsuario();
+
+            if (idUsuario == null)
+            {
+                Console.WriteLine("⚠️ No hay usuario logueado");
+                Navigation.NavigateTo("/login");
+                return;
+            }
+
+            // Cargar todos los usuarios y buscar el actual
+            var resultadoUsuarios = await UsuarioService.ObtenerTodosLosUsuarios();
+
+            if (resultadoUsuarios.IsSuccess && resultadoUsuarios.ListObject != null)
+            {
+                usuario = resultadoUsuarios.ListObject.FirstOrDefault(u => u.Id == idUsuario.Value);
+
+                if (usuario != null)
+                {
+                    // Guardar copia original
+                    usuarioOriginal = new UsuarioDTO
+                    {
+                        Id = usuario.Id,
+                        Cedula = usuario.Cedula,
+                        PrimerNombre = usuario.PrimerNombre,
+                        SegundoNombre = usuario.SegundoNombre,
+                        ApellidoPaterno = usuario.ApellidoPaterno,
+                        ApellidoMaterno = usuario.ApellidoMaterno,
+                        Correo = usuario.Correo,
+                        TelefonoPrincipal = usuario.TelefonoPrincipal,
+                        TelefonoSecundario = usuario.TelefonoSecundario,
+                        Estado = usuario.Estado,
+                        FechaRegistro = usuario.FechaRegistro,
+                        RolId = usuario.RolId,
+                        DireccionId = usuario.DireccionId,
+                        Contrasena = usuario.Contrasena
+                    };
+
+                    // Cargar dirección si existe
+                    if (usuario.DireccionId.HasValue && usuario.DireccionId.Value > 0)
+                    {
+                        var resultadoDireccion = await DireccionService.ObtenerDireccionPorId(usuario.DireccionId.Value);
+                        if (resultadoDireccion.IsSuccess && resultadoDireccion.Object != null)
+                        {
+                            direccion = resultadoDireccion.Object;
+
+                            // Inicializar direccionEditar para edición
+                            direccionEditar = new DireccionActualizacionDTO
+                            {
+                                IdDireccion = direccion.IdDireccion,
+                                CiudadId = direccion.CiudadId,
+                                DireccionCompleta = direccion.DireccionCompleta,
+                                Barrio = direccion.Barrio,
+                                Referencia = direccion.Referencia
+                            };
+                        }
+                    }
+
+                    Console.WriteLine($"✅ Usuario cargado: {usuario.ObtenerNombreCompleto()} (ID: {usuario.Id})");
+                }
+            }
+
+            // Cargar ciudades - AJUSTADO: accede a .Object en lugar de .ListObject
+            var resultadoCiudades = await DireccionService.ObtenerTodasLasCiudades();
+            if (resultadoCiudades.IsSuccess && resultadoCiudades.ListObject != null)
+            {
+                ciudades = resultadoCiudades.ListObject.ToList();
+            }
+
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"❌ Error al cargar datos: {ex.Message}");
+        }
+        finally
+        {
+            cargando = false;
+        }
+    }
+
+    // NUEVO: Método helper para obtener el nombre completo de la ciudad
+    private string ObtenerNombreCiudadCompleto()
+    {
+        if (direccion == null) return "";
+
+        var ciudad = ciudades.FirstOrDefault(c => c.Id == direccion.CiudadId);
+        if (ciudad != null)
+        {
+            return $"{ciudad.Nombre} - {ciudad.Departamento}";
+        }
+
+        return "Ciudad no encontrada";
+    }
+
+    private void CrearNuevaDireccion()
+    {
+        esNuevaDireccion = true;
+        editandoDireccion = true;
+        direccionEditar = new DireccionActualizacionDTO
+        {
+            IdDireccion = 0,
+            CiudadId = 0,
+            DireccionCompleta = "",
+            Barrio = "",
+            Referencia = ""
+        };
+    }
+
+    private async Task GuardarCambiosPersonales()
+    {
+        mensajePersonal = "";
+        guardandoPersonal = true;
+
+        try
+        {
+            // Si hay nueva contraseña, usarla; si no, mantener la original
+            var contrasenaFinal = string.IsNullOrWhiteSpace(nuevaContrasena)
+                ? usuarioOriginal.Contrasena
+                : nuevaContrasena;
+
+            var usuarioActualizar = new UsuarioDTO
+            {
+                Id = usuario!.Id,
+                Cedula = usuario.Cedula,
+                PrimerNombre = usuario.PrimerNombre,
+                SegundoNombre = usuario.SegundoNombre,
+                ApellidoPaterno = usuario.ApellidoPaterno,
+                ApellidoMaterno = usuario.ApellidoMaterno,
+                Correo = usuario.Correo,
+                TelefonoPrincipal = usuario.TelefonoPrincipal,
+                TelefonoSecundario = usuario.TelefonoSecundario,
+                Estado = usuario.Estado,
+                FechaRegistro = usuario.FechaRegistro,
+                RolId = usuario.RolId,
+                DireccionId = usuario.DireccionId,
+                Contrasena = contrasenaFinal
+            };
+
+            var resultado = await UsuarioService.ActualizarUsuario(usuarioActualizar);
+
+            if (resultado.IsSuccess)
+            {
+                mensajePersonal = "✅ Información personal actualizada correctamente";
+                mensajePersonalExito = true;
+                editandoPersonal = false;
+                nuevaContrasena = "";
+
+                // Actualizar copia original
+                usuarioOriginal = new UsuarioDTO
+                {
+                    Id = usuarioActualizar.Id,
+                    Cedula = usuarioActualizar.Cedula,
+                    PrimerNombre = usuarioActualizar.PrimerNombre,
+                    SegundoNombre = usuarioActualizar.SegundoNombre,
+                    ApellidoPaterno = usuarioActualizar.ApellidoPaterno,
+                    ApellidoMaterno = usuarioActualizar.ApellidoMaterno,
+                    Correo = usuarioActualizar.Correo,
+                    TelefonoPrincipal = usuarioActualizar.TelefonoPrincipal,
+                    TelefonoSecundario = usuarioActualizar.TelefonoSecundario,
+                    Estado = usuarioActualizar.Estado,
+                    FechaRegistro = usuarioActualizar.FechaRegistro,
+                    RolId = usuarioActualizar.RolId,
+                    DireccionId = usuarioActualizar.DireccionId,
+                    Contrasena = usuarioActualizar.Contrasena
+                };
+
+                // Ocultar mensaje después de un tiempo
+                await Task.Delay(1500);
+                mensajePersonal = "";
+            }
+            else
+            {
+                mensajePersonal = $"❌ {resultado.Message}";
+                mensajePersonalExito = false;
+            }
+        }
+        catch (Exception ex)
+        {
+            mensajePersonal = $"❌ Error: {ex.Message}";
+            mensajePersonalExito = false;
+        }
+        finally
+        {
+            guardandoPersonal = false;
+        }
+    }
+
+    private void CancelarEdicionPersonal()
+    {
+        // Restaurar valores originales
+        usuario!.Cedula = usuarioOriginal.Cedula;
+        usuario.PrimerNombre = usuarioOriginal.PrimerNombre;
+        usuario.SegundoNombre = usuarioOriginal.SegundoNombre;
+        usuario.ApellidoPaterno = usuarioOriginal.ApellidoPaterno;
+        usuario.ApellidoMaterno = usuarioOriginal.ApellidoMaterno;
+        usuario.Correo = usuarioOriginal.Correo;
+        usuario.TelefonoPrincipal = usuarioOriginal.TelefonoPrincipal;
+        usuario.TelefonoSecundario = usuarioOriginal.TelefonoSecundario;
+
+        nuevaContrasena = "";
+        editandoPersonal = false;
+        mensajePersonal = "";
+    }
+
+    private async Task GuardarCambiosDireccion()
+    {
+        mensajeDireccion = "";
+        guardandoDireccion = true;
+
+        try
+        {
+            if (esNuevaDireccion)
+            {
+                // Crear nueva dirección
+                var nuevaDireccion = new DireccionCreacionDTO
+                {
+                    CiudadId = direccionEditar.CiudadId,
+                    DireccionCompleta = direccionEditar.DireccionCompleta,
+                    Barrio = direccionEditar.Barrio,
+                    Referencia = direccionEditar.Referencia
+                };
+
+                var resultado = await DireccionService.CrearDireccion(nuevaDireccion);
+
+                if (resultado.IsSuccess)
+                {
+                    mensajeDireccion = "✅ Dirección creada correctamente";
+                    mensajeDireccionExito = true;
+                    editandoDireccion = false;
+                    esNuevaDireccion = false;
+
+                    // Actualizar el DireccionId del usuario
+                    usuario.DireccionId = resultado.Object;
+
+                    // Recargar datos
+                    await Task.Delay(1500);
+                    await CargarDatos();
+                    mensajeDireccion = "";
+                }
+                else
+                {
+                    mensajeDireccion = $"❌ {resultado.Message}";
+                    mensajeDireccionExito = false;
+                }
+            }
+            else
+            {
+                // Actualizar dirección existente
+                var resultado = await DireccionService.ActualizarDireccion(direccionEditar);
+
+                if (resultado.IsSuccess)
+                {
+                    mensajeDireccion = "✅ Dirección actualizada correctamente";
+                    mensajeDireccionExito = true;
+                    editandoDireccion = false;
+
+                    // Recargar datos
+                    await Task.Delay(1500);
+                    await CargarDatos();
+                    mensajeDireccion = "";
+                }
+                else
+                {
+                    mensajeDireccion = $"❌ {resultado.Message}";
+                    mensajeDireccionExito = false;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            mensajeDireccion = $"❌ Error: {ex.Message}";
+            mensajeDireccionExito = false;
+        }
+        finally
+        {
+            guardandoDireccion = false;
+        }
+    }
+
+    private void CancelarEdicionDireccion()
+    {
+        if (esNuevaDireccion)
+        {
+            esNuevaDireccion = false;
+            direccionEditar = new DireccionActualizacionDTO();
+        }
+        else if (direccion != null)
+        {
+            // Restaurar valores originales
+            direccionEditar = new DireccionActualizacionDTO
+            {
+                IdDireccion = direccion.IdDireccion,
+                CiudadId = direccion.CiudadId,
+                DireccionCompleta = direccion.DireccionCompleta,
+                Barrio = direccion.Barrio,
+                Referencia = direccion.Referencia
+            };
+        }
+
+        editandoDireccion = false;
+        mensajeDireccion = "";
+    }
+}

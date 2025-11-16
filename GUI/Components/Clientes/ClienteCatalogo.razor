@@ -15,7 +15,7 @@
 
 <section class="catalogo">
 
-     @if (errorMessage != null)
+    @if (errorMessage != null)
     {
         <div class="error-container">
             <p>@errorMessage</p>
@@ -32,7 +32,7 @@
                             <span class="slide-badge">Nueva Colección</span>
                             <h1 class="slide-title">Descubre Tu Estilo</h1>
                             <p class="slide-description">Las mejores marcas y tendencias en un solo lugar</p>
-                            <button class="btn-hero" @onclick='() => SetCategoriaTipo("Reloj")'>Explorar Ahora →</button>
+                            <a href="#products-section"><button class="btn-hero">Explorar Ahora →</Button></a>
                         </div>
                         <div class="slide-image">
                             <img src="https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=800&h=600&fit=crop" alt="Productos" />
@@ -45,7 +45,8 @@
                             <span class="slide-badge">Ofertas Especiales</span>
                             <h1 class="slide-title">Hasta 50% OFF</h1>
                             <p class="slide-description">En productos seleccionados por tiempo limitado</p>
-                            <button class="btn-hero" @onclick="ScrollToProducts">Ver Ofertas →</button>
+                            <a href="#products-section"><button class="btn-hero">Ver Ofertas →</button></a>
+
                         </div>
                         <div class="slide-image">
                             <img src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=800&h=600&fit=crop" alt="Ofertas" />
@@ -58,7 +59,7 @@
                             <span class="slide-badge">Envío Gratis</span>
                             <h1 class="slide-title">Compra Sin Límites</h1>
                             <p class="slide-description">Envío gratuito a toda Colombia en todos tus pedidos</p>
-                            <button class="btn-hero" @onclick="ScrollToProducts">Comprar Ahora →</button>
+                            <a href="#products-section"><button class="btn-hero">Comprar Ahora →</button></a>
                         </div>
                         <div class="slide-image">
                             <img src="https://images.unsplash.com/photo-1445205170230-053b83016050?w=800&h=600&fit=crop" alt="Envíos" />
@@ -81,22 +82,22 @@
 
         <div class="features-section">
             <div class="feature-card">
-                <span class="feature-icon">🚚</span>
+                <span class="feature-icon"><Icon Name="IconName.Truck"/></span>
                 <h3>Envío Gratis</h3>
                 <p>A toda Colombia</p>
             </div>
             <div class="feature-card">
-                <span class="feature-icon">🔒</span>
+                <span class="feature-icon"><Icon Name="IconName.Lock" /></span>
                 <h3>Pago Seguro</h3>
                 <p>100% Protegido</p>
             </div>
             <div class="feature-card">
-                <span class="feature-icon">↩️</span>
+                <span class="feature-icon"><Icon Name="IconName.Undo" /></span>
                 <h3>Devoluciones</h3>
                 <p>30 días garantía</p>
             </div>
             <div class="feature-card">
-                <span class="feature-icon">💬</span>
+                <span class="feature-icon"><Icon Name="IconName.Moon" /></span>
                 <h3>Soporte 24/7</h3>
                 <p>Siempre disponibles</p>
             </div>
@@ -106,23 +107,23 @@
 
         <div class="discount-banner">
             <div class="banner-content">
-                <span class="banner-icon">🎉</span>
+                <span class="banner-icon"><Icon Name="IconName.Gift" /></span>
                 <div class="banner-text">
                     <h3>¡Descuento Especial!</h3>
                     <p>Obtén 15% OFF en tu primera compra con el código: <strong>BIENVENIDO15</strong></p>
                 </div>
-                <button class="btn-banner" @onclick="ScrollToProducts">Comprar Ahora</button>
+                <a href="#products-section"><button class="btn-banner">Comprar Ahora</button></a>
             </div>
         </div>
 
 
         <div class="toolbar" id="products-section">
-                <input class="input mb-3" type="text" placeholder="Buscar productos, marcas..."
-                       @bind="searchText" @bind:event="oninput" />
+            <input class="input mb-3" type="text" placeholder="Buscar productos, marcas..."
+                   @bind="searchText" @bind:event="oninput" />
 
             <div class="filters">
                 <select class="select" @bind="selectedCategoriaTipo">
-                    <option value="">🏷️ Todos los tipos</option>
+                    <option value="">Todos los tipos</option>
                     @foreach (var tipo in categoriasTipo)
                     {
                         <option value="@tipo">@tipo</option>
@@ -130,7 +131,7 @@
                 </select>
 
                 <select class="select" @bind="selectedCategoriaOcasion">
-                    <option value="">🎭 Todas las ocasiones</option>
+                    <option value="">Todas las ocasiones</option>
                     @foreach (var ocasion in categoriasOcasion)
                     {
                         <option value="@ocasion">@ocasion</option>
@@ -138,7 +139,7 @@
                 </select>
 
                 <select class="select" @bind="selectedGenero">
-                    <option value="">👥 Todos los géneros</option>
+                    <option value="">Todos los géneros</option>
                     @foreach (var genero in generos)
                     {
                         <option value="@genero">@genero</option>
@@ -146,7 +147,7 @@
                 </select>
 
                 <select class="select" @bind="selectedMarca">
-                    <option value="">⭐ Todas las marcas</option>
+                    <option value="">Todas las marcas</option>
                     @foreach (var marca in marcas)
                     {
                         <option value="@marca">@marca</option>
@@ -154,27 +155,27 @@
                 </select>
 
                 <div class="price-filter">
-                    <label>💰 Precio máx: <strong>@maxPriceFilter.ToString("C0")</strong></label>
+                    <label><Icon Name="IconName.DollarSign" /> Precio máx: <strong>@maxPriceFilter.ToString("C0")</strong></label>
                     <input type="range" min="@minPrice" max="@maxPrice" step="1000"
                            @bind="maxPriceFilter" @bind:event="oninput" class="price-slider" />
                 </div>
 
                 <select class="select" @bind="sortBy">
-                    <option value="relevancia">📊 Relevancia</option>
-                    <option value="precio_asc">💸 Precio: Menor a Mayor</option>
-                    <option value="precio_desc">💰 Precio: Mayor a Menor</option>
-                    <option value="nombre_asc">🔤 Nombre: A-Z</option>
-                    <option value="nombre_desc">🔤 Nombre: Z-A</option>
-                    <option value="nuevos">✨ Más Recientes</option>
+                    <option value="relevancia">Relevancia</option>
+                    <option value="precio_asc">Precio: Menor a Mayor</option>
+                    <option value="precio_desc">Precio: Mayor a Menor</option>
+                    <option value="nombre_asc">Nombre: A-Z</option>
+                    <option value="nombre_desc"> Nombre: Z-A</option>
+                    <option value="nuevos">Más Recientes</option>
                 </select>
             </div>
         </div>
 
-        <!-- Chips de Categorías -->
+
         <div class="chips">
             <button class="chip @(string.IsNullOrEmpty(selectedCategoriaTipo) ? "active" : "")"
                     @onclick="() => SetCategoriaTipo(string.Empty)">
-                🌟 Todos
+                <Icon Name="IconName.Star" /> Todos
             </button>
             @foreach (var tipo in categoriasTipo.Take(6))
             {
@@ -183,15 +184,10 @@
                     @tipo
                 </button>
             }
-            @if (selectedCategoriaTipo != "" || selectedMarca != "" || selectedGenero != "")
-            {
-                <button class="chip clear" @onclick="ClearFilters">
-                    ✕ Limpiar
-                </button>
-            }
+
         </div>
 
-        <!-- Información de Resultados -->
+
         <div class="results-info">
             <p>
                 <strong>@FilteredProducts.Count()</strong> productos encontrados
@@ -202,13 +198,13 @@
             </p>
         </div>
 
-        <!-- Grid de Productos -->
+
         @if (PagedProducts.Any())
         {
             <div class="grid">
                 @foreach (var articulo in PagedProducts)
                 {
-                    <div class="card" @onclick="() => ViewDetails(articulo)">
+                    <div class="card">
                         <div class="img-wrap">
                             <img src="@GetImageUrl(articulo)" alt="@articulo.Nombre" loading="lazy" />
 
@@ -216,13 +212,8 @@
                                     title="Agregar a favoritos"
                                     @onclick="(e) => ToggleFavorite(articulo.IdArticulo, e)"
                                     @onclick:stopPropagation="true">
-                                ♥
+                                <Icon Name="IconName.Heart" />
                             </button>
-
-                            @if (IsNewProduct(articulo))
-                            {
-                                <span class="badge new">✨ Nuevo</span>
-                            }
 
                             @if (articulo.TotalVariantes > 0)
                             {
@@ -239,14 +230,10 @@
                             </div>
                             <div class="price-section">
                                 <p class="price">@articulo.PrecioBase.ToString("C")</p>
-                                @if (IsNewProduct(articulo))
-                                {
-                                    <span class="price-badge">-15%</span>
-                                }
                             </div>
                             @if (!string.IsNullOrEmpty(articulo.Material))
                             {
-                                <p class="material">📦 @articulo.Material</p>
+                                <p class="material">@articulo.Material</p>
                             }
                         </div>
 
@@ -254,7 +241,7 @@
                             <button class="btn-add-cart"
                                     @onclick="(e) => AbrirModalAgregar(articulo.IdArticulo, e)"
                                     @onclick:stopPropagation="true">
-                                <span class="btn-icon">🛒</span>
+                                <span class="btn-icon"><Icon Name="IconName.ShoppingCart" /></span>
                                 <span class="btn-text">Agregar al Carrito</span>
                             </button>
                         </div>
@@ -265,744 +252,26 @@
         else
         {
             <div class="no-results">
-                <div class="no-results-icon">😔</div>
+                <div class="no-results-icon"></div>
                 <h3>No encontramos productos</h3>
                 <p>Intenta ajustar los filtros o buscar algo diferente</p>
                 <button class="btn-primary" @onclick="ClearFilters">Limpiar Filtros</button>
             </div>
         }
 
-        <!-- Paginación -->
-        @if (TotalPages > 1)
-        {
-            <div class="pagination">
-                <button class="pg-btn" disabled="@(currentPage == 1)" @onclick="PrevPage">
-                    ← Anterior
-                </button>
-                <div class="page-info">
-                    <span>Página <strong>@currentPage</strong> de <strong>@TotalPages</strong></span>
-                </div>
-                <button class="pg-btn" disabled="@(currentPage == TotalPages)" @onclick="NextPage">
-                    Siguiente →
-                </button>
-            </div>
-        }
-
-        <!-- Newsletter -->
         <div class="newsletter-section">
-            <div class="newsletter-content">
-                <h3>📧 Suscríbete a Nuestro Newsletter</h3>
-                <p>Recibe ofertas exclusivas y las últimas novedades</p>
-                <div class="newsletter-form">
-                    <input type="email" placeholder="tu@email.com" class="newsletter-input" />
-                    <button class="btn-newsletter">Suscribirme</button>
-                </div>
-            </div>
+            <Icon Name="IconName.Mail" IconSize="IconSize.x3" />
+            <h3 class="mt-3">Suscríbete a Nuestro Newsletter</h3>
+            <p>Recibe ofertas exclusivas y las últimas novedades</p>
+             <div class="newsletter-form">
+                <input type="email" placeholder="tu@email.com" class="newsletter-input" />
+                <button class="btn-newsletter">Suscribirme</button>
+             </div>
         </div>
     }
 </section>
 
 <ModalAgregarCarrito IdArticulo="idArticuloSeleccionado" mostrarModal="mostrarModalAgregar" OnCerrar="CerrarModalAgregar" />
-
-<style>
-    .catalogo {
-        max-width: 1400px;
-        margin: 0 auto;
-        padding: 0;
-    }
-
-    /* Hero Carousel */
-    .hero-carousel {
-        position: relative;
-        height: 500px;
-        margin-bottom: 40px;
-        border-radius: 24px;
-        overflow: hidden;
-        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
-    }
-
-    .carousel-container {
-        position: relative;
-        height: 100%;
-    }
-
-    .carousel-slide {
-        position: absolute;
-        width: 100%;
-        height: 100%;
-        opacity: 0;
-        transition: opacity 0.6s ease;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    }
-
-        .carousel-slide.active {
-            opacity: 1;
-        }
-
-    .slide-content {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        height: 100%;
-        padding: 60px;
-        gap: 40px;
-    }
-
-    .slide-text {
-        flex: 1;
-        color: white;
-        z-index: 2;
-    }
-
-    .slide-badge {
-        background: rgba(255, 255, 255, 0.2);
-        backdrop-filter: blur(10px);
-        padding: 8px 16px;
-        border-radius: 20px;
-        font-size: 14px;
-        font-weight: 600;
-        display: inline-block;
-        margin-bottom: 20px;
-    }
-
-    .slide-title {
-        font-size: 56px;
-        font-weight: 900;
-        margin: 0 0 20px 0;
-        line-height: 1.1;
-    }
-
-    .slide-description {
-        font-size: 20px;
-        margin-bottom: 32px;
-        opacity: 0.95;
-    }
-
-    .btn-hero {
-        background: white;
-        color: #667eea;
-        padding: 16px 32px;
-        border: none;
-        border-radius: 12px;
-        font-size: 18px;
-        font-weight: 700;
-        cursor: pointer;
-        transition: all 0.3s ease;
-    }
-
-        .btn-hero:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-        }
-
-    .slide-image {
-        flex: 1;
-        height: 100%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-        .slide-image img {
-            max-height: 100%;
-            border-radius: 16px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-        }
-
-    .carousel-controls {
-        position: absolute;
-        bottom: 30px;
-        left: 50%;
-        transform: translateX(-50%);
-        display: flex;
-        align-items: center;
-        gap: 20px;
-        z-index: 10;
-    }
-
-    .carousel-indicators {
-        display: flex;
-        gap: 10px;
-    }
-
-    .indicator {
-        width: 12px;
-        height: 12px;
-        border-radius: 50%;
-        background: rgba(255, 255, 255, 0.4);
-        border: none;
-        cursor: pointer;
-        transition: all 0.3s ease;
-    }
-
-        .indicator.active {
-            background: white;
-            width: 32px;
-            border-radius: 6px;
-        }
-
-    /* Features Section */
-    .features-section {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 24px;
-        margin: 40px 0;
-        padding: 0 20px;
-    }
-
-    .feature-card {
-        background: white;
-        padding: 30px;
-        border-radius: 16px;
-        text-align: center;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-        transition: all 0.3s ease;
-    }
-
-        .feature-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
-        }
-
-    .feature-icon {
-        font-size: 48px;
-        display: block;
-        margin-bottom: 16px;
-    }
-
-    .feature-card h3 {
-        margin: 0 0 8px 0;
-        color: #333;
-        font-size: 18px;
-    }
-
-    .feature-card p {
-        margin: 0;
-        color: #666;
-        font-size: 14px;
-    }
-
-    /* Discount Banner */
-    .discount-banner {
-        background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);
-        border-radius: 20px;
-        padding: 40px;
-        margin: 40px 20px;
-        box-shadow: 0 10px 40px rgba(245, 158, 11, 0.3);
-    }
-
-    .banner-content {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 24px;
-        color: white;
-    }
-
-    .banner-icon {
-        font-size: 64px;
-    }
-
-    .banner-text {
-        flex: 1;
-    }
-
-        .banner-text h3 {
-            margin: 0 0 8px 0;
-            font-size: 28px;
-        }
-
-        .banner-text p {
-            margin: 0;
-            font-size: 16px;
-        }
-
-        .banner-text strong {
-            background: rgba(255, 255, 255, 0.2);
-            padding: 4px 12px;
-            border-radius: 6px;
-            font-weight: 700;
-        }
-
-    .btn-banner {
-        background: white;
-        color: #ef4444;
-        padding: 14px 28px;
-        border: none;
-        border-radius: 12px;
-        font-weight: 700;
-        cursor: pointer;
-        transition: all 0.3s ease;
-    }
-
-        .btn-banner:hover {
-            transform: scale(1.05);
-        }
-
-    /* Toolbar */
-    .toolbar {
-        background: white;
-        padding: 24px;
-        border-radius: 16px;
-        margin: 40px 20px 24px 20px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-    }
-
-    .input {
-        width: 100%;
-        padding: 14px 14px 14px 48px;
-        border: 2px solid #e5e7eb;
-        border-radius: 12px;
-        font-size: 16px;
-        transition: all 0.3s ease;
-    }
-
-        .input:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-        }
-
-    .filters {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 16px;
-    }
-
-    .select {
-        padding: 12px 16px;
-        border: 2px solid #e5e7eb;
-        border-radius: 12px;
-        font-size: 14px;
-        background: white;
-        cursor: pointer;
-        transition: all 0.3s ease;
-    }
-
-        .select:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-
-    .price-filter label {
-        display: block;
-        margin-bottom: 8px;
-        font-size: 14px;
-        color: #666;
-    }
-
-    .price-slider {
-        width: 100%;
-        height: 6px;
-        border-radius: 3px;
-        background: #e5e7eb;
-        outline: none;
-        -webkit-appearance: none;
-    }
-
-        .price-slider::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            background: #667eea;
-            cursor: pointer;
-        }
-
-    /* Chips */
-    .chips {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 12px;
-        padding: 0 20px;
-        margin-bottom: 24px;
-    }
-
-    .chip {
-        padding: 10px 20px;
-        border: 2px solid #e5e7eb;
-        border-radius: 24px;
-        background: white;
-        color: #666;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        font-size: 14px;
-    }
-
-        .chip:hover {
-            border-color: #667eea;
-            color: #667eea;
-        }
-
-        .chip.active {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border-color: transparent;
-        }
-
-        .chip.clear {
-            background: #fee2e2;
-            color: #ef4444;
-            border-color: #fecaca;
-        }
-
-            .chip.clear:hover {
-                background: #ef4444;
-                color: white;
-            }
-
-    /* Results Info */
-    .results-info {
-        padding: 0 20px;
-        margin-bottom: 24px;
-    }
-
-        .results-info p {
-            color: #666;
-            font-size: 16px;
-        }
-
-    .results-filtered {
-        color: #667eea;
-        font-weight: 600;
-    }
-
-    /* Grid */
-    .grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-        gap: 24px;
-        padding: 0 20px;
-    }
-
-    .card {
-        background: white;
-        border-radius: 16px;
-        overflow: hidden;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-    }
-
-        .card:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
-        }
-
-    .img-wrap {
-        position: relative;
-        width: 100%;
-        height: 300px;
-        overflow: hidden;
-        background: #f3f4f6;
-    }
-
-        .img-wrap img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transition: transform 0.3s ease;
-        }
-
-    .card:hover .img-wrap img {
-        transform: scale(1.1);
-    }
-
-    .fav {
-        position: absolute;
-        top: 12px;
-        right: 12px;
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        background: rgba(255, 255, 255, 0.9);
-        backdrop-filter: blur(10px);
-        border: none;
-        color: #9ca3af;
-        font-size: 20px;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        z-index: 2;
-    }
-
-        .fav:hover, .fav.on {
-            color: #ef4444;
-            transform: scale(1.1);
-        }
-
-    .badge {
-        position: absolute;
-        top: 12px;
-        left: 12px;
-        padding: 6px 12px;
-        border-radius: 8px;
-        font-size: 12px;
-        font-weight: 700;
-        color: white;
-        backdrop-filter: blur(10px);
-    }
-
-        .badge.new {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-        }
-
-        .badge.variants {
-            background: rgba(0, 0, 0, 0.6);
-            top: 48px;
-        }
-
-    .info {
-        padding: 20px;
-    }
-
-    .brand {
-        color: #667eea;
-        font-size: 12px;
-        font-weight: 700;
-        text-transform: uppercase;
-        margin: 0 0 8px 0;
-        letter-spacing: 1px;
-    }
-
-    .info h3 {
-        margin: 0 0 12px 0;
-        font-size: 18px;
-        color: #333;
-        font-weight: 700;
-        line-height: 1.3;
-    }
-
-    .tags {
-        display: flex;
-        gap: 8px;
-        margin-bottom: 12px;
-    }
-
-    .tag {
-        padding: 4px 10px;
-        background: #f3f4f6;
-        border-radius: 6px;
-        font-size: 11px;
-        color: #666;
-        font-weight: 600;
-    }
-
-    .price-section {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        margin-bottom: 8px;
-    }
-
-    .price {
-        font-size: 24px;
-        font-weight: 800;
-        color: #333;
-        margin: 0;
-    }
-
-    .price-badge {
-        background: #fee2e2;
-        color: #ef4444;
-        padding: 4px 8px;
-        border-radius: 6px;
-        font-size: 12px;
-        font-weight: 700;
-    }
-
-    .material {
-        font-size: 13px;
-        color: #666;
-        margin: 0;
-    }
-
-    .actions {
-        padding: 0 20px 20px 20px;
-    }
-
-    .btn-add-cart {
-        width: 100%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        padding: 14px;
-        border: none;
-        border-radius: 12px;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        font-weight: 700;
-        cursor: pointer;
-        transition: all 0.3s ease;
-    }
-
-        .btn-add-cart:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
-        }
-
-    .btn-icon {
-        font-size: 18px;
-    }
-
-    /* No Results */
-    .no-results {
-        text-align: center;
-        padding: 80px 20px;
-    }
-
-    .no-results-icon {
-        font-size: 80px;
-        margin-bottom: 20px;
-    }
-
-    .no-results h3 {
-        font-size: 28px;
-        margin: 0 0 12px 0;
-        color: #333;
-    }
-
-    .no-results p {
-        color: #666;
-        margin-bottom: 24px;
-    }
-
-    .btn-primary {
-        padding: 14px 28px;
-        border: none;
-        border-radius: 12px;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        font-weight: 700;
-        cursor: pointer;
-        transition: all 0.3s ease;
-    }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
-        }
-
-    /* Pagination */
-    .pagination {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        gap: 20px;
-        padding: 40px 20px;
-    }
-
-    .pg-btn {
-        padding: 12px 24px;
-        border: 2px solid #e5e7eb;
-        border-radius: 12px;
-        background: white;
-        color: #667eea;
-        font-weight: 700;
-        cursor: pointer;
-        transition: all 0.3s ease;
-    }
-
-        .pg-btn:hover:not(:disabled) {
-            background: #667eea;
-            color: white;
-            border-color: #667eea;
-        }
-
-        .pg-btn:disabled {
-            opacity: 0.4;
-            cursor: not-allowed;
-        }
-
-    .page-info {
-        color: #666;
-        font-size: 16px;
-    }
-
-    /* Newsletter */
-    .newsletter-section {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        border-radius: 20px;
-        padding: 60px 40px;
-        margin: 60px 20px 40px 20px;
-        text-align: center;
-        color: white;
-    }
-
-    .newsletter-content h3 {
-        font-size: 32px;
-        margin: 0 0 12px 0;
-    }
-
-    .newsletter-content p {
-        font-size: 18px;
-        margin: 0 0 32px 0;
-        opacity: 0.95;
-    }
-
-    .newsletter-form {
-        display: flex;
-        max-width: 500px;
-        margin: 0 auto;
-        gap: 12px;
-    }
-
-    .newsletter-input {
-        flex: 1;
-        padding: 16px 20px;
-        border: none;
-        border-radius: 12px;
-        font-size: 16px;
-    }
-
-    .btn-newsletter {
-        padding: 16px 32px;
-        border: none;
-        border-radius: 12px;
-        background: white;
-        color: #667eea;
-        font-weight: 700;
-        cursor: pointer;
-        transition: all 0.3s ease;
-    }
-
-        .btn-newsletter:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
-        }
-
-    /* Responsive */
-    @@media (max-width: 768px) {
-        .slide-content {
-            flex-direction: column;
-            padding: 40px 24px;
-        }
-
-        .slide-title {
-            font-size: 36px;
-        }
-
-        .slide-description {
-            font-size: 16px;
-        }
-
-        .banner-content {
-            flex-direction: column;
-            text-align: center;
-        }
-
-        .newsletter-form {
-            flex-direction: column;
-        }
-
-        .grid {
-            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-            gap: 16px;
-        }
-    }
-</style>
 
 @code {
     private List<ArticuloListaDTO> allProducts = new();
@@ -1145,16 +414,10 @@
         return $"https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=600&h=800&fit=crop&q=80";
     }
 
-    private bool IsNewProduct(ArticuloListaDTO articulo)
-    {
-        return articulo.FechaCreacion >= DateTime.Now.AddDays(-7);
-    }
-
     private void SetCategoriaTipo(string tipo)
     {
         selectedCategoriaTipo = tipo;
         currentPage = 1;
-        ScrollToProducts();
     }
 
     private void ClearFilters()
@@ -1174,7 +437,6 @@
         if (currentPage > 1)
         {
             currentPage--;
-            ScrollToProducts();
         }
     }
 
@@ -1183,7 +445,6 @@
         if (currentPage < TotalPages)
         {
             currentPage++;
-            ScrollToProducts();
         }
     }
 
@@ -1192,21 +453,10 @@
         currentSlide = (currentSlide + 1) % 3;
     }
 
-    private void ScrollToProducts()
-    {
-        // En una implementación real, usarías JSInterop para hacer scroll
-        // await JSRuntime.InvokeVoidAsync("scrollToElement", "products-section");
-    }
-
     private void ToggleFavorite(int productId, MouseEventArgs e)
     {
         if (!favorites.Add(productId))
             favorites.Remove(productId);
-    }
-
-    private void ViewDetails(ArticuloListaDTO articulo, MouseEventArgs? e = null)
-    {
-        Navigation.NavigateTo($"/cliente/producto/{articulo.IdArticulo}");
     }
 
     private void ActualizarContadorCarrito()

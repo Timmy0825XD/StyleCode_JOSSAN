@@ -1,0 +1,985 @@
+﻿@page "/mis-pedidos"
+@using ENTITY.Pedidos
+@using BLL.Interfaces
+@using GUI.Components.Layout
+@using GUI.Services
+@layout ClienteLayout
+@inject IPedidoService PedidoService
+@inject SesionService SesionService
+@inject NavigationManager Navigation
+
+<div class="container">
+    <div class="header-section">
+        <h2 class="page-title">Mis Pedidos</h2>
+        <p class="page-subtitle">Aquí puedes consultar el estado de tus pedidos</p>
+    </div>
+
+    @if (cargando)
+    {
+        <div class="loading-state">
+            <div class="spinner"></div>
+            <p>Cargando tus pedidos...</p>
+        </div>
+    }
+    else if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="error-alert">
+            <span>⚠️</span>
+            <p>@errorMessage</p>
+        </div>
+    }
+    else if (!pedidos.Any())
+    {
+        <div class="empty-state">
+            <span class="empty-icon">📦</span>
+            <h3>No tienes pedidos todavía</h3>
+            <p>Empieza a comprar y tus pedidos aparecerán aquí</p>
+            <button class="btn-primary" @onclick="IrATienda">
+                🛍️ Ir a la tienda
+            </button>
+        </div>
+    }
+    else
+    {
+        <div class="content-card">
+            <div class="filters-row">
+                <div class="search-box">
+                    <span class="search-icon">🔍</span>
+                    <input type="text"
+                           placeholder="Buscar por número de pedido..."
+                           class="search-input"
+                           @bind="searchTerm"
+                           @bind:event="oninput" />
+                </div>
+                <div class="filter-group">
+                    <select class="filter-select" @bind="filterStatus">
+                        <option value="">Todos los estados</option>
+                        <option value="Pendiente">Pendiente</option>
+                        <option value="Confirmado">Confirmado</option>
+                        <option value="Enviado">Enviado</option>
+                        <option value="Entregado">Entregado</option>
+                        <option value="Cancelado">Cancelado</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="pedidos-lista">
+                @foreach (var pedido in PedidosFiltrados)
+                {
+                    <div class="pedido-card">
+                        <div class="pedido-header">
+                            <div class="pedido-info">
+                                <h3 class="pedido-numero">Pedido #@pedido.NumeroPedido</h3>
+                                <p class="pedido-fecha">@pedido.FechaPedido.ToString("dd/MM/yyyy HH:mm")</p>
+                            </div>
+                            <div class="pedido-estado">
+                                <span class="estado-badge @GetStatusClass(pedido.Estado)">
+                                    @GetStatusIcon(pedido.Estado) @pedido.Estado
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="pedido-body">
+                            <div class="pedido-resumen">
+                                <div class="resumen-item">
+                                    <span class="resumen-label">Total:</span>
+                                    <span class="resumen-valor total">@pedido.Total.ToString("C")</span>
+                                </div>
+                                <div class="resumen-item">
+                                    <span class="resumen-label">Método de pago:</span>
+                                    <span class="resumen-valor">@pedido.MetodoPago</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="pedido-footer">
+                            <button class="btn-detalle" @onclick="() => VerDetalles(pedido)">
+                                👁️ Ver detalles
+                            </button>
+                            @if (pedido.Estado == "Pendiente")
+                            {
+                                <button class="btn-cancelar" @onclick="() => MostrarConfirmacionCancelacion(pedido)">
+                                    ❌ Cancelar pedido
+                                </button>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+
+    @if (mostrarDetalles && pedidoSeleccionado != null)
+    {
+        <div class="modal-overlay" @onclick="CerrarDetalles">
+            <div class="modal-content" @onclick:stopPropagation>
+                <div class="modal-header">
+                    <h3>Detalles del Pedido @pedidoSeleccionado.NumeroPedido</h3>
+                    <button class="btn-close" @onclick="CerrarDetalles">✕</button>
+                </div>
+                <div class="modal-body">
+                    <div class="detail-section">
+                        <h4>📋 Información del Pedido</h4>
+                        <div class="detail-grid">
+                            <div class="detail-item">
+                                <span class="detail-label">Número:</span>
+                                <span class="detail-value">@pedidoSeleccionado.NumeroPedido</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Fecha:</span>
+                                <span class="detail-value">@pedidoSeleccionado.FechaPedido.ToString("dd/MM/yyyy HH:mm")</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Estado:</span>
+                                <span class="detail-value status-badge @GetStatusClass(pedidoSeleccionado.Estado)">
+                                    @pedidoSeleccionado.Estado
+                                </span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Método de Pago:</span>
+                                <span class="detail-value">@pedidoSeleccionado.MetodoPago</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="detail-section">
+                        <h4>📍 Dirección de Envío</h4>
+                        <div class="direccion-box">
+                            <p><strong>@pedidoSeleccionado.DireccionCompleta</strong></p>
+                            <p>@pedidoSeleccionado.Barrio</p>
+                            <p>@pedidoSeleccionado.Ciudad, @pedidoSeleccionado.Departamento</p>
+                        </div>
+                    </div>
+
+                    <div class="detail-section">
+                        <h4>🛍️ Productos</h4>
+                        <div class="products-list">
+                            @foreach (var item in pedidoSeleccionado.Productos)
+                            {
+                                <div class="product-item">
+                                    @if (!string.IsNullOrEmpty(item.ImagenUrl))
+                                    {
+                                        <img src="@item.ImagenUrl" alt="@item.NombreProducto" class="product-image" />
+                                    }
+                                    <div class="product-info">
+                                        <span class="product-name">@item.NombreProducto</span>
+                                        <span class="product-details">@item.Marca - @item.Talla - @item.Color</span>
+                                        <span class="product-sku">SKU: @item.CodigoSKU</span>
+                                        <span class="product-quantity">Cantidad: <strong>@item.Cantidad</strong></span>
+                                    </div>
+                                    <div class="product-prices">
+                                        <span class="product-unit-price">@item.PrecioUnitario.ToString("C") c/u</span>
+                                        <span class="product-subtotal">@item.SubtotalLinea.ToString("C")</span>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="detail-section">
+                        <h4>💰 Resumen de Pago</h4>
+                        <div class="payment-summary">
+                            <div class="summary-row">
+                                <span>Subtotal:</span>
+                                <span>@pedidoSeleccionado.Subtotal.ToString("C")</span>
+                            </div>
+                            <div class="summary-row">
+                                <span>Costo de Envío:</span>
+                                <span>@pedidoSeleccionado.CostoEnvio.ToString("C")</span>
+                            </div>
+                            <div class="summary-row">
+                                <span>IVA (19%):</span>
+                                <span>@pedidoSeleccionado.Impuesto.ToString("C")</span>
+                            </div>
+                            <div class="summary-row total-row">
+                                <span>Total:</span>
+                                <span>@pedidoSeleccionado.Total.ToString("C")</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    @if (mostrarConfirmacion)
+    {
+        <div class="modal-overlay" @onclick="CerrarConfirmacion">
+            <div class="modal-content confirmation-modal" @onclick:stopPropagation>
+                <div class="modal-header">
+                    <h3>⚠️ Confirmar Cancelación</h3>
+                    <button class="btn-close" @onclick="CerrarConfirmacion">✕</button>
+                </div>
+                <div class="modal-body">
+                    <p>¿Estás seguro de que deseas cancelar el pedido <strong>@pedidoParaCancelar?.NumeroPedido</strong>?</p>
+                    <p class="warning-text">Esta acción no se puede deshacer.</p>
+                    <div class="confirmation-buttons">
+                        <button class="btn-secondary" @onclick="CerrarConfirmacion">No, mantener pedido</button>
+                        <button class="btn-danger" @onclick="ConfirmarCancelacion">Sí, cancelar pedido</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<style>
+    .container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+
+    .header-section {
+        margin-bottom: 2rem;
+    }
+
+    .page-title {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #1a202c;
+        margin: 0 0 0.5rem 0;
+    }
+
+    .page-subtitle {
+        color: #718096;
+        font-size: 1rem;
+        margin: 0;
+    }
+
+    .loading-state {
+        text-align: center;
+        padding: 4rem 2rem;
+    }
+
+    .spinner {
+        border: 4px solid #f3f4f6;
+        border-top: 4px solid #667eea;
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 1rem;
+    }
+
+    @@keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+    .error-alert {
+        background: #fed7d7;
+        border: 1px solid #fc8181;
+        border-radius: 12px;
+        padding: 1rem 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        color: #c53030;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .empty-icon {
+        font-size: 4rem;
+        display: block;
+        margin-bottom: 1rem;
+    }
+
+    .empty-state h3 {
+        font-size: 1.5rem;
+        color: #1a202c;
+        margin: 0 0 0.5rem 0;
+    }
+
+    .empty-state p {
+        color: #718096;
+        margin: 0 0 1.5rem 0;
+    }
+
+    .btn-primary {
+        background: #667eea;
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+        }
+
+    .content-card {
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        padding: 1.5rem;
+    }
+
+    .filters-row {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+        flex-wrap: wrap;
+    }
+
+    .search-box {
+        flex: 1;
+        min-width: 250px;
+        position: relative;
+    }
+
+    .search-icon {
+        position: absolute;
+        left: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #a0aec0;
+    }
+
+    .search-input {
+        width: 100%;
+        padding: 0.75rem 1rem 0.75rem 2.5rem;
+        border: 2px solid #e2e8f0;
+        border-radius: 8px;
+        font-size: 0.95rem;
+        transition: all 0.3s ease;
+    }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+    .filter-group {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .filter-select {
+        padding: 0.75rem 1rem;
+        border: 2px solid #e2e8f0;
+        border-radius: 8px;
+        font-size: 0.95rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+        .filter-select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+    .pedidos-lista {
+        display: grid;
+        gap: 1.5rem;
+    }
+
+    .pedido-card {
+        background: #f7fafc;
+        border: 2px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 1.5rem;
+        transition: all 0.3s ease;
+    }
+
+        .pedido-card:hover {
+            border-color: #667eea;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+        }
+
+    .pedido-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: start;
+        margin-bottom: 1rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid #e2e8f0;
+    }
+
+    .pedido-numero {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #1a202c;
+        margin: 0 0 0.25rem 0;
+    }
+
+    .pedido-fecha {
+        color: #718096;
+        font-size: 0.9rem;
+        margin: 0;
+    }
+
+    .estado-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+
+    .Pendiente {
+        background: #fef5e7;
+        color: #f39c12;
+        border: 1px solid #f39c12;
+    }
+
+    .Confirmado {
+        background: #d4edff;
+        color: #2980b9;
+        border: 1px solid #2980b9;
+    }
+
+    .Enviado {
+        background: #e8f5e9;
+        color: #27ae60;
+        border: 1px solid #27ae60;
+    }
+
+    .Entregado {
+        background: #e8f8f5;
+        color: #16a085;
+        border: 1px solid #16a085;
+    }
+
+    .Cancelado {
+        background: #fadbd8;
+        color: #c0392b;
+        border: 1px solid #c0392b;
+    }
+
+    .pedido-body {
+        margin-bottom: 1rem;
+    }
+
+    .pedido-resumen {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+    }
+
+    .resumen-item {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+
+    .resumen-label {
+        color: #718096;
+        font-size: 0.85rem;
+        font-weight: 500;
+    }
+
+    .resumen-valor {
+        color: #1a202c;
+        font-size: 1rem;
+        font-weight: 600;
+    }
+
+        .resumen-valor.total {
+            color: #667eea;
+            font-size: 1.25rem;
+        }
+
+    .pedido-footer {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .btn-detalle, .btn-cancelar {
+        padding: 0.75rem 1.25rem;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: none;
+        font-size: 0.95rem;
+    }
+
+    .btn-detalle {
+        background: #667eea;
+        color: white;
+    }
+
+        .btn-detalle:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+        }
+
+    .btn-cancelar {
+        background: transparent;
+        color: #e53e3e;
+        border: 2px solid #e53e3e;
+    }
+
+        .btn-cancelar:hover {
+            background: #e53e3e;
+            color: white;
+        }
+
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        padding: 1rem;
+    }
+
+    .modal-content {
+        background: white;
+        border-radius: 16px;
+        max-width: 800px;
+        width: 100%;
+        max-height: 90vh;
+        overflow-y: auto;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    }
+
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1.5rem;
+        border-bottom: 2px solid #e2e8f0;
+    }
+
+        .modal-header h3 {
+            margin: 0;
+            font-size: 1.5rem;
+            color: #1a202c;
+        }
+
+    .btn-close {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        cursor: pointer;
+        color: #718096;
+        transition: color 0.3s ease;
+    }
+
+        .btn-close:hover {
+            color: #1a202c;
+        }
+
+    .modal-body {
+        padding: 1.5rem;
+    }
+
+    .detail-section {
+        margin-bottom: 2rem;
+    }
+
+        .detail-section h4 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #1a202c;
+            margin: 0 0 1rem 0;
+        }
+
+    .detail-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+    }
+
+    .detail-item {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+
+    .detail-label {
+        color: #718096;
+        font-size: 0.85rem;
+        font-weight: 500;
+    }
+
+    .detail-value {
+        color: #1a202c;
+        font-size: 1rem;
+        font-weight: 600;
+    }
+
+    .direccion-box {
+        background: #f7fafc;
+        padding: 1rem;
+        border-radius: 8px;
+        border: 1px solid #e2e8f0;
+    }
+
+        .direccion-box p {
+            margin: 0.5rem 0;
+            color: #2d3748;
+        }
+
+    .products-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .product-item {
+        display: flex;
+        gap: 1rem;
+        padding: 1rem;
+        background: #f7fafc;
+        border-radius: 8px;
+        border: 1px solid #e2e8f0;
+    }
+
+    .product-image {
+        width: 80px;
+        height: 80px;
+        object-fit: cover;
+        border-radius: 8px;
+    }
+
+    .product-info {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+
+    .product-name {
+        font-weight: 700;
+        color: #1a202c;
+        font-size: 1rem;
+    }
+
+    .product-details, .product-sku {
+        color: #718096;
+        font-size: 0.85rem;
+    }
+
+    .product-quantity {
+        color: #2d3748;
+        font-size: 0.9rem;
+    }
+
+    .product-prices {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        justify-content: center;
+        gap: 0.25rem;
+    }
+
+    .product-unit-price {
+        color: #718096;
+        font-size: 0.85rem;
+    }
+
+    .product-subtotal {
+        color: #667eea;
+        font-weight: 700;
+        font-size: 1.1rem;
+    }
+
+    .payment-summary {
+        background: #f7fafc;
+        padding: 1rem;
+        border-radius: 8px;
+        border: 1px solid #e2e8f0;
+    }
+
+    .summary-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.5rem 0;
+        font-size: 1rem;
+    }
+
+        .summary-row:not(:last-child) {
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+    .total-row {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #667eea;
+        margin-top: 0.5rem;
+        padding-top: 1rem;
+    }
+
+    .confirmation-modal {
+        max-width: 500px;
+    }
+
+    .warning-text {
+        color: #e53e3e;
+        font-weight: 600;
+        margin: 1rem 0;
+    }
+
+    .confirmation-buttons {
+        display: flex;
+        gap: 1rem;
+        justify-content: flex-end;
+        margin-top: 1.5rem;
+    }
+
+    .btn-secondary, .btn-danger {
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: none;
+    }
+
+    .btn-secondary {
+        background: #e2e8f0;
+        color: #2d3748;
+    }
+
+        .btn-secondary:hover {
+            background: #cbd5e0;
+        }
+
+    .btn-danger {
+        background: #e53e3e;
+        color: white;
+    }
+
+        .btn-danger:hover {
+            background: #c53030;
+        }
+
+    @@media (max-width: 768px) {
+        .container {
+            padding: 1rem;
+        }
+
+        .pedido-header {
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .pedido-resumen {
+            grid-template-columns: 1fr;
+        }
+
+        .product-item {
+            flex-direction: column;
+        }
+
+        .product-prices {
+            align-items: flex-start;
+        }
+
+        .confirmation-buttons {
+            flex-direction: column;
+        }
+    }
+</style>
+
+@code {
+    private List<PedidoDTO> pedidos = new();
+    private PedidoCompletoDTO? pedidoSeleccionado;
+    private PedidoDTO? pedidoParaCancelar;
+
+    private string searchTerm = "";
+    private string filterStatus = "";
+
+    private bool cargando = true;
+    private bool mostrarDetalles = false;
+    private bool mostrarConfirmacion = false;
+    private string? errorMessage;
+
+    private int? idUsuarioActual;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await VerificarSesion();
+        await CargarPedidos();
+    }
+
+    private async Task VerificarSesion()
+    {
+        try
+        {
+            idUsuarioActual = await SesionService.ObtenerIdUsuario();
+
+            if (!idUsuarioActual.HasValue)
+            {
+                Navigation.NavigateTo("/login");
+                return;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al verificar sesión: {ex.Message}");
+            Navigation.NavigateTo("/login");
+        }
+    }
+
+    private async Task CargarPedidos()
+    {
+        if (!idUsuarioActual.HasValue) return;
+
+        try
+        {
+            cargando = true;
+            errorMessage = null;
+
+            var response = await PedidoService.ObtenerPedidosUsuario(idUsuarioActual.Value);
+
+            if (response.IsSuccess && response.ListObject != null)
+            {
+                pedidos = response.ListObject.ToList();
+            }
+            else
+            {
+                errorMessage = response.Message ?? "Error al cargar tus pedidos";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error: {ex.Message}";
+        }
+        finally
+        {
+            cargando = false;
+        }
+    }
+
+    private IEnumerable<PedidoDTO> PedidosFiltrados
+    {
+        get
+        {
+            var resultado = pedidos.AsEnumerable();
+
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+            {
+                resultado = resultado.Where(p =>
+                    p.NumeroPedido.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)
+                );
+            }
+
+            if (!string.IsNullOrWhiteSpace(filterStatus))
+            {
+                resultado = resultado.Where(p => p.Estado == filterStatus);
+            }
+
+            return resultado.OrderByDescending(p => p.FechaPedido);
+        }
+    }
+
+    private async Task VerDetalles(PedidoDTO pedido)
+    {
+        try
+        {
+            cargando = true;
+            var response = await PedidoService.ObtenerPedidoCompleto(pedido.Id);
+
+            if (response.IsSuccess && response.Object != null)
+            {
+                pedidoSeleccionado = response.Object;
+                mostrarDetalles = true;
+            }
+            else
+            {
+                errorMessage = response.Message ?? "Error al cargar los detalles del pedido";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error: {ex.Message}";
+        }
+        finally
+        {
+            cargando = false;
+        }
+    }
+
+    private void CerrarDetalles()
+    {
+        mostrarDetalles = false;
+        pedidoSeleccionado = null;
+    }
+
+    private void MostrarConfirmacionCancelacion(PedidoDTO pedido)
+    {
+        pedidoParaCancelar = pedido;
+        mostrarConfirmacion = true;
+    }
+
+    private void CerrarConfirmacion()
+    {
+        mostrarConfirmacion = false;
+        pedidoParaCancelar = null;
+    }
+
+    private async Task ConfirmarCancelacion()
+    {
+        if (pedidoParaCancelar == null) return;
+
+        try
+        {
+            var response = await PedidoService.CancelarPedido(pedidoParaCancelar.Id);
+
+            if (response.IsSuccess)
+            {
+                await CargarPedidos();
+                CerrarConfirmacion();
+            }
+            else
+            {
+                errorMessage = response.Message;
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error al cancelar pedido: {ex.Message}";
+        }
+    }
+
+    private void IrATienda()
+    {
+        Navigation.NavigateTo("/");
+    }
+
+    private string GetStatusClass(string status)
+    {
+        return status;
+    }
+
+    private string GetStatusIcon(string status)
+    {
+        return status switch
+        {
+            "Pendiente" => "⏳",
+            "Confirmado" => "✅",
+            "Enviado" => "🚚",
+            "Entregado" => "📦",
+            "Cancelado" => "❌",
+            _ => "📋"
+        };
+    }
+}

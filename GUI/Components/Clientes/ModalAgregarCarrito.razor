@@ -8,13 +8,13 @@
 @if (mostrarModal)
 {
     <div class="modal-overlay" @onclick="Cerrar">
-        <div class="modal-content" @onclick:stopPropagation>
+        <div class="modal-content-large" @onclick:stopPropagation>
             <div class="modal-header">
                 <h3>Agregar al Carrito</h3>
                 <button class="btn-close" @onclick="Cerrar">✕</button>
             </div>
 
-            <div class="modal-body">
+            <div class="modal-body-horizontal">
                 @if (cargando)
                 {
                     <div class="loading">
@@ -30,101 +30,544 @@
                 }
                 else if (articuloDetalle != null)
                 {
-                    <div class="producto-info">
-                        <h4>@articuloDetalle.Nombre</h4>
-                        <p class="marca">@articuloDetalle.Marca</p>
-                        <p class="precio">@articuloDetalle.PrecioBase.ToString("C")</p>
+                    <!-- Sección de Imágenes (Izquierda) -->
+                    <div class="imagen-section">
+                        <div class="imagen-principal">
+                            <img src="@imagenActual" alt="@articuloDetalle.Nombre" />
+                        </div>
+
+                        @if (imagenesDisponibles.Count > 1)
+                        {
+                            <div class="imagenes-thumbnails">
+                                @foreach (var img in imagenesDisponibles)
+                                {
+                                    <div class="thumbnail @(imagenActual == img ? "active" : "")"
+                                         @onclick="() => CambiarImagen(img)">
+                                        <img src="@img" alt="Variante" />
+                                    </div>
+                                }
+                            </div>
+                        }
                     </div>
 
-                    <div class="form-group">
-                        <label>Talla</label>
-                        <div class="opciones-grid">
-                            @foreach (var talla in tallasDisponibles)
+                    <!-- Sección de Información (Derecha) -->
+                    <div class="info-section">
+                        <div class="producto-info">
+                            <h4>@articuloDetalle.Nombre</h4>
+                            <p class="marca">@articuloDetalle.Marca</p>
+                            <p class="precio">@articuloDetalle.PrecioBase.ToString("C")</p>
+
+                            @if (!string.IsNullOrEmpty(articuloDetalle.Descripcion))
                             {
-                                <button class="opcion-btn @(tallaSeleccionada == talla ? "active" : "")"
-                                        @onclick="() => SeleccionarTalla(talla)">
-                                    @talla
-                                </button>
+                                <p class="descripcion">@articuloDetalle.Descripcion</p>
                             }
                         </div>
-                    </div>
 
-                    @if (!string.IsNullOrEmpty(tallaSeleccionada))
-                    {
                         <div class="form-group">
-                            <label>Color</label>
-                            <div class="opciones-grid">
+                            <label><strong>Color</strong></label>
+                            <div class="colores-visuales">
                                 @foreach (var color in coloresDisponibles)
                                 {
-                                    <button class="opcion-btn @(colorSeleccionado == color ? "active" : "")"
-                                            @onclick="() => SeleccionarColor(color)">
-                                        @color
-                                    </button>
+                                    var imgColor = ObtenerImagenPorColor(color);
+                                    <div class="color-opcion @(colorSeleccionado == color ? "active" : "")"
+                                         @onclick="() => SeleccionarColor(color)"
+                                         title="@color">
+                                        @if (!string.IsNullOrEmpty(imgColor))
+                                        {
+                                            <img src="@imgColor" alt="@color" />
+                                        }
+                                        else
+                                        {
+                                            <div class="color-texto">@color.Substring(0, Math.Min(2, color.Length))</div>
+                                        }
+                                        <span class="color-nombre">@color</span>
+                                    </div>
                                 }
                             </div>
                         </div>
-                    }
 
-                    @if (varianteSeleccionada != null)
-                    {
-                        <div class="stock-info">
-                            <p>
-                                <strong>Stock disponible:</strong> @varianteSeleccionada.Stock unidades
-                            </p>
-                            <p class="sku">SKU: @varianteSeleccionada.CodigoSKU</p>
-                        </div>
-
-                        <div class="form-group">
-                            <label>Cantidad</label>
-                            <div class="cantidad-controls">
-                                <button class="btn-cantidad" @onclick="DisminuirCantidad">−</button>
-                                <input type="number"
-                                       class="cantidad-input"
-                                       @bind="cantidad"
-                                       min="1"
-                                       max="@varianteSeleccionada.Stock" />
-                                <button class="btn-cantidad" @onclick="AumentarCantidad">+</button>
+                        @if (!string.IsNullOrEmpty(colorSeleccionado))
+                        {
+                            <div class="form-group">
+                                <label><strong>Talla</strong></label>
+                                <div class="opciones-grid">
+                                    @foreach (var talla in tallasDisponiblesPorColor)
+                                    {
+                                        <button class="opcion-btn @(tallaSeleccionada == talla ? "active" : "")"
+                                                @onclick="() => SeleccionarTalla(talla)">
+                                            @talla
+                                        </button>
+                                    }
+                                </div>
                             </div>
-                        </div>
-                    }
+                        }
 
-                    @if (!string.IsNullOrEmpty(mensajeError))
-                    {
-                        <div class="error-message">
-                            <p>❌ @mensajeError</p>
-                        </div>
-                    }
+                        @if (varianteSeleccionada != null)
+                        {
+                            <div class="stock-info">
+                                <p>
+                                    <strong>Stock disponible:</strong>
+                                    <span class="stock-number">@varianteSeleccionada.Stock unidades</span>
+                                </p>
+                                <p class="sku">SKU: @varianteSeleccionada.CodigoSKU</p>
+                            </div>
 
-                    @if (mostrarExito)
-                    {
-                        <div class="success-message">
-                            <p>✓ Producto agregado al carrito</p>
+                            <div class="form-group">
+                                <label><strong>Cantidad</strong></label>
+                                <div class="cantidad-controls">
+                                    <button class="btn-cantidad" @onclick="DisminuirCantidad" disabled="@(cantidad <= 1)">−</button>
+                                    <input type="number"
+                                           class="cantidad-input"
+                                           @bind="cantidad"
+                                           min="1"
+                                           max="@varianteSeleccionada.Stock" />
+                                    <button class="btn-cantidad" @onclick="AumentarCantidad" disabled="@(cantidad >= varianteSeleccionada.Stock)">+</button>
+                                </div>
+                            </div>
+                        }
+
+                        @if (!string.IsNullOrEmpty(mensajeError))
+                        {
+                            <div class="error-message">
+                                <p>❌ @mensajeError</p>
+                            </div>
+                        }
+
+                        @if (mostrarExito)
+                        {
+                            <div class="success-message">
+                                <p>✓ Producto agregado al carrito</p>
+                            </div>
+                        }
+
+                        <div class="modal-footer-inline">
+                            <button class="btn-secondary" @onclick="Cerrar">
+                                Cancelar
+                            </button>
+                            <button class="btn-primary"
+                                    @onclick="AgregarAlCarrito"
+                                    disabled="@(varianteSeleccionada == null || agregando)">
+                                @if (agregando)
+                                {
+                                    <span>Agregando...</span>
+                                }
+                                else
+                                {
+                                    <span>🛒 Agregar al Carrito</span>
+                                }
+                            </button>
                         </div>
-                    }
+                    </div>
                 }
-            </div>
-
-            <div class="modal-footer">
-                <button class="btn-secondary" @onclick="Cerrar">
-                    Cancelar
-                </button>
-                <button class="btn-primary"
-                        @onclick="AgregarAlCarrito"
-                        disabled="@(varianteSeleccionada == null || agregando)">
-                    @if (agregando)
-                    {
-                        <span>Agregando...</span>
-                    }
-                    else
-                    {
-                        <span>🛒 Agregar al Carrito</span>
-                    }
-                </button>
             </div>
         </div>
     </div>
 }
 
+<style>
+    .modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.6);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        padding: 20px;
+        backdrop-filter: blur(4px);
+    }
+
+    .modal-content-large {
+        background: white;
+        border-radius: 12px;
+        width: 100%;
+        max-width: 1000px;
+        max-height: 90vh;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    }
+
+    .modal-header {
+        padding: 20px 24px;
+        border-bottom: 1px solid #e5e7eb;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+        .modal-header h3 {
+            margin: 0;
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #111827;
+        }
+
+    .btn-close {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        cursor: pointer;
+        color: #6b7280;
+        padding: 4px 8px;
+        border-radius: 6px;
+        transition: all 0.2s;
+    }
+
+        .btn-close:hover {
+            background: #f3f4f6;
+            color: #111827;
+        }
+
+    .modal-body-horizontal {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 32px;
+        padding: 24px;
+        overflow-y: auto;
+    }
+
+    /* Sección de Imágenes */
+    .imagen-section {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .imagen-principal {
+        width: 100%;
+        aspect-ratio: 1;
+        background: #f9fafb;
+        border-radius: 12px;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid #e5e7eb;
+    }
+
+        .imagen-principal img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+    .imagenes-thumbnails {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+        gap: 8px;
+    }
+
+    .thumbnail {
+        aspect-ratio: 1;
+        border-radius: 8px;
+        overflow: hidden;
+        cursor: pointer;
+        border: 2px solid transparent;
+        transition: all 0.2s;
+        background: #f9fafb;
+    }
+
+        .thumbnail:hover {
+            border-color: #d1d5db;
+        }
+
+        .thumbnail.active {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+        }
+
+        .thumbnail img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+    /* Sección de Información */
+    .info-section {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .producto-info h4 {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: #111827;
+        margin: 0 0 8px 0;
+    }
+
+    .marca {
+        color: #6b7280;
+        font-size: 0.95rem;
+        margin: 0 0 12px 0;
+    }
+
+    .precio {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #059669;
+        margin: 0 0 12px 0;
+    }
+
+    .descripcion {
+        color: #4b5563;
+        font-size: 0.9rem;
+        line-height: 1.5;
+        margin: 0;
+    }
+
+    /* Colores Visuales */
+    .colores-visuales {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+        gap: 12px;
+    }
+
+    .color-opcion {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+        padding: 8px;
+        border: 2px solid #e5e7eb;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s;
+        background: white;
+    }
+
+        .color-opcion:hover {
+            border-color: #3b82f6;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .color-opcion.active {
+            border-color: #3b82f6;
+            background: #eff6ff;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+        }
+
+        .color-opcion img {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+            border-radius: 6px;
+        }
+
+    .color-texto {
+        width: 50px;
+        height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #f3f4f6;
+        border-radius: 6px;
+        font-weight: 600;
+        color: #6b7280;
+        text-transform: uppercase;
+    }
+
+    .color-nombre {
+        font-size: 0.75rem;
+        color: #374151;
+        font-weight: 500;
+        text-align: center;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+        .form-group label {
+            font-size: 0.95rem;
+            color: #374151;
+        }
+
+    .opciones-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+        gap: 8px;
+    }
+
+    .opcion-btn {
+        padding: 10px;
+        border: 2px solid #e5e7eb;
+        background: white;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 500;
+        transition: all 0.2s;
+        color: #374151;
+    }
+
+        .opcion-btn:hover {
+            border-color: #3b82f6;
+            background: #f9fafb;
+        }
+
+        .opcion-btn.active {
+            border-color: #3b82f6;
+            background: #eff6ff;
+            color: #3b82f6;
+        }
+
+    .stock-info {
+        padding: 12px;
+        background: #f0fdf4;
+        border-radius: 8px;
+        border-left: 4px solid #10b981;
+    }
+
+        .stock-info p {
+            margin: 4px 0;
+            font-size: 0.9rem;
+            color: #065f46;
+        }
+
+    .stock-number {
+        font-weight: 600;
+        color: #059669;
+    }
+
+    .sku {
+        font-size: 0.85rem !important;
+        color: #6b7280 !important;
+    }
+
+    .cantidad-controls {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        max-width: 200px;
+    }
+
+    .btn-cantidad {
+        width: 40px;
+        height: 40px;
+        border: 2px solid #e5e7eb;
+        background: white;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #374151;
+        transition: all 0.2s;
+    }
+
+        .btn-cantidad:hover:not(:disabled) {
+            border-color: #3b82f6;
+            color: #3b82f6;
+            background: #f9fafb;
+        }
+
+        .btn-cantidad:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+    .cantidad-input {
+        width: 70px;
+        height: 40px;
+        text-align: center;
+        border: 2px solid #e5e7eb;
+        border-radius: 6px;
+        font-size: 1rem;
+        font-weight: 600;
+    }
+
+    .error-message {
+        padding: 12px;
+        background: #fef2f2;
+        border-left: 4px solid #ef4444;
+        border-radius: 6px;
+    }
+
+        .error-message p {
+            margin: 0;
+            color: #991b1b;
+            font-size: 0.9rem;
+        }
+
+    .success-message {
+        padding: 12px;
+        background: #f0fdf4;
+        border-left: 4px solid #10b981;
+        border-radius: 6px;
+    }
+
+        .success-message p {
+            margin: 0;
+            color: #065f46;
+            font-weight: 500;
+        }
+
+    .modal-footer-inline {
+        display: flex;
+        gap: 12px;
+        margin-top: auto;
+        padding-top: 20px;
+        border-top: 1px solid #e5e7eb;
+    }
+
+    .btn-secondary, .btn-primary {
+        flex: 1;
+        padding: 12px 24px;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        border: none;
+        font-size: 1rem;
+    }
+
+    .btn-secondary {
+        background: #f3f4f6;
+        color: #374151;
+    }
+
+        .btn-secondary:hover {
+            background: #e5e7eb;
+        }
+
+    .btn-primary {
+        background: #3b82f6;
+        color: white;
+    }
+
+        .btn-primary:hover:not(:disabled) {
+            background: #2563eb;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+    .loading {
+        grid-column: 1 / -1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 60px 20px;
+    }
+
+    .spinner {
+        width: 50px;
+        height: 50px;
+        border: 4px solid #f3f4f6;
+        border-top-color: #3b82f6;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+    }
+</style>
 
 @code {
     [Parameter] public int IdArticulo { get; set; }
@@ -138,12 +581,16 @@
     private bool mostrarExito = false;
     private bool agregando = false;
 
-    private List<string> tallasDisponibles = new();
     private List<string> coloresDisponibles = new();
+    private List<string> tallasDisponiblesPorColor = new();
     private string? tallaSeleccionada;
     private string? colorSeleccionado;
     private VarianteDetalleDTO? varianteSeleccionada;
     private int cantidad = 1;
+
+    // Para manejo de imágenes
+    private List<string> imagenesDisponibles = new();
+    private string imagenActual = "";
 
     protected override async Task OnParametersSetAsync()
     {
@@ -166,12 +613,24 @@
             {
                 articuloDetalle = response.Object;
 
-                tallasDisponibles = articuloDetalle.Variantes
+                // Obtener colores disponibles
+                coloresDisponibles = articuloDetalle.Variantes
                     .Where(v => v.Estado == "A" && v.Stock > 0)
-                    .Select(v => v.Talla)
+                    .Select(v => v.Color)
                     .Distinct()
-                    .OrderBy(t => t)
+                    .OrderBy(c => c)
                     .ToList();
+
+                // Cargar todas las imágenes disponibles
+                imagenesDisponibles = articuloDetalle.Imagenes
+                    .Select(i => i.Url)
+                    .ToList();
+
+                // Establecer imagen inicial
+                if (imagenesDisponibles.Any())
+                {
+                    imagenActual = imagenesDisponibles.First();
+                }
             }
             else
             {
@@ -188,34 +647,42 @@
         }
     }
 
-    private void SeleccionarTalla(string talla)
+    private void SeleccionarColor(string color)
     {
-        tallaSeleccionada = talla;
-        colorSeleccionado = null;
+        colorSeleccionado = color;
+        tallaSeleccionada = null;
         varianteSeleccionada = null;
         mensajeError = null;
 
         if (articuloDetalle != null)
         {
-            coloresDisponibles = articuloDetalle.Variantes
-                .Where(v => v.Talla == talla && v.Estado == "A" && v.Stock > 0)
-                .Select(v => v.Color)
+            // Obtener tallas disponibles para este color
+            tallasDisponiblesPorColor = articuloDetalle.Variantes
+                .Where(v => v.Color == color && v.Estado == "A" && v.Stock > 0)
+                .Select(v => v.Talla)
                 .Distinct()
-                .OrderBy(c => c)
+                .OrderBy(t => t)
                 .ToList();
+
+            // Cambiar imagen si hay una asociada a este color
+            var imagenColor = ObtenerImagenPorColor(color);
+            if (!string.IsNullOrEmpty(imagenColor))
+            {
+                imagenActual = imagenColor;
+            }
         }
     }
 
-    private void SeleccionarColor(string color)
+    private void SeleccionarTalla(string talla)
     {
-        colorSeleccionado = color;
+        tallaSeleccionada = talla;
         mensajeError = null;
 
-        if (articuloDetalle != null && !string.IsNullOrEmpty(tallaSeleccionada))
+        if (articuloDetalle != null && !string.IsNullOrEmpty(colorSeleccionado))
         {
             varianteSeleccionada = articuloDetalle.Variantes
-                .FirstOrDefault(v => v.Talla == tallaSeleccionada
-                                  && v.Color == color
+                .FirstOrDefault(v => v.Talla == talla
+                                  && v.Color == colorSeleccionado
                                   && v.Estado == "A"
                                   && v.Stock > 0);
 
@@ -227,6 +694,27 @@
                 }
             }
         }
+    }
+
+    private string? ObtenerImagenPorColor(string color)
+    {
+        // Intentar encontrar una imagen que contenga el color en su nombre o tags
+        // Si tienes una relación directa en tu BD entre variante e imagen, úsala aquí
+        if (articuloDetalle == null) return null;
+
+        // Por ahora retornamos una imagen aleatoria basada en el índice del color
+        var colorIndex = coloresDisponibles.IndexOf(color);
+        if (colorIndex >= 0 && colorIndex < imagenesDisponibles.Count)
+        {
+            return imagenesDisponibles[colorIndex];
+        }
+
+        return imagenesDisponibles.FirstOrDefault();
+    }
+
+    private void CambiarImagen(string url)
+    {
+        imagenActual = url;
     }
 
     private void AumentarCantidad()
@@ -249,7 +737,7 @@
     {
         if (articuloDetalle == null || varianteSeleccionada == null)
         {
-            mensajeError = "Selecciona una talla y color";
+            mensajeError = "Selecciona un color y una talla";
             return;
         }
 
@@ -276,7 +764,7 @@
                 PrecioUnitario = articuloDetalle.PrecioBase,
                 Cantidad = cantidad,
                 StockDisponible = varianteSeleccionada.Stock,
-                ImagenUrl = articuloDetalle.Imagenes.FirstOrDefault()?.Url
+                ImagenUrl = imagenActual
             };
 
             Carrito.AgregarItem(item);
@@ -310,6 +798,8 @@
         cantidad = 1;
         mensajeError = null;
         mostrarExito = false;
+        imagenesDisponibles.Clear();
+        imagenActual = "";
         await OnCerrar.InvokeAsync();
     }
 }

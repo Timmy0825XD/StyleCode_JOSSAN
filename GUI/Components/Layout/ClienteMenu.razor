@@ -1,10 +1,13 @@
 ﻿@using BLL.Interfaces
+@using GUI.Services
+@using Blazorise
 @inject IUsuarioService UsuarioService
+@inject SesionService SesionService
 @inject NavigationManager Navigation
 
 <div class="sidebar-header">
     <div class="sidebar-logo">
-        <div class="logo-icon">🛍️</div>
+        <span class="logo-icon">🛍️</span>
         <div class="logo-text">
             <span class="logo-title">JOSSAN</span>
             <span class="logo-subtitle">Tu estilo perfecto</span>
@@ -13,53 +16,41 @@
 </div>
 
 <nav class="sidebar-nav">
-    <NavLink class="nav-item" href="/">
-        <span class="nav-icon">🏠</span>
+
+    <NavLink class="nav-item" href="/" Match="NavLinkMatch.All">
+        <span class="nav-icon"><Icon Name="IconName.Home" /></span>
         <span class="nav-text">Inicio</span>
     </NavLink>
 
-    @if (EstaLogueado)
-    {
-        <NavLink class="nav-item" href="virtual-tryon">
-            <span class="nav-icon">👓</span>
-            <span class="nav-text">Prueba Virtual</span>
-        </NavLink>
-        <NavLink class="nav-item" href="mis-pedidos">
-            <span class="nav-icon">📦</span>
-            <span class="nav-text">Mis Pedidos</span>
-        </NavLink>
-        <NavLink class="nav-item" href="favoritos">
-            <span class="nav-icon">❤️</span>
-            <span class="nav-text">Favoritos</span>
-        </NavLink>
-        <NavLink class="nav-item" href="mi-perfil">
-            <span class="nav-icon">👤</span>
-            <span class="nav-text">Mi Perfil</span>
-        </NavLink>
-    }
+    <!-- Páginas que requieren login -->
+    <a class="nav-item" @onclick="@(() => IrAPagina("virtual-tryon"))" style="cursor: pointer;">
+        <span class="nav-icon"><Icon Name="IconName.Eye" /></span>
+        <span class="nav-text">Prueba Virtual</span>
+    </a>
 
-    <div class="nav-divider"></div>
+    <a class="nav-item" @onclick="@(() => IrAPagina("mis-pedidos"))" style="cursor: pointer;">
+        <span class="nav-icon"><Icon Name="IconName.ShoppingBasket" /></span>
+        <span class="nav-text">Mis Pedidos</span>
+    </a>
 
-    <NavLink class="nav-item" href="ofertas">
-        <span class="nav-icon">🏷️</span>
-        <span class="nav-text">Ofertas</span>
-        <span class="badge-new">HOT</span>
-    </NavLink>
+    <a class="nav-item" @onclick="@(() => IrAPagina("favoritos"))" style="cursor: pointer;">
+        <span class="nav-icon"><Icon Name="IconName.Heart" /></span>
+        <span class="nav-text">Favoritos</span>
+    </a>
 
-    <NavLink class="nav-item" href="asistente">
-        <span class="nav-icon">💬</span>
+    <a class="nav-item" @onclick="@(() => IrAPagina("mi-perfil"))" style="cursor: pointer;">
+        <span class="nav-icon"><Icon Name="IconName.User" /></span>
+        <span class="nav-text">Mi Perfil</span>
+    </a>
+
+    <a class="nav-item" @onclick="@(() => IrAPagina("asistente"))" style="cursor: pointer;">
+        <span class="nav-icon"><Icon Name="IconName.Comment" /></span>
         <span class="nav-text">Asistente Virtual</span>
-    </NavLink>
-
-    <NavLink class="nav-item" href="ayuda">
-        <span class="nav-icon">❓</span>
-        <span class="nav-text">Ayuda</span>
-    </NavLink>
+    </a>
 </nav>
 
 <div class="sidebar-footer">
     <div class="promo-card">
-        <span class="promo-icon">✨</span>
         <div class="promo-content">
             <p class="promo-title">¡Nueva Colección!</p>
             <p class="promo-text">Descubre las últimas tendencias</p>
@@ -69,30 +60,42 @@
     @if (EstaLogueado)
     {
         <button class="logout-btn" @onclick="CerrarSesion">
-            <span class="logout-icon">🚪</span>
             <span>Cerrar Sesión</span>
         </button>
     }
     else
     {
-        <button class="login-btn" @onclick="IrALogin">
-            <span class="login-icon">🔐</span>
+        <button class="login-btn" @onclick="IrALoginDirecto">
             <span>Iniciar Sesión</span>
         </button>
     }
 </div>
 
-<style>
-    .sidebar-header {
-        padding: 24px 20px;
-        border-bottom: 1px solid #e5e7eb;
-    }
+<!-- Modal de login requerido -->
+@if (mostrarModalLogin)
+{
+    <div class="modal-overlay" @onclick="CerrarModalLogin">
+        <div class="modal-login" @onclick:stopPropagation="true">
+            <div class="modal-header">
+                <h3>Inicia sesión para continuar</h3>
+                <button class="btn-close-modal" @onclick="CerrarModalLogin">✕</button>
+            </div>
+            <div class="modal-body">
+                <p>Para acceder a esta sección necesitas iniciar sesión o crear una cuenta.</p>
+                <div class="modal-actions">
+                    <button class="btn-primary-modal" @onclick="IrALoginDesdeModal">
+                        Iniciar Sesión
+                    </button>
+                    <button class="btn-secondary-modal" @onclick="IrARegistroDesdeModal">
+                        Crear Cuenta
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
 
-    .sidebar-logo {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-    }
+<style>
 
     .logo-icon {
         font-size: 32px;
@@ -107,32 +110,6 @@
         50% {
             transform: translateY(-5px);
         }
-    }
-
-    .logo-text {
-        display: flex;
-        flex-direction: column;
-    }
-
-    .logo-title {
-        font-size: 24px;
-        font-weight: 800;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-    }
-
-    .logo-subtitle {
-        font-size: 12px;
-        color: #9ca3af;
-        font-weight: 500;
-    }
-
-    .sidebar-nav {
-        padding: 20px 16px;
-        flex: 1;
-        overflow-y: auto;
     }
 
     .nav-item {
@@ -160,73 +137,15 @@
             box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
         }
 
-    .nav-icon {
-        font-size: 20px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 24px;
-        transition: transform 0.3s ease;
-    }
-
-    .nav-item:hover .nav-icon {
-        transform: scale(1.15);
-    }
-
     .nav-text {
         flex: 1;
         font-weight: 500;
         font-size: 14px;
     }
 
-    .badge-new {
-        background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);
-        color: white;
-        padding: 2px 8px;
-        border-radius: 12px;
-        font-size: 10px;
-        font-weight: 700;
-        animation: pulse 2s infinite;
-    }
-
-    @@keyframes pulse {
-        0%, 100% {
-            opacity: 1;
-        }
-
-        50% {
-            opacity: 0.7;
-        }
-    }
-
-    .nav-divider {
-        height: 1px;
-        background: linear-gradient(90deg, transparent, #e5e7eb, transparent);
-        margin: 16px 0;
-    }
-
     .sidebar-footer {
         padding: 16px;
         border-top: 1px solid #e5e7eb;
-    }
-
-    .promo-card {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        border-radius: 16px;
-        padding: 16px;
-        margin-bottom: 12px;
-        display: flex;
-        align-items: flex-start;
-        gap: 12px;
-        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-    }
-
-    .promo-icon {
-        font-size: 28px;
-    }
-
-    .promo-content {
-        flex: 1;
     }
 
     .promo-title {
@@ -268,22 +187,245 @@
             box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
         }
 
-    .logout-icon, .login-icon {
-        font-size: 18px;
+    /* Estilos del modal */
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 2000;
+        animation: fadeIn 0.3s ease;
+    }
+
+    @@keyframes fadeIn {
+        from {
+            opacity: 0;
+        }
+
+        to {
+            opacity: 1;
+        }
+    }
+
+    .modal-login {
+        background: white;
+        border-radius: 16px;
+        padding: 2rem;
+        max-width: 450px;
+        width: 90%;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        animation: slideUp 0.3s ease;
+    }
+
+    @@keyframes slideUp {
+        from {
+            transform: translateY(50px);
+            opacity: 0;
+        }
+
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid #e5e7eb;
+    }
+
+        .modal-header h3 {
+            margin: 0;
+            color: #1a202c;
+            font-size: 1.25rem;
+        }
+
+    .btn-close-modal {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        cursor: pointer;
+        color: #718096;
+        transition: color 0.3s ease;
+        padding: 0;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+        .btn-close-modal:hover {
+            color: #1a202c;
+            background: #f3f4f6;
+        }
+
+    .modal-body p {
+        color: #4a5568;
+        margin-bottom: 1.5rem;
+        line-height: 1.6;
+        font-size: 1rem;
+    }
+
+    .modal-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .btn-primary-modal, .btn-secondary-modal {
+        padding: 0.875rem 1.5rem;
+        border: none;
+        border-radius: 10px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        width: 100%;
+    }
+
+    .btn-primary-modal {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    }
+
+        .btn-primary-modal:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+    .btn-secondary-modal {
+        background: #f3f4f6;
+        color: #1a202c;
+        border: 2px solid #e5e7eb;
+    }
+
+        .btn-secondary-modal:hover {
+            background: #e5e7eb;
+            border-color: #cbd5e0;
+        }
+
+    @@media (max-width: 480px) {
+        .modal-login {
+            padding: 1.5rem;
+            max-width: 95%;
+        }
+
+        .modal-header h3 {
+            font-size: 1.1rem;
+        }
+
+        .modal-body p {
+            font-size: 0.95rem;
+        }
     }
 </style>
 
 @code {
-    private bool EstaLogueado => !string.IsNullOrEmpty(UsuarioService.ObtenerNombreUsuario());
+    private bool EstaLogueado { get; set; } = false;
+    private bool mostrarModalLogin = false;
+    private string paginaDestino = "";
 
-    private void CerrarSesion()
+    protected override async Task OnInitializedAsync()
     {
-        UsuarioService.CerrarSesion();
-        Navigation.NavigateTo("/", forceLoad: true);
+        await VerificarSesion();
     }
 
-    private void IrALogin()
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await VerificarSesion();
+            StateHasChanged();
+        }
+    }
+
+    private async Task VerificarSesion()
+    {
+        try
+        {
+            EstaLogueado = await SesionService.EstaLogueado();
+            Console.WriteLine($"✅ Estado de sesión en menú: {(EstaLogueado ? "Logueado" : "No logueado")}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"❌ Error al verificar sesión en menú: {ex.Message}");
+            EstaLogueado = false;
+        }
+    }
+
+    private async Task IrAPagina(string pagina)
+    {
+        await VerificarSesion(); // Verificar sesión antes de navegar
+
+        if (!EstaLogueado)
+        {
+            // Usuario no logueado, guardar destino y mostrar modal
+            paginaDestino = pagina;
+            mostrarModalLogin = true;
+            Console.WriteLine($"⚠️ Usuario no logueado intentando acceder a: {pagina}");
+        }
+        else
+        {
+            // Usuario logueado, permitir navegación
+            Console.WriteLine($"✅ Usuario logueado, navegando a: {pagina}");
+            Navigation.NavigateTo($"/{pagina}");
+        }
+    }
+
+    private void CerrarModalLogin()
+    {
+        mostrarModalLogin = false;
+        paginaDestino = "";
+    }
+
+    private void IrALoginDesdeModal()
+    {
+        // Guardar la página de destino en sessionStorage o como query parameter
+        Navigation.NavigateTo($"/login?returnUrl={paginaDestino}");
+    }
+
+    private void IrARegistroDesdeModal()
+    {
+        Navigation.NavigateTo($"/Register");
+    }
+
+    private void IrALoginDirecto()
     {
         Navigation.NavigateTo("/login");
+    }
+
+    private async Task CerrarSesion()
+    {
+        try
+        {
+            // Cerrar sesión en SesionService (limpia ProtectedLocalStorage)
+            await SesionService.CerrarSesion();
+
+            // Cerrar sesión en UsuarioService (limpia campo estático)
+            UsuarioService.CerrarSesion();
+
+            Console.WriteLine("🚪 Sesión cerrada correctamente");
+
+            // Redirigir al inicio con recarga forzada
+            Navigation.NavigateTo("/", forceLoad: true);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"❌ Error al cerrar sesión: {ex.Message}");
+            // Aún así redirigir al inicio
+            Navigation.NavigateTo("/", forceLoad: true);
+        }
     }
 }
