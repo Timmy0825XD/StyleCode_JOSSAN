@@ -23,7 +23,6 @@
     @if (Carrito.EstaVacio())
     {
         <div class="carrito-vacio">
-            <div class="empty-icon">🛒</div>
             <h3>Tu carrito está vacío</h3>
             <p>Agrega productos antes de continuar</p>
             <button class="btn-primary" @onclick="IrAlCatalogo">
@@ -80,13 +79,13 @@
                             </div>
 
                             <div class="info-note">
-                                <p>📍 Esta es tu dirección de envío registrada</p>
+                                <p> Esta es tu dirección de envío registrada</p>
                             </div>
                         }
                         else
                         {
                             <div class="error-message">
-                                <p>⚠️ No tienes una dirección registrada. Por favor, actualiza tu perfil antes de continuar.</p>
+                                <p>No tienes una dirección registrada. Por favor, actualiza tu perfil antes de continuar.</p>
                             </div>
                         }
 
@@ -129,7 +128,7 @@
                         @if (!string.IsNullOrEmpty(errorMessage))
                         {
                             <div class="error-message">
-                                <p>❌ @errorMessage</p>
+                                <p>@errorMessage</p>
                             </div>
                         }
 
@@ -188,7 +187,7 @@
                         else if (!string.IsNullOrEmpty(mensajeError))
                         {
                             <div class="error-message">
-                                <p>❌ @mensajeError</p>
+                                <p>@mensajeError</p>
                             </div>
                         }
 
@@ -203,7 +202,7 @@
                                 }
                                 else
                                 {
-                                    <span>✓ Confirmar y Pagar</span>
+                                    <span>Confirmar y Pagar</span>
                                 }
                             </button>
                         </div>
@@ -243,7 +242,7 @@
                         {
                             <div class="producto-resumen">
                                 <span>@item.NombreArticulo</span>
-                                <span>x@item.Cantidad</span>
+                                <span>@item.Cantidad</span>
                             </div>
                         }
                     </div>
@@ -304,16 +303,16 @@
             if (response.IsSuccess && response.Object != null)
             {
                 usuarioConDireccion = response.Object;
-                Console.WriteLine($"✅ Dirección cargada: {usuarioConDireccion.DireccionCompleta}");
+                Console.WriteLine($"Dirección cargada: {usuarioConDireccion.DireccionCompleta}");
             }
             else
             {
-                Console.WriteLine($"⚠️ No se pudo cargar la dirección: {response.Message}");
+                Console.WriteLine($"No se pudo cargar la dirección: {response.Message}");
             }
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"❌ Error al cargar dirección: {ex.Message}");
+            Console.WriteLine($"Error al cargar dirección: {ex.Message}");
         }
         finally
         {
@@ -428,8 +427,8 @@
                 }).ToList()
             };
 
-            Console.WriteLine($"🛒 Creando pedido para usuario ID: {pedido.IdUsuario}");
-            Console.WriteLine($"📍 Dirección de envío ID: {pedido.IdDireccionEnvio}");
+            Console.WriteLine($" Creando pedido para usuario ID: {pedido.IdUsuario}");
+            Console.WriteLine($"Dirección de envío ID: {pedido.IdDireccionEnvio}");
 
             var response = await PedidoService.CrearPedido(pedido);
 

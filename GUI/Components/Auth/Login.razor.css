@@ -63,6 +63,7 @@
     border-radius: 12px;
     font-weight: 600;
     cursor: pointer;
+    border:none;
 }
 
     .btn-login:hover:not(:disabled) {

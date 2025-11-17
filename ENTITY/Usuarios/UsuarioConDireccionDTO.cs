@@ -10,6 +10,7 @@ namespace ENTITY.Usuarios
     {
         public int IdUsuario { get; set; }
         public int? IdDireccion { get; set; }
+        public string Cedula { get; set; } = null!;
         public string PrimerNombre { get; set; } = null!;
         public string ApellidoPaterno { get; set; } = null!;
         public string Correo { get; set; } = null!;

@@ -17,7 +17,6 @@
     @if (cargando)
     {
         <div class="empty-state">
-            <span class="empty-icon">⏳</span>
             <p>Cargando información...</p>
         </div>
     }
@@ -37,13 +36,13 @@
         <div class="content-card">
             <div class="card-header">
                 <div class="header-content">
-                    <span class="header-icon">👤</span>
+                    <span class="header-icon"><Icon Name="IconName.User" /></span>
                     <h3 class="card-title">Información Personal</h3>
                 </div>
                 @if (!editandoPersonal)
                 {
                     <button class="btn-edit" @onclick="() => editandoPersonal = true">
-                        <span>✏️</span> Editar
+                        <span><Icon Name="IconName.Pen" /></span> Editar
                     </button>
                 }
             </div>
@@ -101,15 +100,15 @@
                     <button class="btn-primary" @onclick="GuardarCambiosPersonales" disabled="@guardandoPersonal">
                         @if (guardandoPersonal)
                         {
-                            <span>⏳ Guardando...</span>
+                            <span>Guardando...</span>
                         }
                         else
                         {
-                            <span>💾 Guardar Cambios</span>
+                            <span>Guardar Cambios</span>
                         }
                     </button>
                     <button class="btn-secondary" @onclick="CancelarEdicionPersonal" disabled="@guardandoPersonal">
-                        ❌ Cancelar
+                        Cancelar
                     </button>
                 </div>
             }
@@ -122,11 +121,11 @@
             }
         </div>
 
-        <!-- Información de Dirección -->
+
         <div class="content-card mt-4">
             <div class="card-header">
                 <div class="header-content">
-                    <span class="header-icon">📍</span>
+                    <span class="header-icon"><Icon Name="IconName.Truck" /></span>
                     <h3 class="card-title">Dirección de Envío</h3>
                 </div>
                 @if (!editandoDireccion && direccion != null)
@@ -142,7 +141,7 @@
                 <div class="empty-state-small">
                     <p>No tienes una dirección registrada</p>
                     <button class="btn-primary" @onclick="CrearNuevaDireccion">
-                        ➕ Agregar Dirección
+                        <Icon Name="IconName.Add" />Agregar Dirección
                     </button>
                 </div>
             }
@@ -192,15 +191,15 @@
                         <button class="btn-primary" @onclick="GuardarCambiosDireccion" disabled="@guardandoDireccion">
                             @if (guardandoDireccion)
                             {
-                                <span>⏳ Guardando...</span>
+                                <span> Guardando...</span>
                             }
                             else
                             {
-                                <span>💾 Guardar Dirección</span>
+                                <span>Guardar Dirección</span>
                             }
                         </button>
                         <button class="btn-secondary" @onclick="CancelarEdicionDireccion" disabled="@guardandoDireccion">
-                            ❌ Cancelar
+                             Cancelar
                         </button>
                     </div>
                 }
@@ -214,11 +213,9 @@
             }
         </div>
 
-        <!-- Información de Cuenta -->
         <div class="content-card mt-4">
             <div class="card-header">
                 <div class="header-content">
-                    <span class="header-icon">ℹ️</span>
                     <h3 class="card-title">Información de Cuenta</h3>
                 </div>
             </div>
@@ -247,279 +244,6 @@
     }
 </div>
 
-<style>
-    .container {
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 2rem;
-    }
-
-    .page-title {
-        font-size: 2rem;
-        font-weight: 700;
-        color: #1a202c;
-        margin-bottom: 2rem;
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-    }
-
-    .content-card {
-        background: white;
-        border-radius: 16px;
-        padding: 2rem;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
-        margin-bottom: 2rem;
-    }
-
-    .mt-4 {
-        margin-top: 2rem;
-    }
-
-    .card-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 2rem;
-        padding-bottom: 1rem;
-        border-bottom: 2px solid #e5e7eb;
-    }
-
-    .header-content {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-    }
-
-    .header-icon {
-        font-size: 1.5rem;
-    }
-
-    .card-title {
-        font-size: 1.25rem;
-        font-weight: 600;
-        color: #1a202c;
-        margin: 0;
-    }
-
-    .btn-edit {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        padding: 0.625rem 1.25rem;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        border: none;
-        border-radius: 8px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        font-size: 0.9rem;
-    }
-
-        .btn-edit:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
-        }
-
-    .form-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-        gap: 1.5rem;
-        margin-bottom: 1.5rem;
-    }
-
-    .form-group {
-        display: flex;
-        flex-direction: column;
-    }
-
-        .form-group.full-width {
-            grid-column: 1 / -1;
-        }
-
-    .form-label {
-        font-weight: 600;
-        color: #374151;
-        margin-bottom: 0.5rem;
-        font-size: 0.9rem;
-    }
-
-    .form-input, .form-textarea {
-        padding: 0.75rem;
-        border: 2px solid #e5e7eb;
-        border-radius: 8px;
-        font-size: 0.95rem;
-        transition: all 0.3s ease;
-        font-family: inherit;
-    }
-
-        .form-input:focus, .form-textarea:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-        }
-
-        .form-input:disabled, .form-textarea:disabled {
-            background-color: #f9fafb;
-            color: #6b7280;
-            cursor: not-allowed;
-        }
-
-    .form-textarea {
-        resize: vertical;
-        min-height: 80px;
-    }
-
-    .action-buttons {
-        display: flex;
-        gap: 1rem;
-        margin-top: 2rem;
-    }
-
-    .btn-primary, .btn-secondary {
-        padding: 0.875rem 1.75rem;
-        border: none;
-        border-radius: 10px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        font-size: 1rem;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-
-    .btn-primary {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-    }
-
-        .btn-primary:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
-        }
-
-        .btn-primary:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-
-    .btn-secondary {
-        background: #f3f4f6;
-        color: #374151;
-        border: 2px solid #e5e7eb;
-    }
-
-        .btn-secondary:hover:not(:disabled) {
-            background: #e5e7eb;
-            border-color: #cbd5e0;
-        }
-
-    .alert {
-        padding: 1rem;
-        border-radius: 8px;
-        margin-top: 1rem;
-        font-weight: 500;
-    }
-
-    .alert-success {
-        background: #d1fae5;
-        color: #065f46;
-        border: 1px solid #6ee7b7;
-    }
-
-    .alert-error {
-        background: #fee2e2;
-        color: #991b1b;
-        border: 1px solid #fca5a5;
-    }
-
-    .empty-state {
-        text-align: center;
-        padding: 3rem 1rem;
-    }
-
-    .empty-state-small {
-        text-align: center;
-        padding: 2rem 1rem;
-    }
-
-    .empty-icon {
-        font-size: 4rem;
-        display: block;
-        margin-bottom: 1rem;
-    }
-
-    .empty-state p, .empty-state-small p {
-        color: #6b7280;
-        font-size: 1.1rem;
-        margin-bottom: 1.5rem;
-    }
-
-    .info-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 1.5rem;
-    }
-
-    .info-item {
-        display: flex;
-        flex-direction: column;
-        gap: 0.5rem;
-    }
-
-    .info-label {
-        font-weight: 600;
-        color: #6b7280;
-        font-size: 0.9rem;
-    }
-
-    .info-value {
-        color: #1a202c;
-        font-size: 1rem;
-    }
-
-    .status-badge {
-        display: inline-block;
-        padding: 0.375rem 0.875rem;
-        border-radius: 20px;
-        font-size: 0.875rem;
-        font-weight: 600;
-        text-align: center;
-    }
-
-        .status-badge.activo {
-            background: #d1fae5;
-            color: #065f46;
-        }
-
-        .status-badge.inactivo {
-            background: #fee2e2;
-            color: #991b1b;
-        }
-
-    @@media (max-width: 768px) {
-        .container {
-            padding: 1rem;
-        }
-
-        .form-grid {
-            grid-template-columns: 1fr;
-        }
-
-        .action-buttons {
-            flex-direction: column;
-        }
-
-        .card-header {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 1rem;
-        }
-    }
-</style>
 
 @code {
     private UsuarioDTO? usuario;
@@ -557,21 +281,18 @@
 
             if (idUsuario == null)
             {
-                Console.WriteLine("⚠️ No hay usuario logueado");
                 Navigation.NavigateTo("/login");
                 return;
             }
 
-            // Cargar todos los usuarios y buscar el actual
-            var resultadoUsuarios = await UsuarioService.ObtenerTodosLosUsuarios();
+            var resultadoUsuarioCompleto = await UsuarioService.ObtenerTodosLosUsuarios();
 
-            if (resultadoUsuarios.IsSuccess && resultadoUsuarios.ListObject != null)
+            if (resultadoUsuarioCompleto.IsSuccess && resultadoUsuarioCompleto.ListObject != null)
             {
-                usuario = resultadoUsuarios.ListObject.FirstOrDefault(u => u.Id == idUsuario.Value);
+                usuario = resultadoUsuarioCompleto.ListObject.FirstOrDefault(u => u.Id == idUsuario.Value);
 
                 if (usuario != null)
                 {
-                    // Guardar copia original
                     usuarioOriginal = new UsuarioDTO
                     {
                         Id = usuario.Id,
@@ -590,36 +311,41 @@
                         Contrasena = usuario.Contrasena
                     };
 
-                    // Cargar dirección si existe
                     if (usuario.DireccionId.HasValue && usuario.DireccionId.Value > 0)
                     {
                         var resultadoDireccion = await DireccionService.ObtenerDireccionPorId(usuario.DireccionId.Value);
+
                         if (resultadoDireccion.IsSuccess && resultadoDireccion.Object != null)
                         {
                             direccion = resultadoDireccion.Object;
 
-                            // Inicializar direccionEditar para edición
                             direccionEditar = new DireccionActualizacionDTO
                             {
                                 IdDireccion = direccion.IdDireccion,
                                 CiudadId = direccion.CiudadId,
                                 DireccionCompleta = direccion.DireccionCompleta,
                                 Barrio = direccion.Barrio,
+                                CodigoPostal = direccion.CodigoPostal,
                                 Referencia = direccion.Referencia
                             };
                         }
                     }
-
-                    Console.WriteLine($"✅ Usuario cargado: {usuario.ObtenerNombreCompleto()} (ID: {usuario.Id})");
                 }
             }
 
-            // Cargar ciudades - CORREGIDO
+            var resultadoCiudades = await DireccionService.ObtenerTodasLasCiudades();
 
+            if (resultadoCiudades.IsSuccess && resultadoCiudades.ListObject != null)
+            {
+                ciudades = resultadoCiudades.ListObject.ToList();
+            }
+            else
+            {
+                ciudades = new List<CiudadDTO>();
+            }
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"❌ Error al cargar datos: {ex.Message}");
         }
         finally
         {
@@ -661,16 +387,14 @@
 
         try
         {
-            // Validación de nueva contraseña (solo si se proporciona)
             if (!string.IsNullOrWhiteSpace(nuevaContrasena) && nuevaContrasena.Length < 6)
             {
-                mensajePersonal = "❌ La nueva contraseña debe tener al menos 6 caracteres";
+                mensajePersonal = " La nueva contraseña debe tener al menos 6 caracteres";
                 mensajePersonalExito = false;
                 guardandoPersonal = false;
                 return;
             }
 
-            // Si hay nueva contraseña, usarla; si no, mantener la original
             var contrasenaFinal = string.IsNullOrWhiteSpace(nuevaContrasena)
                 ? usuarioOriginal.Contrasena
                 : nuevaContrasena;
@@ -697,12 +421,11 @@
 
             if (resultado.IsSuccess)
             {
-                mensajePersonal = "✅ Información personal actualizada correctamente";
+                mensajePersonal = " Información personal actualizada correctamente";
                 mensajePersonalExito = true;
                 editandoPersonal = false;
                 nuevaContrasena = "";
 
-                // Actualizar copia original
                 usuarioOriginal = new UsuarioDTO
                 {
                     Id = usuarioActualizar.Id,
@@ -721,19 +444,18 @@
                     Contrasena = usuarioActualizar.Contrasena
                 };
 
-                // Ocultar mensaje después de un tiempo
                 await Task.Delay(3000);
                 mensajePersonal = "";
             }
             else
             {
-                mensajePersonal = $"❌ {resultado.Message}";
+                mensajePersonal = $" {resultado.Message}";
                 mensajePersonalExito = false;
             }
         }
         catch (Exception ex)
         {
-            mensajePersonal = $"❌ Error: {ex.Message}";
+            mensajePersonal = $" Error: {ex.Message}";
             mensajePersonalExito = false;
         }
         finally
@@ -744,7 +466,6 @@
 
     private void CancelarEdicionPersonal()
     {
-        // Restaurar valores originales
         usuario!.Cedula = usuarioOriginal.Cedula;
         usuario.PrimerNombre = usuarioOriginal.PrimerNombre;
         usuario.SegundoNombre = usuarioOriginal.SegundoNombre;
@@ -766,10 +487,9 @@
 
         try
         {
-            // Validaciones
             if (direccionEditar.CiudadId <= 0)
             {
-                mensajeDireccion = "❌ Debe seleccionar una ciudad";
+                mensajeDireccion = " Debe seleccionar una ciudad";
                 mensajeDireccionExito = false;
                 guardandoDireccion = false;
                 return;
@@ -777,7 +497,7 @@
 
             if (string.IsNullOrWhiteSpace(direccionEditar.DireccionCompleta) || direccionEditar.DireccionCompleta.Length < 10)
             {
-                mensajeDireccion = "❌ La dirección debe tener al menos 10 caracteres";
+                mensajeDireccion = " La dirección debe tener al menos 10 caracteres";
                 mensajeDireccionExito = false;
                 guardandoDireccion = false;
                 return;
@@ -785,7 +505,7 @@
 
             if (string.IsNullOrWhiteSpace(direccionEditar.Barrio) || direccionEditar.Barrio.Length < 3)
             {
-                mensajeDireccion = "❌ El barrio debe tener al menos 3 caracteres";
+                mensajeDireccion = " El barrio debe tener al menos 3 caracteres";
                 mensajeDireccionExito = false;
                 guardandoDireccion = false;
                 return;
@@ -793,7 +513,6 @@
 
             if (esNuevaDireccion)
             {
-                // Crear nueva dirección
                 var nuevaDireccion = new DireccionCreacionDTO
                 {
                     CiudadId = direccionEditar.CiudadId,
@@ -806,54 +525,48 @@
 
                 if (resultado.IsSuccess)
                 {
-                    mensajeDireccion = "✅ Dirección creada correctamente";
+                    mensajeDireccion = " Dirección creada correctamente";
                     mensajeDireccionExito = true;
                     editandoDireccion = false;
                     esNuevaDireccion = false;
 
-                    // Actualizar el DireccionId del usuario
                     usuario!.DireccionId = resultado.Object;
-
-                    // Guardar cambio en el usuario
                     await UsuarioService.ActualizarUsuario(usuario);
 
-                    // Recargar datos
                     await Task.Delay(1500);
                     await CargarDatos();
                     mensajeDireccion = "";
                 }
                 else
                 {
-                    mensajeDireccion = $"❌ {resultado.Message}";
+                    mensajeDireccion = $" {resultado.Message}";
                     mensajeDireccionExito = false;
                 }
             }
             else
             {
-                // Actualizar dirección existente
                 var resultado = await DireccionService.ActualizarDireccion(direccionEditar);
 
                 if (resultado.IsSuccess)
                 {
-                    mensajeDireccion = "✅ Dirección actualizada correctamente";
+                    mensajeDireccion = " Dirección actualizada correctamente";
                     mensajeDireccionExito = true;
                     editandoDireccion = false;
 
-                    // Recargar datos
                     await Task.Delay(1500);
                     await CargarDatos();
                     mensajeDireccion = "";
                 }
                 else
                 {
-                    mensajeDireccion = $"❌ {resultado.Message}";
+                    mensajeDireccion = $" {resultado.Message}";
                     mensajeDireccionExito = false;
                 }
             }
         }
         catch (Exception ex)
         {
-            mensajeDireccion = $"❌ Error: {ex.Message}";
+            mensajeDireccion = $" Error: {ex.Message}";
             mensajeDireccionExito = false;
         }
         finally
@@ -871,7 +584,6 @@
         }
         else if (direccion != null)
         {
-            // Restaurar valores originales
             direccionEditar = new DireccionActualizacionDTO
             {
                 IdDireccion = direccion.IdDireccion,

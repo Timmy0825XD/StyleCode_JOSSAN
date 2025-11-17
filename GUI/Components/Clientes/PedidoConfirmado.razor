@@ -13,9 +13,7 @@
         <div class="error-state">
             <h2>¡Algo salió mal!</h2>
             <p class="error-message">@errorMessage</p>
-            <button class="btn-action btn-primary" @onclick="VolverAlCatalogo">
-                🏠 Volver al Catálogo
-            </button>
+            <button class="btn-action btn-primary" @onclick="VolverAlCatalogo">Volver al Catálogo</button>
         </div>
     }
     else if (pedido != null)
@@ -36,7 +34,7 @@
                 <div class="left-column">
                     <div class="section-card productos-section">
                         <div class="section-header">
-                            <h3>📦 Tus Productos</h3>
+                            <h3>Tus Productos</h3>
                             <span class="badge-cantidad">@pedido.Productos.Count items</span>
                         </div>
                         <div class="productos-list">
@@ -50,7 +48,7 @@
                                         }
                                         else
                                         {
-                                            <div class="producto-placeholder">📦</div>
+                                            <div class="producto-placeholder"></div>
                                         }
                                     </div>
                                     <div class="producto-detalles">
@@ -72,18 +70,18 @@
 
                     <div class="section-card envio-section">
                         <div class="section-header">
-                            <h3>🚚 Información de Envío</h3>
+                            <h3><Icon Name="IconName.Truck" /> Información de Envío</h3>
                         </div>
                         <div class="envio-detalles">
                             <div class="envio-grupo">
-                                <div class="envio-icon">👤</div>
+                                <div class="envio-icon"><Icon Name="IconName.User" /></div>
                                 <div>
                                     <p class="envio-label">Destinatario</p>
                                     <p class="envio-valor">@pedido.NombreCliente</p>
                                 </div>
                             </div>
                             <div class="envio-grupo">
-                                <div class="envio-icon">📍</div>
+                                <div class="envio-icon"><Icon Name="IconName.Directions" /></div>
                                 <div>
                                     <p class="envio-label">Dirección</p>
                                     <p class="envio-valor">@pedido.DireccionCompleta</p>
@@ -92,7 +90,7 @@
                                 </div>
                             </div>
                             <div class="envio-grupo">
-                                <div class="envio-icon">📞</div>
+                                <div class="envio-icon"><Icon Name="IconName.Phone" /></div>
                                 <div>
                                     <p class="envio-label">Teléfono</p>
                                     <p class="envio-valor">@pedido.TelefonoPrincipal</p>
@@ -122,7 +120,7 @@
                                 <span class="resumen-total-valor">@pedido.Total.ToString("C")</span>
                             </div>
                             <div class="metodo-pago-info">
-                                <div class="metodo-pago-icon">💰</div>
+                                <div class="metodo-pago-icon"><Icon Name="IconName.MoneyBillAlt" /></div>
                                 <div>
                                     <p class="metodo-label">Método de pago</p>
                                     <p class="metodo-valor">@pedido.MetodoPago</p>
@@ -133,7 +131,7 @@
 
                     <div class="info-boxes">
                         <div class="info-box-modern">
-                            <div class="info-box-icon">📧</div>
+                            <div class="info-box-icon"><Icon Name="IconName.Mail" /></div>
                             <div class="info-box-content">
                                 <h4>Confirmación Enviada</h4>
                                 <p>Revisa <strong>@pedido.CorreoCliente</strong> para más detalles</p>
@@ -141,7 +139,7 @@
                         </div>
 
                         <div class="info-box-modern">
-                            <div class="info-box-icon">💬</div>
+                            <div class="info-box-icon"><Icon Name="IconName.Send" /></div>
                             <div class="info-box-content">
                                 <h4>¿Necesitas Ayuda?</h4>
                                 <p>Contáctanos con tu N° de orden</p>
@@ -153,10 +151,10 @@
 
             <div class="acciones-footer">
                 <button class="btn-action btn-secondary" @onclick="VerMisPedidos">
-                    📋 Ver Mis Pedidos
+                    <Icon Name="IconName.File" /> Ver Mis Pedidos
                 </button>
                 <button class="btn-action btn-primary" @onclick="VolverAlCatalogo">
-                    🛍️ Seguir Comprando
+                    <Icon Name="IconName.ShoppingCart" /> Seguir Comprando
                 </button>
             </div>
         </div>

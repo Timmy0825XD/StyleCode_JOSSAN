@@ -7,332 +7,24 @@
 
 <PageTitle>Virtual Try-On</PageTitle>
 
-<style>
-    .gradient-header {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        border-radius: 16px;
-        padding: 2rem;
-        color: white;
-        box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
-        margin-bottom: 2rem;
-    }
-
-    .stat-card {
-        background: white;
-        border-radius: 12px;
-        padding: 1.5rem;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-        border: none;
-    }
-
-        .stat-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-        }
-
-    .stat-number {
-        font-size: 2.5rem;
-        font-weight: 700;
-        margin: 0;
-        line-height: 1;
-    }
-
-    .stat-label {
-        font-size: 0.875rem;
-        color: #6c757d;
-        margin-top: 0.5rem;
-        font-weight: 500;
-    }
-
-    .garment-type-card {
-        background: white;
-        border-radius: 16px;
-        border: 3px solid #e9ecef;
-        padding: 1.5rem;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        text-align: center;
-        height: 100%;
-    }
-
-        .garment-type-card:hover {
-            border-color: #667eea;
-            box-shadow: 0 8px 24px rgba(102, 126, 234, 0.15);
-            transform: translateY(-3px);
-        }
-
-        .garment-type-card.selected {
-            border-color: #667eea;
-            background: linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%);
-            box-shadow: 0 8px 24px rgba(102, 126, 234, 0.2);
-        }
-
-    .garment-icon {
-        font-size: 3rem;
-        margin-bottom: 0.5rem;
-        display: block;
-    }
-
-    .garment-title {
-        font-weight: 700;
-        font-size: 1.1rem;
-        margin-bottom: 0.25rem;
-    }
-
-    .garment-subtitle {
-        color: #6c757d;
-        font-size: 0.875rem;
-    }
-
-    .upload-card {
-        background: white;
-        border-radius: 16px;
-        overflow: hidden;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-        height: 100%;
-        border: none;
-    }
-
-    .upload-header {
-        padding: 1.25rem;
-        font-weight: 700;
-        font-size: 1.1rem;
-        border-bottom: 3px solid #f8f9fa;
-    }
-
-        .upload-header.person {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-        }
-
-        .upload-header.garment {
-            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
-            color: white;
-        }
-
-    .image-preview {
-        position: relative;
-        min-height: 300px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: #f8f9fa;
-    }
-
-        .image-preview img {
-            max-height: 450px;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        }
-
-    .empty-preview {
-        padding: 3rem;
-        text-align: center;
-        color: #adb5bd;
-    }
-
-    .empty-preview-icon {
-        font-size: 4rem;
-        margin-bottom: 1rem;
-        opacity: 0.3;
-    }
-
-    .custom-file-input {
-        border: 2px dashed #dee2e6;
-        border-radius: 12px;
-        padding: 1.5rem;
-        text-align: center;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        background: #fafbfc;
-    }
-
-        .custom-file-input:hover {
-            border-color: #667eea;
-            background: #f5f7ff;
-        }
-
-    .process-btn {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        border: none;
-        border-radius: 50px;
-        padding: 1rem 3rem;
-        font-size: 1.1rem;
-        font-weight: 700;
-        color: white;
-        box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
-        transition: all 0.3s ease;
-    }
-
-        .process-btn:hover:not(:disabled) {
-            transform: translateY(-3px);
-            box-shadow: 0 12px 32px rgba(102, 126, 234, 0.5);
-        }
-
-        .process-btn:disabled {
-            background: linear-gradient(135deg, #adb5bd 0%, #868e96 100%);
-            cursor: not-allowed;
-            box-shadow: none;
-        }
-
-    .result-card {
-        background: white;
-        border-radius: 16px;
-        overflow: hidden;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
-        border: none;
-        animation: slideUp 0.5s ease;
-    }
-
-    .result-header {
-        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-        color: white;
-        padding: 1.5rem;
-        font-weight: 700;
-        font-size: 1.2rem;
-    }
-
-    .accordion-card {
-        background: white;
-        border-radius: 16px;
-        border: none;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-        overflow: hidden;
-    }
-
-    .accordion-header {
-        padding: 1.25rem 1.5rem;
-        cursor: pointer;
-        font-weight: 700;
-        font-size: 1.1rem;
-        background: #f8f9fa;
-        transition: background 0.3s ease;
-    }
-
-        .accordion-header:hover {
-            background: #e9ecef;
-        }
-
-    .alert-custom {
-        border-radius: 12px;
-        border: none;
-        padding: 1rem 1.5rem;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-    }
-
-    .alert-warning-custom {
-        background: linear-gradient(135deg, #fff5e6 0%, #ffe8cc 100%);
-        color: #856404;
-        border-left: 4px solid #ffc107;
-    }
-
-    .alert-success-custom {
-        background: linear-gradient(135deg, #e6f9f0 0%, #ccf2e0 100%);
-        color: #155724;
-        border-left: 4px solid #28a745;
-    }
-
-    .badge-type {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        padding: 0.5rem 1rem;
-        border-radius: 50px;
-        font-weight: 600;
-        font-size: 0.875rem;
-    }
-
-    .form-control, .form-select {
-        border-radius: 8px;
-        border: 2px solid #e9ecef;
-        padding: 0.75rem;
-        transition: border-color 0.3s ease;
-    }
-
-        .form-control:focus, .form-select:focus {
-            border-color: #667eea;
-            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.15);
-        }
-
-    .btn-action {
-        border-radius: 50px;
-        padding: 0.75rem 2rem;
-        font-weight: 600;
-        transition: all 0.3s ease;
-        border: none;
-    }
-
-    .btn-download {
-        background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
-        color: white;
-    }
-
-        .btn-download:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(17, 153, 142, 0.4);
-        }
-
-    .btn-reset {
-        background: linear-gradient(135deg, #868e96 0%, #6c757d 100%);
-        color: white;
-    }
-
-        .btn-reset:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(108, 117, 125, 0.4);
-        }
-
-    .health-indicator {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        padding: 0.5rem 1rem;
-        border-radius: 50px;
-        font-weight: 600;
-        font-size: 0.875rem;
-    }
-
-        .health-indicator.healthy {
-            background: linear-gradient(135deg, #e6f9f0 0%, #ccf2e0 100%);
-            color: #155724;
-        }
-
-        .health-indicator.unhealthy {
-            background: linear-gradient(135deg, #ffe6e6 0%, #ffcccc 100%);
-            color: #721c24;
-        }
-
-    .tips-list li {
-        padding: 0.5rem 0;
-        border-bottom: 1px solid #f0f0f0;
-    }
-
-        .tips-list li:last-child {
-            border-bottom: none;
-        }
-</style>
-
 <div class="container py-4">
-    <!-- Header con Gradiente -->
+
     <div class="gradient-header">
         <div class="d-flex justify-content-between align-items-center flex-wrap">
             <div>
-                <h1 class="display-4 mb-2">👔 Virtual Try-On v2.0</h1>
-                <p class="lead mb-0">Prueba prendas virtualmente usando IA - Ahora con soporte para pantalones 🩳</p>
+                <h1 class="display-4 mb-2">Virtual Try-On v2.0</h1>
+                <p class="lead mb-0">Prueba prendas virtualmente usando IA</p>
             </div>
             <div>
                 @if (!isApiHealthy)
                 {
                     <span class="health-indicator unhealthy">
-                        <span>⚠️</span>
                         <span>API Desconectada</span>
                     </span>
                 }
                 else
                 {
                     <span class="health-indicator healthy">
-                        <span>✅</span>
                         <span>API v2.0 Conectada</span>
                     </span>
                 }
@@ -340,41 +32,41 @@
         </div>
     </div>
 
-    @* Mensaje de error de API *@
+
     @if (!isApiHealthy)
     {
         <div class="alert alert-danger alert-custom mb-4" role="alert">
-            <strong>⚠️ API no disponible</strong>
+            <strong> API no disponible</strong>
             <p class="mb-0 mt-2">Asegúrate de que el servidor Python esté ejecutándose en http://localhost:8000</p>
         </div>
     }
 
-    @* Estadísticas Mejoradas *@
+
     @if (stats != null)
     {
         <div class="row g-3 mb-4">
             <div class="col-md-3">
                 <div class="stat-card">
                     <h3 class="stat-number text-primary">@stats.Stats.Successful</h3>
-                    <div class="stat-label">✨ Exitosas</div>
+                    <div class="stat-label">Exitosas</div>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="stat-card">
                     <h3 class="stat-number text-success">@stats.Stats.Good_Quality</h3>
-                    <div class="stat-label">⭐ Buena Calidad</div>
+                    <div class="stat-label">Buena Calidad</div>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="stat-card">
                     <h3 class="stat-number text-danger">@stats.Stats.Failed</h3>
-                    <div class="stat-label">❌ Fallidas</div>
+                    <div class="stat-label"> Fallidas</div>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="stat-card">
                     <h3 class="stat-number text-info">@stats.Stats.Total</h3>
-                    <div class="stat-label">📊 Total Hoy</div>
+                    <div class="stat-label"> Total Hoy</div>
                 </div>
             </div>
         </div>
@@ -388,15 +80,12 @@
                             <span class="text-muted fw-semibold">Procesadas por tipo:</span>
                             <div class="d-flex gap-4">
                                 <span class="badge-type bg-light">
-                                    <span>👕</span>
                                     <span>@(stats.Stats.By_Type.ContainsKey("upper") ? stats.Stats.By_Type["upper"] : 0) Superiores</span>
                                 </span>
                                 <span class="badge-type bg-light">
-                                    <span>🩳</span>
                                     <span>@(stats.Stats.By_Type.ContainsKey("lower") ? stats.Stats.By_Type["lower"] : 0) Inferiores</span>
                                 </span>
                                 <span class="badge-type bg-light">
-                                    <span>👗</span>
                                     <span>@(stats.Stats.By_Type.ContainsKey("dress") ? stats.Stats.By_Type["dress"] : 0) Vestidos</span>
                                 </span>
                             </div>
@@ -407,12 +96,11 @@
         }
     }
 
-    @* Selector de Tipo de Prenda Mejorado *@
+
     <div class="row g-3 mb-4">
         <div class="col-md-4">
             <div class="garment-type-card @(selectedGarmentType == GarmentType.Upper ? "selected" : "")"
                  @onclick="@(() => OnGarmentTypeChanged(GarmentType.Upper))">
-                <span class="garment-icon">👕</span>
                 <div class="garment-title">Parte Superior</div>
                 <div class="garment-subtitle">Camisas, blusas, tops</div>
             </div>
@@ -420,7 +108,6 @@
         <div class="col-md-4">
             <div class="garment-type-card @(selectedGarmentType == GarmentType.Lower ? "selected" : "")"
                  @onclick="@(() => OnGarmentTypeChanged(GarmentType.Lower))">
-                <span class="garment-icon">🩳</span>
                 <div class="garment-title">Parte Inferior</div>
                 <div class="garment-subtitle">Pantalones, jeans, faldas</div>
             </div>
@@ -428,29 +115,26 @@
         <div class="col-md-4">
             <div class="garment-type-card @(selectedGarmentType == GarmentType.Dress ? "selected" : "")"
                  @onclick="@(() => OnGarmentTypeChanged(GarmentType.Dress))">
-                <span class="garment-icon">👗</span>
                 <div class="garment-title">Vestido</div>
                 <div class="garment-subtitle">Vestidos, monos</div>
             </div>
         </div>
     </div>
 
-    @* Advertencia para pantalones/vestidos *@
+
     @if (selectedGarmentType == GarmentType.Lower || selectedGarmentType == GarmentType.Dress)
     {
         <div class="alert alert-warning-custom alert-custom mb-4" role="alert">
-            <strong>⚠️ IMPORTANTE:</strong> Para @(selectedGarmentType == GarmentType.Lower ? "pantalones/faldas" : "vestidos"),
+            <strong>IMPORTANTE:</strong> Para @(selectedGarmentType == GarmentType.Lower ? "pantalones/faldas" : "vestidos"),
             la foto de la persona DEBE ser de <strong>CUERPO COMPLETO</strong> con las piernas visibles.
         </div>
     }
 
-    @* Subida de Imágenes Mejorada *@
+
     <div class="row g-4 mb-4">
         <div class="col-lg-6">
             <div class="upload-card">
-                <div class="upload-header person">
-                    📷 Imagen de la Persona
-                </div>
+                <div class="upload-header person">Imagen de la Persona</div>
                 <div class="card-body">
                     <div class="mb-3">
                         <InputFile OnChange="HandlePersonImageSelected" class="form-control" accept="image/*" />
@@ -467,7 +151,6 @@
                         else
                         {
                             <div class="empty-preview">
-                                <div class="empty-preview-icon">📸</div>
                                 <p class="mb-0">No hay imagen seleccionada</p>
                                 <small class="text-muted">Sube una foto de la persona</small>
                             </div>
@@ -480,7 +163,7 @@
         <div class="col-lg-6">
             <div class="upload-card">
                 <div class="upload-header garment">
-                    @GetGarmentIcon() Imagen de la Prenda
+                    Imagen de la Prenda
                 </div>
                 <div class="card-body">
                     <div class="mb-3">
@@ -498,7 +181,7 @@
                         else
                         {
                             <div class="empty-preview">
-                                <div class="empty-preview-icon">@GetGarmentIcon()</div>
+                                <div class="empty-preview-icon"></div>
                                 <p class="mb-0">No hay imagen seleccionada</p>
                                 <small class="text-muted">Sube una foto de la prenda</small>
                             </div>
@@ -509,11 +192,11 @@
         </div>
     </div>
 
-    @* Configuración Avanzada *@
+
     <div class="accordion-card mb-4">
         <div class="accordion-header" @onclick="ToggleAdvancedSettings">
             <div class="d-flex justify-content-between align-items-center">
-                <span>⚙️ Configuración Avanzada</span>
+                <span>Configuración Avanzada</span>
                 <span>@(showAdvancedSettings ? "▼" : "▶")</span>
             </div>
         </div>
@@ -557,7 +240,7 @@
         }
     </div>
 
-    @* Botón de Procesamiento Mejorado *@
+
     <div class="text-center mb-4">
         <button class="process-btn"
                 @onclick="ProcessTryOn"
@@ -569,12 +252,11 @@
             }
             else
             {
-                <span>✨ Generar Try-On (@GetGarmentTypeName())</span>
+                <span>Generar Try-On (@GetGarmentTypeName())</span>
             }
         </button>
     </div>
 
-    @* Mensajes de Estado *@
     @if (!string.IsNullOrEmpty(statusMessage))
     {
         <div class="row mb-4">
@@ -586,32 +268,32 @@
         </div>
     }
 
-    @* Resultado Mejorado *@
+
     @if (!string.IsNullOrEmpty(resultImageUrl))
     {
         <div class="result-card mb-4">
             <div class="result-header">
-                🎨 Resultado del Try-On
+                 Resultado del Try-On
             </div>
             <div class="card-body text-center p-4">
                 <img src="@resultImageUrl" class="img-fluid rounded shadow-lg" alt="Resultado" style="max-height: 700px;" />
                 <div class="mt-4 d-flex gap-3 justify-content-center">
                     <a href="@resultImageUrl" download="@GetResultFilename()" class="btn btn-action btn-download">
-                        💾 Descargar Imagen
+                        Descargar Imagen
                     </a>
                     <button class="btn btn-action btn-reset" @onclick="ClearResult">
-                        🔄 Nueva Prueba
+                        Nueva Prueba
                     </button>
                 </div>
             </div>
         </div>
     }
 
-    @* Tips Mejorados *@
+ 
     <div class="accordion-card">
         <div class="accordion-header" @onclick="ToggleTips">
             <div class="d-flex justify-content-between align-items-center">
-                <span>💡 Consejos para Mejores Resultados</span>
+                <span>Consejos para Mejores Resultados</span>
                 <span>@(showTips ? "▼" : "▶")</span>
             </div>
         </div>
@@ -620,47 +302,47 @@
             <div class="card-body">
                 <div class="row">
                     <div class="col-lg-6">
-                        <h6 class="text-primary fw-bold mb-3">📸 Foto de la Persona</h6>
+                        <h6 class="text-primary fw-bold mb-3">Foto de la Persona</h6>
 
                         @if (selectedGarmentType == GarmentType.Upper)
                         {
                             <p class="fw-semibold">Para camisas/blusas:</p>
                             <ul class="tips-list">
-                                <li>✅ De frente, mirando a la cámara</li>
-                                <li>✅ Medio cuerpo o torso visible</li>
-                                <li>✅ Brazos ligeramente separados</li>
-                                <li>✅ Ropa simple y ajustada</li>
-                                <li>✅ Fondo sólido (blanco/gris)</li>
+                                <li>De frente, mirando a la cámara</li>
+                                <li>Medio cuerpo o torso visible</li>
+                                <li>Brazos ligeramente separados</li>
+                                <li> Ropa simple y ajustada</li>
+                                <li> Fondo sólido (blanco/gris)</li>
                             </ul>
                         }
                         else
                         {
                             <p class="fw-semibold">Para pantalones/vestidos:</p>
                             <ul class="tips-list">
-                                <li>✅ <strong>CUERPO COMPLETO visible</strong></li>
-                                <li>✅ De frente, mirando a la cámara</li>
-                                <li>✅ Piernas visibles y rectas</li>
-                                <li>✅ Ropa simple y ajustada</li>
-                                <li>✅ Fondo sólido (blanco/gris)</li>
-                                <li>❌ NO usar fotos de medio cuerpo</li>
+                                <li> <strong>CUERPO COMPLETO visible</strong></li>
+                                <li> De frente, mirando a la cámara</li>
+                                <li> Piernas visibles y rectas</li>
+                                <li> Ropa simple y ajustada</li>
+                                <li> Fondo sólido (blanco/gris)</li>
+                                <li> NO usar fotos de medio cuerpo</li>
                             </ul>
                         }
                     </div>
                     <div class="col-lg-6">
-                        <h6 class="text-success fw-bold mb-3">@GetGarmentIcon() Foto de la Prenda</h6>
+                        <h6 class="text-success fw-bold mb-3">Foto de la Prenda</h6>
                         <ul class="tips-list">
-                            <li>✅ Prenda plana y extendida</li>
-                            <li>✅ Fondo blanco o transparente</li>
-                            <li>✅ Sin arrugas ni dobleces</li>
-                            <li>✅ Bien iluminada</li>
-                            <li>❌ Evitar sombras fuertes</li>
-                            <li>❌ Evitar múltiples prendas</li>
+                            <li> Prenda plana y extendida</li>
+                            <li> Fondo blanco o transparente</li>
+                            <li> Sin arrugas ni dobleces</li>
+                            <li> Bien iluminada</li>
+                            <li> Evitar sombras fuertes</li>
+                            <li> Evitar múltiples prendas</li>
                         </ul>
 
                         @if (selectedGarmentType == GarmentType.Lower)
                         {
                             <div class="alert alert-info alert-custom mt-3">
-                                <strong>💡 Tip para pantalones:</strong> La detección automática (auto-mask) mejora significativamente los resultados.
+                                <strong>Tip para pantalones:</strong> La detección automática (auto-mask) mejora significativamente los resultados.
                             </div>
                         }
                     </div>
@@ -671,14 +353,11 @@
 </div>
 
 @code {
-    // Estado de la API
     private bool isApiHealthy = false;
     private TryOnStats? stats = null;
 
-    // Tipo de prenda (NUEVO)
     private GarmentType selectedGarmentType = GarmentType.Upper;
 
-    // Imágenes
     private byte[]? personImageData = null;
     private string? personFileName = null;
     private string? personImagePreview = null;
@@ -687,22 +366,18 @@
     private string? garmentFileName = null;
     private string? garmentImagePreview = null;
 
-    // Resultado
     private string? resultImageUrl = null;
 
-    // Estado del procesamiento
     private bool isProcessing = false;
     private string? statusMessage = null;
     private string statusAlertClass = "alert-info";
 
-    // Configuración avanzada
     private bool showAdvancedSettings = false;
     private int denoiseSteps = 30;
     private int seed = 42;
     private bool autoCrop = false;
     private bool autoMask = true;
 
-    // Tips
     private bool showTips = true;
 
     protected override async Task OnInitializedAsync()
@@ -732,24 +407,12 @@
     {
         selectedGarmentType = newType;
 
-        // Para pantalones, forzar auto-mask a true
         if (selectedGarmentType == GarmentType.Lower)
         {
             autoMask = true;
         }
 
         StateHasChanged();
-    }
-
-    private string GetGarmentIcon()
-    {
-        return selectedGarmentType switch
-        {
-            GarmentType.Upper => "👕",
-            GarmentType.Lower => "🩳",
-            GarmentType.Dress => "👗",
-            _ => "👕"
-        };
     }
 
     private string GetGarmentTypeName()
@@ -767,9 +430,9 @@
     {
         if (selectedGarmentType == GarmentType.Lower || selectedGarmentType == GarmentType.Dress)
         {
-            return "⚠️ IMPORTANTE: Foto de CUERPO COMPLETO con piernas visibles";
+            return "IMPORTANTE: Foto de CUERPO COMPLETO con piernas visibles";
         }
-        return "💡 De frente, brazos separados, fondo simple";
+        return " De frente, brazos separados, fondo simple";
     }
 
     private async Task HandlePersonImageSelected(InputFileChangeEventArgs e)
@@ -781,7 +444,7 @@
             // Validar tamaño (máx 10MB)
             if (file.Size > 10 * 1024 * 1024)
             {
-                statusMessage = "⚠️ La imagen es muy grande. Máximo 10MB.";
+                statusMessage = "La imagen es muy grande. Máximo 10MB.";
                 statusAlertClass = "alert-warning";
                 return;
             }
@@ -798,12 +461,12 @@
                 // Crear preview
                 personImagePreview = $"data:{file.ContentType};base64,{Convert.ToBase64String(personImageData)}";
 
-                statusMessage = "✅ Imagen de persona cargada correctamente";
+                statusMessage = "Imagen de persona cargada correctamente";
                 statusAlertClass = "alert-success-custom";
             }
             catch (Exception ex)
             {
-                statusMessage = $"❌ Error cargando imagen: {ex.Message}";
+                statusMessage = $"Error cargando imagen: {ex.Message}";
                 statusAlertClass = "alert-danger";
             }
         }
@@ -815,32 +478,31 @@
 
         if (file != null)
         {
-            // Validar tamaño (máx 10MB)
+
             if (file.Size > 10 * 1024 * 1024)
             {
-                statusMessage = "⚠️ La imagen es muy grande. Máximo 10MB.";
+                statusMessage = "La imagen es muy grande. Máximo 10MB.";
                 statusAlertClass = "alert-warning";
                 return;
             }
 
             try
             {
-                // Leer datos
+
                 using var stream = file.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024);
                 using var memoryStream = new MemoryStream();
                 await stream.CopyToAsync(memoryStream);
                 garmentImageData = memoryStream.ToArray();
                 garmentFileName = file.Name;
 
-                // Crear preview
                 garmentImagePreview = $"data:{file.ContentType};base64,{Convert.ToBase64String(garmentImageData)}";
 
-                statusMessage = "✅ Imagen de prenda cargada correctamente";
+                statusMessage = "Imagen de prenda cargada correctamente";
                 statusAlertClass = "alert-success-custom";
             }
             catch (Exception ex)
             {
-                statusMessage = $"❌ Error cargando imagen: {ex.Message}";
+                statusMessage = $" Error cargando imagen: {ex.Message}";
                 statusAlertClass = "alert-danger";
             }
         }
@@ -850,13 +512,13 @@
     {
         if (personImageData == null || garmentImageData == null)
         {
-            statusMessage = "⚠️ Por favor sube ambas imágenes primero";
+            statusMessage = "Por favor sube ambas imágenes primero";
             statusAlertClass = "alert-warning";
             return;
         }
 
         isProcessing = true;
-        statusMessage = $"🔄 Procesando {GetGarmentTypeName()}... Esto puede tardar 1-2 minutos. Por favor espera.";
+        statusMessage = $"Procesando {GetGarmentTypeName()}... Esto puede tardar 1-2 minutos. Por favor espera.";
         statusAlertClass = "alert-info";
         resultImageUrl = null;
 
@@ -880,7 +542,7 @@
             // Convertir resultado a base64 para mostrar
             resultImageUrl = $"data:image/jpeg;base64,{Convert.ToBase64String(resultBytes)}";
 
-            statusMessage = $"✅ ¡Try-On de {GetGarmentTypeName()} completado exitosamente!";
+            statusMessage = $"¡Try-On de {GetGarmentTypeName()} completado exitosamente!";
             statusAlertClass = "alert-success-custom";
 
             // Recargar estadísticas
@@ -888,7 +550,7 @@
         }
         catch (Exception ex)
         {
-            statusMessage = $"❌ Error: {ex.Message}";
+            statusMessage = $"Error: {ex.Message}";
             statusAlertClass = "alert-danger";
         }
         finally

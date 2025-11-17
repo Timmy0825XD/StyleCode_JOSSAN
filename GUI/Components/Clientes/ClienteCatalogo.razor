@@ -49,7 +49,6 @@
                             <h1 class="slide-title">Hasta 50% OFF</h1>
                             <p class="slide-description">En productos seleccionados por tiempo limitado</p>
                             <a href="#products-section"><button class="btn-hero">Ver Ofertas →</button></a>
-
                         </div>
                         <div class="slide-image">
                             <img src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=800&h=600&fit=crop" alt="Ofertas" />
@@ -112,12 +111,13 @@
             <div class="banner-content">
                 <span class="banner-icon"><Icon Name="IconName.Gift" /></span>
                 <div class="banner-text">
-                    <h3>¡Descuento Especial!</h3>
-                    <p>Obtén 15% OFF en tu primera compra con el código: <strong>BIENVENIDO15</strong></p>
+                    <h3>¡Querido Cliente!</h3>
+                    <p>Aprovecha nuestras ofertas exclusivas y los mejores precios en una gran variedad de productos.</p>
                 </div>
-                <a href="#products-section"><button class="btn-banner">Comprar Ahora</button></a>
+                <a href="#products-section"><button class="btn-banner">Ver Productos</button></a>
             </div>
         </div>
+
 
 
         <div class="toolbar" id="products-section">
@@ -261,16 +261,6 @@
                 <button class="btn-primary" @onclick="ClearFilters">Limpiar Filtros</button>
             </div>
         }
-
-        <div class="newsletter-section">
-            <Icon Name="IconName.Mail" IconSize="IconSize.x3" />
-            <h3 class="mt-3">Suscríbete a Nuestro Newsletter</h3>
-            <p>Recibe ofertas exclusivas y las últimas novedades</p>
-             <div class="newsletter-form">
-                <input type="email" placeholder="tu@email.com" class="newsletter-input" />
-                <button class="btn-newsletter">Suscribirme</button>
-             </div>
-        </div>
     }
 </section>
 
@@ -348,19 +338,16 @@
         Carrito.OnChange += ActualizarContadorCarrito;
         ActualizarContadorCarrito();
 
-        // Verificar sesión
         estaLogueado = await SesionService.EstaLogueado();
         idUsuarioActual = await SesionService.ObtenerIdUsuario();
 
         await LoadProducts();
         
-        // Si está logueado, cargar favoritos
         if (estaLogueado && idUsuarioActual.HasValue)
         {
             await CargarFavoritos();
         }
 
-        // Auto-avance del carrusel
         carouselTimer = new System.Threading.Timer(_ =>
         {
             InvokeAsync(() =>
@@ -427,12 +414,12 @@
             if (response.IsSuccess && response.ListObject != null)
             {
                 favorites = response.ListObject.Select(f => f.IdArticulo).ToHashSet();
-                Console.WriteLine($"✅ Favoritos cargados en catálogo: {favorites.Count}");
+                Console.WriteLine($"Favoritos cargados en catálogo: {favorites.Count}");
             }
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"❌ Error al cargar favoritos: {ex.Message}");
+            Console.WriteLine($"Error al cargar favoritos: {ex.Message}");
         }
     }
 
@@ -443,7 +430,6 @@
 
     private async Task ToggleFavorite(int idArticulo, MouseEventArgs e)
     {
-        // Si no está logueado, redirigir al login
         if (!estaLogueado || !idUsuarioActual.HasValue)
         {
             Navigation.NavigateTo("/login");
@@ -459,24 +445,22 @@
                 if (response.Object.Agregado == 1)
                 {
                     favorites.Add(idArticulo);
-                    Console.WriteLine($"❤️ Agregado a favoritos: {idArticulo}");
                 }
                 else
                 {
                     favorites.Remove(idArticulo);
-                    Console.WriteLine($"💔 Quitado de favoritos: {idArticulo}");
                 }
 
                 StateHasChanged();
             }
             else
             {
-                Console.WriteLine($"❌ Error: {response.Message}");
+                Console.WriteLine($" Error: {response.Message}");
             }
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"❌ Excepción: {ex.Message}");
+            Console.WriteLine($"Excepción: {ex.Message}");
         }
     }
 

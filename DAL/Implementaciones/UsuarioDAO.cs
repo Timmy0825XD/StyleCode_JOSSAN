@@ -298,6 +298,7 @@ namespace DAL.Implementaciones
                                 var usuario = new UsuarioConDireccionDTO
                                 {
                                     IdUsuario = reader.GetInt32(reader.GetOrdinal("ID_USUARIO")),
+                                    Cedula = reader.GetString(reader.GetOrdinal("CEDULA")),
                                     IdDireccion = reader.IsDBNull(reader.GetOrdinal("ID_DIRECCION"))
                                         ? null
                                         : reader.GetInt32(reader.GetOrdinal("ID_DIRECCION")),

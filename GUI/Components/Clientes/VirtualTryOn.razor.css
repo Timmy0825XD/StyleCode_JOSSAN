@@ -1,0 +1,303 @@
+﻿.gradient-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 16px;
+    padding: 2rem;
+    color: white;
+    box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: none;
+}
+
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    }
+
+.stat-number {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin: 0;
+    line-height: 1;
+}
+
+.stat-label {
+    font-size: 0.875rem;
+    color: #6c757d;
+    margin-top: 0.5rem;
+    font-weight: 500;
+}
+
+.garment-type-card {
+    background: white;
+    border-radius: 16px;
+    border: 3px solid #e9ecef;
+    padding: 1.5rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+    height: 100%;
+}
+
+    .garment-type-card:hover {
+        border-color: #667eea;
+        box-shadow: 0 8px 24px rgba(102, 126, 234, 0.15);
+        transform: translateY(-3px);
+    }
+
+    .garment-type-card.selected {
+        border-color: #667eea;
+        background: linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%);
+        box-shadow: 0 8px 24px rgba(102, 126, 234, 0.2);
+    }
+
+.garment-icon {
+    font-size: 3rem;
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+.garment-title {
+    font-weight: 700;
+    font-size: 1.1rem;
+    margin-bottom: 0.25rem;
+}
+
+.garment-subtitle {
+    color: #6c757d;
+    font-size: 0.875rem;
+}
+
+.upload-card {
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    height: 100%;
+    border: none;
+}
+
+.upload-header {
+    padding: 1.25rem;
+    font-weight: 700;
+    font-size: 1.1rem;
+    border-bottom: 3px solid #f8f9fa;
+}
+
+    .upload-header.person {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+
+    .upload-header.garment {
+        background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        color: white;
+    }
+
+.image-preview {
+    position: relative;
+    min-height: 300px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f8f9fa;
+}
+
+    .image-preview img {
+        max-height: 450px;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+.empty-preview {
+    padding: 3rem;
+    text-align: center;
+    color: #adb5bd;
+}
+
+.empty-preview-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    opacity: 0.3;
+}
+
+.custom-file-input {
+    border: 2px dashed #dee2e6;
+    border-radius: 12px;
+    padding: 1.5rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: #fafbfc;
+}
+
+    .custom-file-input:hover {
+        border-color: #667eea;
+        background: #f5f7ff;
+    }
+
+.process-btn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    border-radius: 50px;
+    padding: 1rem 3rem;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: white;
+    box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+    transition: all 0.3s ease;
+}
+
+    .process-btn:hover:not(:disabled) {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 32px rgba(102, 126, 234, 0.5);
+    }
+
+    .process-btn:disabled {
+        background: linear-gradient(135deg, #adb5bd 0%, #868e96 100%);
+        cursor: not-allowed;
+        box-shadow: none;
+    }
+
+.result-card {
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+    border: none;
+    animation: slideUp 0.5s ease;
+}
+
+.result-header {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    color: white;
+    padding: 1.5rem;
+    font-weight: 700;
+    font-size: 1.2rem;
+}
+
+.accordion-card {
+    background: white;
+    border-radius: 16px;
+    border: none;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+}
+
+.accordion-header {
+    padding: 1.25rem 1.5rem;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 1.1rem;
+    background: #f8f9fa;
+    transition: background 0.3s ease;
+}
+
+    .accordion-header:hover {
+        background: #e9ecef;
+    }
+
+.alert-custom {
+    border-radius: 12px;
+    border: none;
+    padding: 1rem 1.5rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.alert-warning-custom {
+    background: linear-gradient(135deg, #fff5e6 0%, #ffe8cc 100%);
+    color: #856404;
+    border-left: 4px solid #ffc107;
+}
+
+.alert-success-custom {
+    background: linear-gradient(135deg, #e6f9f0 0%, #ccf2e0 100%);
+    color: #155724;
+    border-left: 4px solid #28a745;
+}
+
+.badge-type {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border-radius: 50px;
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+
+.form-control, .form-select {
+    border-radius: 8px;
+    border: 2px solid #e9ecef;
+    padding: 0.75rem;
+    transition: border-color 0.3s ease;
+}
+
+    .form-control:focus, .form-select:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.15);
+    }
+
+.btn-action {
+    border-radius: 50px;
+    padding: 0.75rem 2rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    border: none;
+}
+
+.btn-download {
+    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    color: white;
+}
+
+    .btn-download:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(17, 153, 142, 0.4);
+    }
+
+.btn-reset {
+    background: linear-gradient(135deg, #868e96 0%, #6c757d 100%);
+    color: white;
+}
+
+    .btn-reset:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(108, 117, 125, 0.4);
+    }
+
+.health-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border-radius: 50px;
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+
+    .health-indicator.healthy {
+        background: linear-gradient(135deg, #e6f9f0 0%, #ccf2e0 100%);
+        color: #155724;
+    }
+
+    .health-indicator.unhealthy {
+        background: linear-gradient(135deg, #ffe6e6 0%, #ffcccc 100%);
+        color: #721c24;
+    }
+
+.tips-list li {
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+    .tips-list li:last-child {
+        border-bottom: none;
+    }

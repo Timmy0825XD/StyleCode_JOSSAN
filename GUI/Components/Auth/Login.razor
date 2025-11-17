@@ -25,7 +25,7 @@
                 <label style="font-size: 14px; font-weight:600">Contraseña</label>
                 <div class="input-contraseña">
                     <input type="@(mostrarPassword ? "text" : "password")" class="form-input" placeholder="••••••••" @bind="password" required />
-                    <button type="button" style="cursor: pointer; right: 16px; position: absolute;" @onclick="TogglePassword"> 👁️‍🗨️ </button>
+                    <button type="button" style="cursor: pointer; right: 16px; position: absolute; border:none; background-color:white" @onclick="TogglePassword"> <Icon Name="IconName.Eye" /></button>
                 </div>
             </div>
             <a href="#" class="link-text">¿Olvidaste tu contraseña?</a>
@@ -42,7 +42,7 @@
                 }
                 else
                 {
-                    <span>Iniciar Sesión</span>
+                    <span >Iniciar Sesión</span>
                 }
             </button>
         </form>

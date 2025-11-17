@@ -11,7 +11,7 @@
 
 <div class="carrito-container">
     <div class="carrito-header">
-        <h2>🛒 Mi Carrito</h2>
+        <h2>Mi Carrito</h2>
         <button class="btn-back" @onclick="VolverAlCatalogo">
             ← Seguir Comprando
         </button>
@@ -20,7 +20,7 @@
     @if (Carrito.EstaVacio())
     {
         <div class="carrito-vacio">
-            <div class="empty-icon">🛒</div>
+            <div class="empty-icon"><Icon Name="IconName.Cart" /></div>
             <h3>Tu carrito está vacío</h3>
             <p>¡Agrega productos para comenzar tu compra!</p>
             <button class="btn-primary" @onclick="VolverAlCatalogo">
@@ -82,7 +82,7 @@
                         </div>
 
                         <button class="btn-eliminar" @onclick="() => EliminarItem(item)" title="Eliminar">
-                            🗑️
+                            <Icon Name="IconName.Delete" />
                         </button>
                     </div>
                 }
@@ -139,7 +139,7 @@
     <div class="modal-overlay" @onclick="CerrarModalLogin">
         <div class="modal-login" @onclick:stopPropagation="true">
             <div class="modal-header">
-                <h3>🔒 Inicia sesión para continuar</h3>
+                <h3>Inicia sesión para continuar</h3>
                 <button class="btn-close" @onclick="CerrarModalLogin">✕</button>
             </div>
             <div class="modal-body">
@@ -157,89 +157,6 @@
     </div>
 }
 
-<style>
-    .modal-overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(0, 0, 0, 0.5);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 1000;
-    }
-
-    .modal-login {
-        background: white;
-        border-radius: 12px;
-        padding: 2rem;
-        max-width: 400px;
-        width: 90%;
-        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-    }
-
-    .modal-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 1.5rem;
-    }
-
-        .modal-header h3 {
-            margin: 0;
-            color: #333;
-        }
-
-    .btn-close {
-        background: none;
-        border: none;
-        font-size: 1.5rem;
-        cursor: pointer;
-        color: #666;
-    }
-
-    .modal-body p {
-        color: #666;
-        margin-bottom: 1.5rem;
-        line-height: 1.5;
-    }
-
-    .modal-actions {
-        display: flex;
-        flex-direction: column;
-        gap: 1rem;
-    }
-
-    .btn-primary, .btn-secondary {
-        padding: 0.75rem 1.5rem;
-        border: none;
-        border-radius: 8px;
-        font-size: 1rem;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.3s ease;
-    }
-
-    .btn-primary {
-        background: #667eea;
-        color: white;
-    }
-
-        .btn-primary:hover {
-            background: #5568d3;
-        }
-
-    .btn-secondary {
-        background: #f3f4f6;
-        color: #333;
-    }
-
-        .btn-secondary:hover {
-            background: #e5e7eb;
-        }
-</style>
 
 @code {
     private List<CarritoItemDTO> items = new();
@@ -314,17 +231,14 @@
 
     private void IrACheckout()
     {
-        // Verificar si el usuario está logueado
         var nombreUsuario = UsuarioService.ObtenerNombreUsuario();
 
         if (string.IsNullOrEmpty(nombreUsuario) || nombreUsuario == "Cliente" || nombreUsuario == "Usuario")
         {
-            // Usuario no logueado, mostrar modal
             mostrarModalLogin = true;
         }
         else
         {
-            // Usuario logueado, proceder al checkout
             Navigation.NavigateTo("/checkout");
         }
     }

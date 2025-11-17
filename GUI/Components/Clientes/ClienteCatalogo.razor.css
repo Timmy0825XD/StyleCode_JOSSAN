@@ -410,7 +410,6 @@
 }
 
     .fav:hover, .fav.on {
-        color: #ef4444;
         transform: scale(1.1);
     }
 
@@ -552,56 +551,4 @@
     .btn-primary:hover {
         transform: translateY(-2px);
         box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
-    }
-
-
-.newsletter-section {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border-radius: 20px;
-    padding: 60px 40px;
-    margin: 60px 20px 40px 20px;
-    text-align: center;
-    color: white;
-}
-
-.newsletter-content h3 {
-    font-size: 32px;
-    margin: 0 0 12px 0;
-}
-
-.newsletter-content p {
-    font-size: 18px;
-    margin: 0 0 32px 0;
-    opacity: 0.95;
-}
-
-.newsletter-form {
-    display: flex;
-    max-width: 500px;
-    margin: 0 auto;
-    gap: 12px;
-}
-
-.newsletter-input {
-    flex: 1;
-    padding: 16px 20px;
-    border: none;
-    border-radius: 12px;
-    font-size: 16px;
-}
-
-.btn-newsletter {
-    padding: 16px 32px;
-    border: none;
-    border-radius: 12px;
-    background: white;
-    color: #667eea;
-    font-weight: 700;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-    .btn-newsletter:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
     }

@@ -1388,9 +1388,37 @@
         });
     }
 
-    private void EliminarVarianteEdicion(int index)
+    private async void EliminarVarianteEdicion(int index)
     {
-        variantesEditando.RemoveAt(index);
+        var variante = variantesEditando[index];
+
+        // Si la variante tiene ID, significa que existe en BD y debe eliminarse
+        if (variante.IdVariante.HasValue && variante.IdVariante.Value > 0)
+        {
+            try
+            {
+                var resultado = await ArticuloService.EliminarVariante(variante.IdVariante.Value);
+
+                if (resultado.IsSuccess)
+                {
+                    variantesEditando.RemoveAt(index);
+                    StateHasChanged();
+                }
+                else
+                {
+                    mensajeErrorModal = resultado.Message;
+                }
+            }
+            catch (Exception ex)
+            {
+                mensajeErrorModal = $"Error al eliminar variante: {ex.Message}";
+            }
+        }
+        else
+        {
+            // Si no tiene ID, solo la removemos de la lista (aún no está en BD)
+            variantesEditando.RemoveAt(index);
+        }
     }
 
     private async Task GuardarVariantes()
@@ -1417,12 +1445,34 @@
         {
             guardandoProducto = true;
 
-            var dto = new ActualizarVariantesDTO
+            // 🔥 AQUÍ ESTÁ LO QUE FALTABA - Procesar variantes
+            foreach (var variante in variantesEditando)
             {
-                IdArticulo = idProductoEditandoVariantes,
-                Variantes = variantesEditando
-            };
+                Response<bool> resultado;
 
+                if (variante.IdVariante.HasValue && variante.IdVariante.Value > 0)
+                {
+                    // Si tiene ID, es una variante existente - ACTUALIZAR
+                    resultado = await ArticuloService.ActualizarVariante(variante);
+                }
+                else
+                {
+                    // Si no tiene ID, es una variante nueva - necesitarías un método RegistrarVariante
+                    // Por ahora, mostraremos un mensaje
+                    mensajeErrorModal = "No se puede agregar nuevas variantes desde esta pantalla. Use el formulario de creación.";
+                    return;
+                }
+
+                if (!resultado.IsSuccess)
+                {
+                    mensajeErrorModal = resultado.Message;
+                    return;
+                }
+            }
+
+            // Si todo salió bien, recargar productos y cerrar modal
+            await CargarProductos();
+            CerrarModalEditarVariantes();
         }
         catch (Exception ex)
         {
@@ -1546,19 +1596,59 @@
         }
     }
 
-    private void EliminarImagenEdicion(int index)
+    private async void EliminarImagenEdicion(int index)
     {
         var imagen = imagenesEditando[index];
-        imagenesEditando.RemoveAt(index);
 
-        if (imagen.EsPrincipal == 'S' && imagenesEditando.Any())
+        // Si la imagen tiene ID, significa que existe en BD y debe eliminarse
+        if (imagen.IdImagen.HasValue && imagen.IdImagen.Value > 0)
         {
-            imagenesEditando[0].EsPrincipal = 'S';
+            try
+            {
+                var resultado = await ArticuloService.EliminarImagen(imagen.IdImagen.Value);
+
+                if (resultado.IsSuccess)
+                {
+                    imagenesEditando.RemoveAt(index);
+
+                    // Si era la principal y quedan más imágenes, marcar la primera como principal
+                    if (imagen.EsPrincipal == 'S' && imagenesEditando.Any())
+                    {
+                        imagenesEditando[0].EsPrincipal = 'S';
+                    }
+
+                    // Reordenar
+                    for (int i = 0; i < imagenesEditando.Count; i++)
+                    {
+                        imagenesEditando[i].Orden = i + 1;
+                    }
+
+                    StateHasChanged();
+                }
+                else
+                {
+                    mensajeErrorModal = resultado.Message;
+                }
+            }
+            catch (Exception ex)
+            {
+                mensajeErrorModal = $"Error al eliminar imagen: {ex.Message}";
+            }
         }
-
-        for (int i = 0; i < imagenesEditando.Count; i++)
+        else
         {
-            imagenesEditando[i].Orden = i + 1;
+            // Si no tiene ID, solo la removemos de la lista (aún no está en BD)
+            imagenesEditando.RemoveAt(index);
+
+            if (imagen.EsPrincipal == 'S' && imagenesEditando.Any())
+            {
+                imagenesEditando[0].EsPrincipal = 'S';
+            }
+
+            for (int i = 0; i < imagenesEditando.Count; i++)
+            {
+                imagenesEditando[i].Orden = i + 1;
+            }
         }
     }
 
@@ -1601,12 +1691,50 @@
         {
             guardandoProducto = true;
 
-            var dto = new ActualizarImagenesDTO
+            // 🔥 AQUÍ ESTÁ LO QUE FALTABA - Procesar imágenes
+            foreach (var imagen in imagenesEditando)
             {
-                IdArticulo = idProductoEditandoImagenes,
-                Imagenes = imagenesEditando
-            };
+                Response<bool> resultado;
 
+                if (imagen.IdImagen.HasValue && imagen.IdImagen.Value > 0)
+                {
+                    // Si tiene ID, es una imagen existente - ACTUALIZAR
+                    resultado = await ArticuloService.ActualizarImagen(imagen);
+                }
+                else
+                {
+                    // Si no tiene ID, es una imagen nueva - necesitarías un método RegistrarImagen
+                    // Por ahora, mostraremos un mensaje
+                    mensajeErrorModal = "No se puede agregar nuevas imágenes desde esta pantalla. Use el formulario de creación.";
+                    return;
+                }
+
+                if (!resultado.IsSuccess)
+                {
+                    mensajeErrorModal = resultado.Message;
+                    return;
+                }
+            }
+
+            // Si hay una imagen marcada como principal, establecerla
+            var imagenPrincipal = imagenesEditando.FirstOrDefault(img => img.EsPrincipal == 'S');
+            if (imagenPrincipal != null && imagenPrincipal.IdImagen.HasValue)
+            {
+                var resultadoPrincipal = await ArticuloService.EstablecerImagenPrincipal(
+                    idProductoEditandoImagenes,
+                    imagenPrincipal.IdImagen.Value
+                );
+
+                if (!resultadoPrincipal.IsSuccess)
+                {
+                    mensajeErrorModal = resultadoPrincipal.Message;
+                    return;
+                }
+            }
+
+            // Si todo salió bien, recargar productos y cerrar modal
+            await CargarProductos();
+            CerrarModalEditarImagenes();
         }
         catch (Exception ex)
         {

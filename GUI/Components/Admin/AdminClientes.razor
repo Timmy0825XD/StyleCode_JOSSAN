@@ -3,6 +3,7 @@
 @using ENTITY.Usuarios
 @using BLL.Interfaces
 @using System.Text
+@using ENTITY.Utilidades
 @inject IJSRuntime JSRuntime
 @inject IUsuarioService UsuarioService
 
@@ -38,10 +39,6 @@
             <div class="stat-item">
                 <span class="stat-value">@usuarios.Count(u => u.Estado == "A")</span>
                 <span class="stat-label">Activos</span>
-            </div>
-            <div class="stat-item">
-                <span class="stat-value">@usuarios.Count(u => u.Estado == "I")</span>
-                <span class="stat-label">Inactivos</span>
             </div>
         </div>
 
@@ -257,7 +254,46 @@
 
     private async Task CambiarEstado(UsuarioDTO usuario)
     {
-        usuario.Estado = usuario.Estado == "A" ? "I" : "A";
+        var accion = usuario.Estado == "A" ? "desactivar" : "activar";
+
+        var confirmado = await JSRuntime.InvokeAsync<bool>("confirm",
+            $"¿Está seguro de {accion} al usuario {usuario.ObtenerNombreCompleto()}?");
+
+        if (!confirmado)
+            return;
+
+        try
+        {
+            Response<bool> resultado;
+
+            if (usuario.Estado == "A")
+            {
+                // Si está activo, lo desactivamos usando EliminarUsuario
+                resultado = await UsuarioService.EliminarUsuario(usuario.Id);
+            }
+            else
+            {
+                // Si está inactivo, lo activamos actualizando su estado
+                usuario.Estado = "A";
+                resultado = await UsuarioService.ActualizarUsuario(usuario);
+            }
+
+            if (resultado.IsSuccess)
+            {
+                // Recargar la lista
+                await CargarUsuarios();
+            }
+            else
+            {
+                await JSRuntime.InvokeVoidAsync("alert", $"Error: {resultado.Message}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error: {ex.Message}");
+            await JSRuntime.InvokeVoidAsync("alert", "Error al cambiar el estado del usuario");
+        }
+
         StateHasChanged();
     }
 

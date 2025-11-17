@@ -149,7 +149,7 @@
                         <label class="form-label">Contraseña *</label>
                         <div style="display:flex;">
                             <input type="@(mostrarPassword ? "text" : "password")" class="form-input" placeholder="Mínimo 8 caracteres" @bind="password" required />
-                            <button type="button" class="toggle-password" @onclick="TogglePassword">👁‍🗨 </button>
+                            <button type="button" class="toggle-password" @onclick="TogglePassword"><Icon Name="IconName.Eye" /> </button>
                         </div>
                         <div class="password-strength">
                             <div class="strength-bar @GetPasswordStrength()"></div>
@@ -160,7 +160,7 @@
                         <label class="form-label">Confirmar Contraseña *</label>
                         <div style="display:flex;">
                             <input type="@(mostrarConfirmPassword ? "text" : "password")" class="form-input" placeholder="Repite tu contraseña" @bind="confirmPassword" required />
-                            <button type="button" class="toggle-password" @onclick="ToggleConfirmPassword">👁‍🗨 </button>
+                            <button type="button" class="toggle-password" @onclick="ToggleConfirmPassword"><Icon Name="IconName.Eye" /> </button>
                         </div>
                     </div>
 
@@ -177,7 +177,6 @@
             @if (!string.IsNullOrEmpty(mensajeError))
             {
                 <div class="error-message">
-                    <span>⚠</span>
                     <span>@mensajeError</span>
                 </div>
             }
@@ -185,7 +184,6 @@
             @if (!string.IsNullOrEmpty(mensajeExito))
             {
                 <div class="success-message">
-                    <span>✅</span>
                     <span>@mensajeExito</span>
                 </div>
             }
@@ -221,7 +219,7 @@
         </form>
 
         <div class="footer-text">
-            ¿Ya tienes cuenta? <a href="/" class="link-text">Inicia sesión aquí</a>
+            ¿Ya tienes cuenta? <a href="/Login" class="link-text">Inicia sesión aquí</a>
         </div>
     </div>
 
