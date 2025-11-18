@@ -15,13 +15,11 @@ namespace ENTITY.Alertas
         public string Estado { get; set; } = string.Empty;
         public string? ResueltoPor { get; set; }
 
-        // Información del artículo
         public int IdArticulo { get; set; }
         public string NombreProducto { get; set; } = string.Empty;
         public string Marca { get; set; } = string.Empty;
         public decimal PrecioBase { get; set; }
 
-        // Información de la variante
         public int IdVariante { get; set; }
         public string Talla { get; set; } = string.Empty;
         public string Color { get; set; } = string.Empty;
@@ -29,7 +27,6 @@ namespace ENTITY.Alertas
         public int StockActual { get; set; }
         public string? ImagenProducto { get; set; }
 
-        // Tiempo de resolución
         public int DiasResolucion { get; set; }
     }
 }

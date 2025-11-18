@@ -165,7 +165,6 @@ namespace BLL.Implementaciones
             <p>Hemos recibido tu pedido exitosamente. Lo estamos procesando y pronto lo confirmaremos.</p>
             <div class='pedido-number'>Pedido #" + datos.NumeroPedido + @"</div>");
 
-            // Productos
             sb.Append("<div class='section'><div class='section-title'>📦 Productos</div>");
             foreach (var producto in datos.Productos)
             {
@@ -185,7 +184,6 @@ namespace BLL.Implementaciones
             }
             sb.Append("</div>");
 
-            // Totales
             sb.Append($@"
             <div class='totales'>
                 <div class='total-linea'><span>Subtotal:</span><span>${datos.Subtotal:N0} COP</span></div>
@@ -259,7 +257,6 @@ namespace BLL.Implementaciones
             <p>Tu pedido ha sido confirmado exitosamente y está siendo preparado para envío.</p>
             <div class='pedido-number'>Pedido #" + datos.NumeroPedido + @"</div>");
 
-            // Productos
             sb.Append("<div class='section'><div class='section-title'>📦 Productos Confirmados</div>");
             foreach (var producto in datos.Productos)
             {
@@ -279,7 +276,6 @@ namespace BLL.Implementaciones
             }
             sb.Append("</div>");
 
-            // Dirección de envío
             sb.Append($@"
             <div class='section'>
                 <div class='section-title'>🚚 Dirección de Envío</div>
@@ -288,7 +284,6 @@ namespace BLL.Implementaciones
                 {datos.Departamento}</p>
             </div>");
 
-            // Totales
             sb.Append($@"
             <div class='totales'>
                 <div class='total-linea'><span>Subtotal:</span><span>${datos.Subtotal:N0} COP</span></div>

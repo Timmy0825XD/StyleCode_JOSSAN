@@ -19,9 +19,6 @@ namespace BLL.Implementaciones
             _estadisticaDAO = estadisticaDAO;
         }
 
-        // ========================================
-        // 1. OBTENER MÉTRICAS DEL DASHBOARD
-        // ========================================
         public async Task<Response<MetricasDashboardDTO>> ObtenerMetricasDashboard()
         {
             try
@@ -34,9 +31,6 @@ namespace BLL.Implementaciones
             }
         }
 
-        // ========================================
-        // 2. OBTENER VENTAS MENSUALES
-        // ========================================
         public async Task<Response<VentaMensualDTO>> ObtenerVentasMensuales(int anio)
         {
             try
@@ -55,9 +49,6 @@ namespace BLL.Implementaciones
             }
         }
 
-        // ========================================
-        // 3. OBTENER VENTAS POR CATEGORÍA
-        // ========================================
         public async Task<Response<VentaCategoriaDTO>> ObtenerVentasPorCategoria()
         {
             try
@@ -70,14 +61,10 @@ namespace BLL.Implementaciones
             }
         }
 
-        // ========================================
-        // 4. OBTENER TOP PRODUCTOS
-        // ========================================
         public async Task<Response<TopProductoDTO>> ObtenerTopProductos(int limite = 10)
         {
             try
             {
-                // Validar límite
                 if (limite <= 0)
                 {
                     return Response<TopProductoDTO>.Fail("El límite debe ser mayor a 0");
@@ -96,14 +83,10 @@ namespace BLL.Implementaciones
             }
         }
 
-        // ========================================
-        // 5. OBTENER PEDIDOS RECIENTES
-        // ========================================
         public async Task<Response<PedidoRecienteDTO>> ObtenerPedidosRecientes(int limite = 10)
         {
             try
             {
-                // Validar límite
                 if (limite <= 0)
                 {
                     return Response<PedidoRecienteDTO>.Fail("El límite debe ser mayor a 0");
@@ -122,9 +105,6 @@ namespace BLL.Implementaciones
             }
         }
 
-        // ========================================
-        // 6. OBTENER PEDIDOS POR ESTADO
-        // ========================================
         public async Task<Response<PedidoPorEstadoDTO>> ObtenerPedidosPorEstado()
         {
             try
@@ -137,14 +117,10 @@ namespace BLL.Implementaciones
             }
         }
 
-        // ========================================
-        // 7. OBTENER TOP CLIENTES
-        // ========================================
         public async Task<Response<TopClienteDTO>> ObtenerTopClientes(int limite = 10)
         {
             try
             {
-                // Validar límite
                 if (limite <= 0)
                 {
                     return Response<TopClienteDTO>.Fail("El límite debe ser mayor a 0");
@@ -163,14 +139,10 @@ namespace BLL.Implementaciones
             }
         }
 
-        // ========================================
-        // 8. OBTENER PRODUCTOS CON STOCK BAJO
-        // ========================================
         public async Task<Response<ProductoStockBajoDTO>> ObtenerProductosStockBajo(int limite = 10)
         {
             try
             {
-                // Validar límite
                 if (limite <= 0)
                 {
                     return Response<ProductoStockBajoDTO>.Fail("El límite debe ser mayor a 0");
@@ -189,9 +161,6 @@ namespace BLL.Implementaciones
             }
         }
 
-        // ========================================
-        // 9. OBTENER VENTAS POR GÉNERO
-        // ========================================
         public async Task<Response<VentaGeneroDTO>> ObtenerVentasPorGenero()
         {
             try
@@ -204,9 +173,6 @@ namespace BLL.Implementaciones
             }
         }
 
-        // ========================================
-        // 10. OBTENER CRECIMIENTO DE VENTAS
-        // ========================================
         public async Task<Response<CrecimientoVentasDTO>> ObtenerCrecimientoVentas()
         {
             try

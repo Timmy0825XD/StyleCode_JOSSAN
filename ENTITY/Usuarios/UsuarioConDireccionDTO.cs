@@ -16,7 +16,6 @@ namespace ENTITY.Usuarios
         public string Correo { get; set; } = null!;
         public string TelefonoPrincipal { get; set; } = null!;
 
-        // Datos de la dirección
         public string? DireccionCompleta { get; set; }
         public string? Barrio { get; set; }
         public string? CodigoPostal { get; set; }

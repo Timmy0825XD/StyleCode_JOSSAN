@@ -12,7 +12,6 @@ namespace ENTITY.Favoritos
         public int IdArticulo { get; set; }
         public DateTime FechaAgregado { get; set; }
 
-        // Información del artículo
         public string Nombre { get; set; } = string.Empty;
         public string Descripcion { get; set; } = string.Empty;
         public string Marca { get; set; } = string.Empty;
@@ -21,11 +20,9 @@ namespace ENTITY.Favoritos
         public decimal PrecioBase { get; set; }
         public char Estado { get; set; }
 
-        // Categorías
         public string CategoriaTipo { get; set; } = string.Empty;
         public string CategoriaOcasion { get; set; } = string.Empty;
 
-        // Imagen y stock
         public string? ImagenPrincipal { get; set; }
         public int StockTotal { get; set; }
         public int VariantesDisponibles { get; set; }

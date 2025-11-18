@@ -61,7 +61,6 @@ namespace BLL.Implementaciones
                     }
                 }
 
-                // Validar productos duplicados
                 var productosDuplicados = pedido.Productos
                     .GroupBy(p => p.IdVariante)
                     .Where(g => g.Count() > 1)

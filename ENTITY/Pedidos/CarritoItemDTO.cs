@@ -20,7 +20,6 @@ namespace ENTITY.Pedidos
         public int StockDisponible { get; set; }
         public string? ImagenUrl { get; set; }
 
-        // Propiedad calculada
         public decimal Subtotal => PrecioUnitario * Cantidad;
     }
 }

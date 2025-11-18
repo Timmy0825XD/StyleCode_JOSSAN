@@ -18,10 +18,6 @@ namespace BLL.Implementaciones
         {
             _alertaDAO = alertaDAO;
         }
-
-        // ========================================
-        // 1. OBTENER ALERTAS PENDIENTES
-        // ========================================
         public async Task<Response<AlertaStockDTO>> ObtenerAlertasPendientes()
         {
             try
@@ -34,14 +30,10 @@ namespace BLL.Implementaciones
             }
         }
 
-        // ========================================
-        // 2. OBTENER TODAS LAS ALERTAS (CON FILTRO)
-        // ========================================
         public async Task<Response<AlertaStockDTO>> ObtenerTodasAlertas(string? estado = null)
         {
             try
             {
-                // Validar estado si se proporciona
                 if (!string.IsNullOrEmpty(estado))
                 {
                     if (estado != "Pendiente" && estado != "Resuelta")
@@ -57,15 +49,10 @@ namespace BLL.Implementaciones
                 return Response<AlertaStockDTO>.Fail($"Error en la capa de negocio: {ex.Message}");
             }
         }
-
-        // ========================================
-        // 3. OBTENER DETALLE DE ALERTA
-        // ========================================
         public async Task<Response<DetalleAlertaDTO>> ObtenerDetalleAlerta(int idAlerta)
         {
             try
             {
-                // Validar ID
                 if (idAlerta <= 0)
                 {
                     return Response<DetalleAlertaDTO>.Fail("ID de alerta inválido");
@@ -79,9 +66,6 @@ namespace BLL.Implementaciones
             }
         }
 
-        // ========================================
-        // 4. OBTENER ESTADÍSTICAS DE ALERTAS
-        // ========================================
         public async Task<Response<EstadisticaAlertaDTO>> ObtenerEstadisticasAlertas()
         {
             try

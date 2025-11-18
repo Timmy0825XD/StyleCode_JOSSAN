@@ -11,7 +11,7 @@ namespace ENTITY.Alertas
         public int TotalAlertas { get; set; }
         public int AlertasPendientes { get; set; }
         public int AlertasResueltas { get; set; }
-        public int AlertasCriticas { get; set; } // Más de 7 días pendientes
+        public int AlertasCriticas { get; set; }
         public decimal DiasPromedioResolucion { get; set; }
         public int AlertasHoy { get; set; }
         public int AlertasSemana { get; set; }

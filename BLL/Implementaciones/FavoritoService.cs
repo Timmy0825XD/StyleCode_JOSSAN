@@ -19,9 +19,6 @@ namespace BLL.Implementaciones
             _favoritoDAO = favoritoDAO;
         }
 
-        // ========================================
-        // AGREGAR FAVORITO
-        // ========================================
         public async Task<Response<int>> AgregarFavorito(int idUsuario, int idArticulo)
         {
             try
@@ -43,10 +40,6 @@ namespace BLL.Implementaciones
                 return Response<int>.Fail($"Error en la capa de negocio: {ex.Message}");
             }
         }
-
-        // ========================================
-        // ELIMINAR FAVORITO
-        // ========================================
         public async Task<Response<bool>> EliminarFavorito(int idUsuario, int idArticulo)
         {
             try
@@ -68,10 +61,6 @@ namespace BLL.Implementaciones
                 return Response<bool>.Fail($"Error en la capa de negocio: {ex.Message}");
             }
         }
-
-        // ========================================
-        // TOGGLE FAVORITO
-        // ========================================
         public async Task<Response<ToggleFavoritoResultDTO>> ToggleFavorito(int idUsuario, int idArticulo)
         {
             try
@@ -94,9 +83,6 @@ namespace BLL.Implementaciones
             }
         }
 
-        // ========================================
-        // ES FAVORITO
-        // ========================================
         public async Task<Response<int>> EsFavorito(int idUsuario, int idArticulo)
         {
             try
@@ -119,9 +105,6 @@ namespace BLL.Implementaciones
             }
         }
 
-        // ========================================
-        // OBTENER FAVORITOS DEL USUARIO
-        // ========================================
         public async Task<Response<FavoritoDTO>> ObtenerFavoritosUsuario(int idUsuario)
         {
             try
@@ -139,9 +122,6 @@ namespace BLL.Implementaciones
             }
         }
 
-        // ========================================
-        // OBTENER ESTADÍSTICAS DE FAVORITOS
-        // ========================================
         public async Task<Response<EstadisticaFavoritoDTO>> ObtenerEstadisticasFavoritos()
         {
             try
@@ -154,9 +134,6 @@ namespace BLL.Implementaciones
             }
         }
 
-        // ========================================
-        // LIMPIAR FAVORITOS INACTIVOS
-        // ========================================
         public async Task<Response<int>> LimpiarFavoritosInactivos()
         {
             try

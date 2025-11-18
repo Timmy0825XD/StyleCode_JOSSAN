@@ -16,7 +16,6 @@ namespace ENTITY.Alertas
         public string Estado { get; set; } = string.Empty;
         public string? ResueltoPor { get; set; }
 
-        // Información del producto
         public int IdArticulo { get; set; }
         public string NombreProducto { get; set; } = string.Empty;
         public string Marca { get; set; } = string.Empty;
@@ -26,7 +25,6 @@ namespace ENTITY.Alertas
         public int StockActualBd { get; set; }
         public string? ImagenProducto { get; set; }
 
-        // Información adicional
         public int DiasPendiente { get; set; }
     }
 }

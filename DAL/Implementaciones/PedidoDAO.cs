@@ -34,7 +34,6 @@ namespace DAL.Implementaciones
 
                 int idPedidoGenerado = 0;
 
-                // Crear el encabezado del pedido
                 using (var command = connection.CreateCommand())
                 {
                     command.Transaction = transaction;
@@ -53,7 +52,6 @@ namespace DAL.Implementaciones
                     idPedidoGenerado = ((OracleDecimal)idParam.Value).ToInt32();
                 }
 
-                // Agregar cada producto al pedido
                 foreach (var producto in pedido.Productos)
                 {
                     using (var command = connection.CreateCommand())
@@ -93,7 +91,6 @@ namespace DAL.Implementaciones
                 }
                 if (ex.Message.Contains("ORA-20013"))
                 {
-                    // Extraer mensaje de stock
                     var mensaje = ex.Message.Substring(ex.Message.IndexOf("ORA-20013") + 12);
                     return Response<int>.Fail($"Stock insuficiente: {mensaje}");
                 }
@@ -207,7 +204,6 @@ namespace DAL.Implementaciones
 
                         PedidoCompletoDTO pedido = null;
 
-                        // Leer información del pedido
                         using (var reader = ((OracleRefCursor)cursorPedido.Value).GetDataReader())
                         {
                             if (await reader.ReadAsync())
@@ -240,7 +236,6 @@ namespace DAL.Implementaciones
                             return Response<PedidoCompletoDTO>.Fail("Pedido no encontrado");
                         }
 
-                        // Leer detalles de productos
                         using (var reader = ((OracleRefCursor)cursorDetalles.Value).GetDataReader())
                         {
                             while (await reader.ReadAsync())

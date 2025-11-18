@@ -55,7 +55,7 @@ namespace BLL.Implementaciones
 
         public async Task<Response<int>> RegistrarUsuario(UsuarioDTO usuario)
         {
-            var validacion = ValidarDatosUsuario(usuario, true); // NUEVO PARÁMETRO
+            var validacion = ValidarDatosUsuario(usuario, true);
             if (!validacion.IsSuccess)
             {
                 return Response<int>.Fail(validacion.Message);
@@ -76,7 +76,7 @@ namespace BLL.Implementaciones
                 return Response<bool>.Fail("ID de usuario inválido");
             }
 
-            var validacion = ValidarDatosUsuario(usuario, false); // NO VALIDAR CONTRASEÑA
+            var validacion = ValidarDatosUsuario(usuario, false);
             if (!validacion.IsSuccess)
             {
                 return Response<bool>.Fail(validacion.Message);
@@ -100,7 +100,6 @@ namespace BLL.Implementaciones
             return await _usuarioDAO.EliminarUsuario(idUsuario);
         }
 
-        // MÉTODO CORREGIDO CON PARÁMETRO PARA VALIDAR O NO LA CONTRASEÑA
         private Response<bool> ValidarDatosUsuario(UsuarioDTO usuario, bool validarContrasena = true)
         {
             if (string.IsNullOrWhiteSpace(usuario.Cedula) || usuario.Cedula.Length < 8)
@@ -123,7 +122,6 @@ namespace BLL.Implementaciones
                 return Response<bool>.Fail("El formato del correo es inválido");
             }
 
-            // SOLO VALIDAR CONTRASEÑA SI SE SOLICITA (NUEVO REGISTRO)
             if (validarContrasena && (string.IsNullOrWhiteSpace(usuario.Contrasena) || usuario.Contrasena.Length < 6))
             {
                 return Response<bool>.Fail("La contraseña debe tener al menos 6 caracteres");

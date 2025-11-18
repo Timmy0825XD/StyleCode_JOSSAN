@@ -48,14 +48,12 @@ namespace BLL.Implementaciones
                     return Response<int>.Fail("Debe agregar al menos una imagen al artículo");
                 }
 
-                // Validar que exista al menos una imagen principal
                 var tieneImagenPrincipal = articulo.Imagenes.Any(i => i.EsPrincipal == 'S');
                 if (!tieneImagenPrincipal)
                 {
                     return Response<int>.Fail("Debe marcar al menos una imagen como principal");
                 }
 
-                // Validar que no haya variantes duplicadas
                 var variantesDuplicadas = articulo.Variantes
                     .GroupBy(v => new { v.Talla, v.Color })
                     .Where(g => g.Count() > 1)
@@ -67,7 +65,6 @@ namespace BLL.Implementaciones
                     return Response<int>.Fail($"Existen variantes duplicadas: {string.Join(", ", variantesDuplicadas)}");
                 }
 
-                // Validar que todas las variantes tengan stock >= 0
                 var variantesConStockNegativo = articulo.Variantes.Where(v => v.Stock < 0).ToList();
                 if (variantesConStockNegativo.Any())
                 {

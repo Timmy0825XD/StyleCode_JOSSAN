@@ -209,8 +209,8 @@ namespace DAL.Implementaciones
 
                         return Response<CiudadDTO>.Done(
                             message: "Ciudades obtenidas exitosamente",
-                            obj: default,      // No hay un objeto individual, solo la lista
-                            list: ciudades     // Aquí va la lista de ciudades
+                            obj: default,
+                            list: ciudades
                         );
                     }
                 }

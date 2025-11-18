@@ -8,7 +8,7 @@ namespace ENTITY.Favoritos
 {
     public class ToggleFavoritoResultDTO
     {
-        public int Agregado { get; set; } // 1 = agregado, 0 = eliminado
+        public int Agregado { get; set; }
         public string Mensaje { get; set; } = string.Empty;
     }
 }

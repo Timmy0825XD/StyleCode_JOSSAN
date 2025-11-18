@@ -21,9 +21,6 @@ namespace DAL.Implementaciones
             _context = new OracleDbContext(connectionString);
         }
 
-        // ========================================
-        // AGREGAR FAVORITO
-        // ========================================
         public async Task<Response<int>> AgregarFavorito(int idUsuario, int idArticulo)
         {
             using var connection = _context.CreateConnection() as OracleConnection;
@@ -60,7 +57,6 @@ namespace DAL.Implementaciones
             {
                 await transaction.RollbackAsync();
 
-                // Manejo de errores personalizados del package
                 return ex.Number switch
                 {
                     20400 => Response<int>.Fail("Usuario no encontrado o inactivo"),
@@ -77,9 +73,6 @@ namespace DAL.Implementaciones
             }
         }
 
-        // ========================================
-        // ELIMINAR FAVORITO
-        // ========================================
         public async Task<Response<bool>> EliminarFavorito(int idUsuario, int idArticulo)
         {
             using var connection = _context.CreateConnection() as OracleConnection;
@@ -119,9 +112,6 @@ namespace DAL.Implementaciones
             }
         }
 
-        // ========================================
-        // TOGGLE FAVORITO
-        // ========================================
         public async Task<Response<ToggleFavoritoResultDTO>> ToggleFavorito(int idUsuario, int idArticulo)
         {
             using var connection = _context.CreateConnection() as OracleConnection;
@@ -177,9 +167,6 @@ namespace DAL.Implementaciones
             }
         }
 
-        // ========================================
-        // VERIFICAR SI ES FAVORITO
-        // ========================================
         public async Task<Response<int>> EsFavorito(int idUsuario, int idArticulo)
         {
             using var connection = _context.CreateConnection() as OracleConnection;
@@ -213,9 +200,6 @@ namespace DAL.Implementaciones
             }
         }
 
-        // ========================================
-        // OBTENER FAVORITOS DEL USUARIO
-        // ========================================
         public async Task<Response<FavoritoDTO>> ObtenerFavoritosUsuario(int idUsuario)
         {
             using var connection = _context.CreateConnection() as OracleConnection;
@@ -270,9 +254,6 @@ namespace DAL.Implementaciones
             }
         }
 
-        // ========================================
-        // OBTENER ESTADÍSTICAS DE FAVORITOS
-        // ========================================
         public async Task<Response<EstadisticaFavoritoDTO>> ObtenerEstadisticasFavoritos()
         {
             using var connection = _context.CreateConnection() as OracleConnection;
@@ -317,9 +298,6 @@ namespace DAL.Implementaciones
             }
         }
 
-        // ========================================
-        // LIMPIAR FAVORITOS INACTIVOS
-        // ========================================
         public async Task<Response<int>> LimpiarFavoritosInactivos()
         {
             using var connection = _context.CreateConnection() as OracleConnection;

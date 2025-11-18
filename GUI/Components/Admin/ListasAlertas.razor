@@ -87,9 +87,9 @@
                             </td>
                             <td>@alerta.FechaAlerta.ToString("dd/MM/yyyy HH:mm")</td>
                             <td>
-                                <span class="dias-badge @GetDiasClass(alerta.DiasPendiente)">
-                                    @alerta.DiasPendiente día(s)
-                                    @if (alerta.DiasPendiente >= 7)
+                                <span class="dias-badge @GetDiasClass(CalcularDiasPendiente(alerta))">
+                                    @CalcularDiasPendiente(alerta) día(s)
+                                    @if (CalcularDiasPendiente(alerta) >= 7)
                                     {
                                         <span class="critico-icon"><i class="fa-solid fa-circle-exclamation"></i></span>
                                     }
@@ -143,6 +143,14 @@
             if (response.IsSuccess && response.ListObject != null)
             {
                 alertas = response.ListObject.ToList();
+
+                foreach (var alerta in alertas)
+                {
+                    if (alerta.Estado == "Pendiente")
+                    {
+                        alerta.DiasPendiente = (DateTime.Now - alerta.FechaAlerta).Days;
+                    }
+                }
                 AplicarFiltros();
             }
         }
@@ -154,6 +162,15 @@
         {
             cargando = false;
         }
+    }
+
+    private int CalcularDiasPendiente(AlertaStockDTO alerta)
+    {
+        if (alerta.Estado == "Pendiente")
+        {
+            return (DateTime.Now - alerta.FechaAlerta).Days;
+        }
+        return 0;
     }
 
     private void AplicarFiltros()

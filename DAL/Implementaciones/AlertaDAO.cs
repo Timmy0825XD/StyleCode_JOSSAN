@@ -21,9 +21,6 @@ namespace DAL.Implementaciones
             _context = new OracleDbContext(connectionString);
         }
 
-        // ========================================
-        // 1. OBTENER ALERTAS PENDIENTES
-        // ========================================
         public async Task<Response<AlertaStockDTO>> ObtenerAlertasPendientes()
         {
             using var connection = _context.CreateConnection() as OracleConnection;
@@ -75,9 +72,6 @@ namespace DAL.Implementaciones
             }
         }
 
-        // ========================================
-        // 2. OBTENER TODAS LAS ALERTAS (CON FILTRO)
-        // ========================================
         public async Task<Response<AlertaStockDTO>> ObtenerTodasAlertas(string? estado = null)
         {
             using var connection = _context.CreateConnection() as OracleConnection;
@@ -90,7 +84,6 @@ namespace DAL.Implementaciones
                     CommandType = CommandType.StoredProcedure
                 };
 
-                // Parámetro opcional para filtrar por estado
                 var paramEstado = new OracleParameter("p_estado", OracleDbType.Varchar2)
                 {
                     Direction = ParameterDirection.Input,
@@ -136,9 +129,6 @@ namespace DAL.Implementaciones
             }
         }
 
-        // ========================================
-        // 3. OBTENER DETALLE DE ALERTA
-        // ========================================
         public async Task<Response<DetalleAlertaDTO>> ObtenerDetalleAlerta(int idAlerta)
         {
             using var connection = _context.CreateConnection() as OracleConnection;
@@ -195,9 +185,6 @@ namespace DAL.Implementaciones
             }
         }
 
-        // ========================================
-        // 4. OBTENER ESTADÍSTICAS DE ALERTAS
-        // ========================================
         public async Task<Response<EstadisticaAlertaDTO>> ObtenerEstadisticasAlertas()
         {
             using var connection = _context.CreateConnection() as OracleConnection;

@@ -21,9 +21,6 @@ namespace DAL.Implementaciones
             _context = new OracleDbContext(connectionString);
         }
 
-        // ========================================
-        // 1. OBTENER MÉTRICAS DEL DASHBOARD
-        // ========================================
         public async Task<Response<MetricasDashboardDTO>> ObtenerMetricasDashboard()
         {
             using var connection = _context.CreateConnection() as OracleConnection;
@@ -74,9 +71,6 @@ namespace DAL.Implementaciones
             }
         }
 
-        // ========================================
-        // 2. OBTENER VENTAS MENSUALES
-        // ========================================
         public async Task<Response<VentaMensualDTO>> ObtenerVentasMensuales(int anio)
         {
             using var connection = _context.CreateConnection() as OracleConnection;
@@ -120,9 +114,6 @@ namespace DAL.Implementaciones
             }
         }
 
-        // ========================================
-        // 3. OBTENER VENTAS POR CATEGORÍA
-        // ========================================
         public async Task<Response<VentaCategoriaDTO>> ObtenerVentasPorCategoria()
         {
             using var connection = _context.CreateConnection() as OracleConnection;
@@ -165,9 +156,6 @@ namespace DAL.Implementaciones
             }
         }
 
-        // ========================================
-        // 4. OBTENER TOP PRODUCTOS
-        // ========================================
         public async Task<Response<TopProductoDTO>> ObtenerTopProductos(int limite)
         {
             using var connection = _context.CreateConnection() as OracleConnection;
@@ -215,9 +203,6 @@ namespace DAL.Implementaciones
             }
         }
 
-        // ========================================
-        // 5. OBTENER PEDIDOS RECIENTES
-        // ========================================
         public async Task<Response<PedidoRecienteDTO>> ObtenerPedidosRecientes(int limite)
         {
             using var connection = _context.CreateConnection() as OracleConnection;
@@ -266,9 +251,6 @@ namespace DAL.Implementaciones
             }
         }
 
-        // ========================================
-        // 6. OBTENER PEDIDOS POR ESTADO
-        // ========================================
         public async Task<Response<PedidoPorEstadoDTO>> ObtenerPedidosPorEstado()
         {
             using var connection = _context.CreateConnection() as OracleConnection;
@@ -310,9 +292,6 @@ namespace DAL.Implementaciones
             }
         }
 
-        // ========================================
-        // 7. OBTENER TOP CLIENTES
-        // ========================================
         public async Task<Response<TopClienteDTO>> ObtenerTopClientes(int limite)
         {
             using var connection = _context.CreateConnection() as OracleConnection;
@@ -360,9 +339,6 @@ namespace DAL.Implementaciones
             }
         }
 
-        // ========================================
-        // 8. OBTENER PRODUCTOS CON STOCK BAJO
-        // ========================================
         public async Task<Response<ProductoStockBajoDTO>> ObtenerProductosStockBajo(int limite)
         {
             using var connection = _context.CreateConnection() as OracleConnection;
@@ -410,9 +386,6 @@ namespace DAL.Implementaciones
             }
         }
 
-        // ========================================
-        // 9. OBTENER VENTAS POR GÉNERO
-        // ========================================
         public async Task<Response<VentaGeneroDTO>> ObtenerVentasPorGenero()
         {
             using var connection = _context.CreateConnection() as OracleConnection;
@@ -455,9 +428,6 @@ namespace DAL.Implementaciones
             }
         }
 
-        // ========================================
-        // 10. OBTENER CRECIMIENTO DE VENTAS
-        // ========================================
         public async Task<Response<CrecimientoVentasDTO>> ObtenerCrecimientoVentas()
         {
             using var connection = _context.CreateConnection() as OracleConnection;
