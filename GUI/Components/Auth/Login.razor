@@ -85,13 +85,9 @@
 
             var resultado = await UsuarioService.Login(loginRequest);
 
-            Console.WriteLine($"Login resultado: {resultado.Message}");
-
             if (resultado.IsSuccess && resultado.Object != null)
             {
                 await SesionService.IniciarSesion(resultado.Object);
-
-                Console.WriteLine($"Usuario logueado: {resultado.Object.NombreCompleto} (ID: {resultado.Object.IdUsuario})");
 
                 if (resultado.Object.IdRol == 1)
                 {
@@ -110,7 +106,6 @@
         catch (Exception ex)
         {
             mensajeError = $"Error inesperado: {ex.Message}";
-            Console.WriteLine($" Error en login: {ex}");
         }
         finally
         {

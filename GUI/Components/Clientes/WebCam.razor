@@ -1,0 +1,594 @@
+﻿@page "/webcam-tryon"
+@using GUI.Components.Layout
+@using System.Net.WebSockets
+@using System.Text
+@using System.Text.Json
+@inject IJSRuntime JS
+@inject HttpClient Http
+@layout ClienteLayout
+
+<PageTitle>Webcam Try-On</PageTitle>
+
+<div class="container py-4">
+
+    <div class="gradient-header">
+        <div class="d-flex justify-content-between align-items-center flex-wrap">
+            <div>
+                <h1 class="display-4 mb-2">📹 Webcam Try-On en Tiempo Real</h1>
+                <p class="lead mb-0">Prueba gafas y camisas en vivo con tu cámara</p>
+            </div>
+            <div>
+                @if (!isApiHealthy)
+                {
+                    <span class="health-indicator unhealthy">
+                        <span>⚠️ API Desconectada</span>
+                    </span>
+                }
+                else if (isStreaming)
+                {
+                    <span class="health-indicator streaming">
+                        <span>🔴 En Vivo</span>
+                    </span>
+                }
+                else
+                {
+                    <span class="health-indicator healthy">
+                        <span>✅ API Conectada</span>
+                    </span>
+                }
+            </div>
+        </div>
+    </div>
+
+    @if (!isApiHealthy)
+    {
+        <div class="alert alert-danger alert-custom mb-4" role="alert">
+            <strong>⚠️ API no disponible</strong>
+            <p class="mb-0 mt-2">Asegúrate de que el servidor Python esté ejecutándose:</p>
+            <code class="d-block mt-2">python api_webcam_tryon.py</code>
+        </div>
+    }
+
+    @if (stats != null)
+    {
+        <div class="row g-3 mb-4">
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <h3 class="stat-number text-primary">@stats.FramesProcessed</h3>
+                    <div class="stat-label">📊 Frames Procesados</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <h3 class="stat-number text-info">@stats.GlassesApplied</h3>
+                    <div class="stat-label">👓 Gafas Aplicadas</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <h3 class="stat-number text-success">@stats.ShirtsApplied</h3>
+                    <div class="stat-label">👕 Camisas Aplicadas</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <h3 class="stat-number text-warning">@stats.TotalSessions</h3>
+                    <div class="stat-label">🎥 Sesiones Totales</div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-6">
+            <div class="mode-card @(selectedMode == "glasses" ? "active" : "")"
+                 @onclick="@(() => SelectMode("glasses"))">
+                <div class="mode-icon">👓</div>
+                <div class="mode-title">Gafas</div>
+                <div class="mode-subtitle">Prueba diferentes estilos de gafas</div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="mode-card @(selectedMode == "shirt" ? "active" : "")"
+                 @onclick="@(() => SelectMode("shirt"))">
+                <div class="mode-icon">👕</div>
+                <div class="mode-title">Camisas</div>
+                <div class="mode-subtitle">Prueba diferentes camisas</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <div class="col-lg-8">
+            <div class="webcam-card">
+                <div class="webcam-header">
+                    <span>📹 Cámara en Vivo</span>
+                    @if (isStreaming)
+                    {
+                        <span class="badge bg-danger">🔴 LIVE</span>
+                    }
+                </div>
+                <div class="card-body p-0">
+                    <div class="video-container">
+                        <video id="webcam" autoplay playsinline style="display: @(isStreaming ? "none" : "block");"></video>
+                        <canvas id="canvas" style="display: @(isStreaming ? "block" : "none");"></canvas>
+
+                        @if (!isStreaming && !cameraPermissionDenied)
+                        {
+                            <div class="video-overlay">
+                                <div class="text-center">
+                                    <div class="video-overlay-icon">📹</div>
+                                    <h4>Cámara Detenida</h4>
+                                    <p class="text-muted">Haz clic en "Iniciar Cámara" para comenzar</p>
+                                </div>
+                            </div>
+                        }
+
+                        @if (cameraPermissionDenied)
+                        {
+                            <div class="video-overlay">
+                                <div class="text-center text-danger">
+                                    <div class="video-overlay-icon">⚠️</div>
+                                    <h4>Permiso Denegado</h4>
+                                    <p>Por favor permite el acceso a la cámara en tu navegador</p>
+                                </div>
+                            </div>
+                        }
+                    </div>
+
+                    <div class="webcam-controls p-3">
+                        <div class="d-flex gap-3 justify-content-center flex-wrap">
+                            @if (!isStreaming)
+                            {
+                                <button class="btn btn-lg btn-success" @onclick="StartCamera" disabled="@(!isApiHealthy)">
+                                    ▶️ Iniciar Cámara
+                                </button>
+                            }
+                            else
+                            {
+                                <button class="btn btn-lg btn-danger" @onclick="StopCamera">
+                                    ⏹️ Detener Cámara
+                                </button>
+                            }
+
+                            <button class="btn btn-lg btn-primary" @onclick="CapturePhoto" disabled="@(!isStreaming)">
+                                📸 Capturar Foto
+                            </button>
+
+                            <button class="btn btn-lg btn-outline-secondary" @onclick="SwitchCamera" disabled="@(!isStreaming)">
+                                🔄 Cambiar Cámara
+                            </button>
+                        </div>
+
+                        @if (isStreaming)
+                        {
+                            <div class="mt-3 text-center">
+                                <small class="text-muted">
+                                    FPS: <span class="fw-bold">@currentFps</span> |
+                                    Latencia: <span class="fw-bold">@latencyMs ms</span>
+                                </small>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            @if (!string.IsNullOrEmpty(capturedPhotoUrl))
+            {
+                <div class="captured-photo-card mt-4">
+                    <div class="webcam-header">
+                        📸 Última Captura
+                    </div>
+                    <div class="card-body text-center">
+                        <img src="@capturedPhotoUrl" class="img-fluid rounded" alt="Captura" style="max-height: 400px;" />
+                        <div class="mt-3">
+                            <a href="@capturedPhotoUrl" download="captura_@DateTime.Now.ToString("yyyyMMdd_HHmmss")"
+                               class="btn btn-primary">
+                                💾 Descargar
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <div class="col-lg-4">
+            <div class="library-card">
+                <div class="library-header">
+                    @if (selectedMode == "glasses")
+                    {
+                        <span>👓 Biblioteca de Gafas</span>
+                    }
+                    else
+                    {
+                        <span>👕 Biblioteca de Camisas</span>
+                    }
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <button class="btn btn-outline-primary w-100" @onclick="ShowUploadDialog">
+                            ➕ Agregar Nueva
+                        </button>
+                    </div>
+
+                    <div class="items-list">
+                        @if (availableItems != null && availableItems.Any())
+                        {
+                            @foreach (var item in availableItems)
+                            {
+                                <div class="item-card @(selectedItem == item ? "selected" : "")"
+                                     @onclick="@(() => SelectItem(item))">
+                                    <div class="item-name">@item</div>
+                                    @if (selectedItem == item)
+                                    {
+                                        <span class="item-badge">✓</span>
+                                    }
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <div class="text-center text-muted p-4">
+                                <p>No hay items disponibles</p>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <div class="tips-card mt-4">
+                <div class="tips-header">
+                    💡 Consejos
+                </div>
+                <div class="card-body">
+                    @if (selectedMode == "glasses")
+                    {
+                        <ul class="tips-list">
+                            <li>Mira directamente a la cámara</li>
+                            <li>Asegura buena iluminación</li>
+                            <li>Mantén el rostro centrado</li>
+                            <li>Evita movimientos bruscos</li>
+                        </ul>
+                    }
+                    else
+                    {
+                        <ul class="tips-list">
+                            <li>Mantén los hombros visibles</li>
+                            <li>Párate de frente a la cámara</li>
+                            <li>Usa ropa ajustada</li>
+                            <li>Fondo uniforme preferible</li>
+                        </ul>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrEmpty(statusMessage))
+    {
+        <div class="alert @statusAlertClass alert-custom" role="alert">
+            @statusMessage
+        </div>
+    }
+</div>
+
+@if (showUploadModal)
+{
+    <div class="modal-overlay" @onclick="CloseUploadDialog">
+        <div class="modal-content" @onclick:stopPropagation="true">
+            <div class="modal-header">
+                <h5>Agregar @(selectedMode == "glasses" ? "Gafas" : "Camisa")</h5>
+                <button class="btn-close" @onclick="CloseUploadDialog"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Nombre:</label>
+                    <input type="text" class="form-control" @bind="newItemName" placeholder="Ej: Gafas Aviador" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Imagen:</label>
+                    <InputFile OnChange="HandleFileSelected" class="form-control" accept="image/png" />
+                    <small class="text-muted">Solo archivos PNG con transparencia</small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" @onclick="CloseUploadDialog">Cancelar</button>
+                <button class="btn btn-primary" @onclick="UploadNewItem" disabled="@(string.IsNullOrEmpty(newItemName) || uploadFileData == null)">
+                    Subir
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private bool isApiHealthy = false;
+    private bool isStreaming = false;
+    private bool cameraPermissionDenied = false;
+    private string selectedMode = "glasses";
+    private string? selectedItem = null;
+    private List<string> availableItems = new();
+    private WebcamStats? stats = null;
+
+    private string? statusMessage = null;
+    private string statusAlertClass = "alert-info";
+
+    private int currentFps = 0;
+    private int latencyMs = 0;
+
+    private string? capturedPhotoUrl = null;
+
+    private bool showUploadModal = false;
+    private string newItemName = "";
+    private byte[]? uploadFileData = null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CheckApiHealth();
+        await LoadStats();
+        await LoadItems();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await JS.InvokeVoidAsync("initializeWebcam");
+        }
+    }
+
+    private async Task CheckApiHealth()
+    {
+        try
+        {
+            var response = await Http.GetAsync("http://localhost:8000/health");
+            isApiHealthy = response.IsSuccessStatusCode;
+        }
+        catch
+        {
+            isApiHealthy = false;
+        }
+    }
+
+    private async Task LoadStats()
+    {
+        try
+        {
+            var response = await Http.GetFromJsonAsync<StatsResponse>("http://localhost:8000/stats");
+            if (response != null)
+            {
+                stats = response.Stats;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error cargando estadísticas: {ex.Message}");
+        }
+    }
+
+    private async Task LoadItems()
+    {
+        try
+        {
+            var response = await Http.GetFromJsonAsync<ItemsResponse>($"http://localhost:8000/items/{selectedMode}");
+            if (response != null)
+            {
+                availableItems = response.Items;
+                if (availableItems.Any() && selectedItem == null)
+                {
+                    selectedItem = availableItems.First();
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error cargando items: {ex.Message}");
+        }
+    }
+
+    private void SelectMode(string mode)
+    {
+        selectedMode = mode;
+        selectedItem = null;
+        availableItems.Clear();
+        _ = LoadItems();
+    }
+
+    private void SelectItem(string item)
+    {
+        selectedItem = item;
+        statusMessage = $"Seleccionado: {item}";
+        statusAlertClass = "alert-info";
+    }
+
+    private async Task StartCamera()
+    {
+        try
+        {
+            var result = await JS.InvokeAsync<bool>("startWebcam");
+            if (result)
+            {
+                isStreaming = true;
+                cameraPermissionDenied = false;
+                statusMessage = "Cámara iniciada correctamente";
+                statusAlertClass = "alert-success-custom";
+
+                // Iniciar streaming
+                _ = StreamFrames();
+            }
+            else
+            {
+                cameraPermissionDenied = true;
+                statusMessage = "No se pudo acceder a la cámara";
+                statusAlertClass = "alert-danger";
+            }
+        }
+        catch (Exception ex)
+        {
+            statusMessage = $"Error: {ex.Message}";
+            statusAlertClass = "alert-danger";
+        }
+    }
+
+    private async Task StopCamera()
+    {
+        await JS.InvokeVoidAsync("stopWebcam");
+        isStreaming = false;
+        statusMessage = "Cámara detenida";
+        statusAlertClass = "alert-info";
+    }
+
+    private async Task SwitchCamera()
+    {
+        await JS.InvokeVoidAsync("switchCamera");
+    }
+
+    private async Task CapturePhoto()
+    {
+        try
+        {
+            var imageData = await JS.InvokeAsync<string>("captureFrame");
+            capturedPhotoUrl = imageData;
+            statusMessage = "Foto capturada exitosamente";
+            statusAlertClass = "alert-success-custom";
+        }
+        catch (Exception ex)
+        {
+            statusMessage = $"Error capturando foto: {ex.Message}";
+            statusAlertClass = "alert-danger";
+        }
+    }
+
+    private async Task StreamFrames()
+    {
+        // Implementación simplificada - en producción usar WebSocket
+        while (isStreaming)
+        {
+            try
+            {
+                var startTime = DateTime.Now;
+
+                // Obtener frame actual
+                var frameData = await JS.InvokeAsync<string>("getFrame");
+
+                if (!string.IsNullOrEmpty(frameData) && !string.IsNullOrEmpty(selectedItem))
+                {
+                    // Procesar frame con la API
+                    var processedFrame = await ProcessFrame(frameData);
+
+                    if (!string.IsNullOrEmpty(processedFrame))
+                    {
+                        await JS.InvokeVoidAsync("displayFrame", processedFrame);
+                    }
+                }
+
+                var endTime = DateTime.Now;
+                latencyMs = (int)(endTime - startTime).TotalMilliseconds;
+                currentFps = latencyMs > 0 ? 1000 / latencyMs : 0;
+
+                StateHasChanged();
+
+                // Limitar FPS
+                await Task.Delay(33); // ~30 FPS
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error en streaming: {ex.Message}");
+                await Task.Delay(100);
+            }
+        }
+    }
+
+    private async Task<string?> ProcessFrame(string frameBase64)
+    {
+        try
+        {
+            // Aquí deberías implementar el WebSocket para mejor rendimiento
+            // Por ahora, retornamos el frame original
+            return frameBase64;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private void ShowUploadDialog()
+    {
+        showUploadModal = true;
+        newItemName = "";
+        uploadFileData = null;
+    }
+
+    private void CloseUploadDialog()
+    {
+        showUploadModal = false;
+    }
+
+    private async Task HandleFileSelected(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        if (file != null)
+        {
+            using var stream = file.OpenReadStream(maxAllowedSize: 5 * 1024 * 1024);
+            using var memoryStream = new MemoryStream();
+            await stream.CopyToAsync(memoryStream);
+            uploadFileData = memoryStream.ToArray();
+        }
+    }
+
+    private async Task UploadNewItem()
+    {
+        if (string.IsNullOrEmpty(newItemName) || uploadFileData == null)
+            return;
+
+        try
+        {
+            using var content = new MultipartFormDataContent();
+            content.Add(new ByteArrayContent(uploadFileData), "file", $"{newItemName}.png");
+
+            var response = await Http.PostAsync(
+                $"http://localhost:8000/upload/{selectedMode}?name={Uri.EscapeDataString(newItemName)}",
+                content
+            );
+
+            if (response.IsSuccessStatusCode)
+            {
+                statusMessage = $"{(selectedMode == "glasses" ? "Gafas" : "Camisa")} agregada exitosamente";
+                statusAlertClass = "alert-success-custom";
+                await LoadItems();
+                CloseUploadDialog();
+            }
+            else
+            {
+                statusMessage = "Error al subir el archivo";
+                statusAlertClass = "alert-danger";
+            }
+        }
+        catch (Exception ex)
+        {
+            statusMessage = $"Error: {ex.Message}";
+            statusAlertClass = "alert-danger";
+        }
+    }
+
+    // Modelos
+    public class WebcamStats
+    {
+        public int FramesProcessed { get; set; }
+        public int GlassesApplied { get; set; }
+        public int ShirtsApplied { get; set; }
+        public int TotalSessions { get; set; }
+        public int Errors { get; set; }
+    }
+
+    public class StatsResponse
+    {
+        public WebcamStats Stats { get; set; } = new();
+    }
+
+    public class ItemsResponse
+    {
+        public List<string> Items { get; set; } = new();
+    }
+}

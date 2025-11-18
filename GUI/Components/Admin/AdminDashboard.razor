@@ -25,7 +25,6 @@
     }
     else
     {
-        <!-- Stats Cards Grid -->
         <div class="stats-grid">
             @foreach (var stat in stats)
             {
@@ -47,9 +46,7 @@
             }
         </div>
 
-        <!-- Charts Grid -->
         <div class="charts-grid">
-            <!-- Ventas por Categoría -->
             <div class="chart-card">
                 <div class="chart-header">
                     <h3>Ventas por Categoría</h3>
@@ -60,7 +57,6 @@
                 </div>
             </div>
 
-            <!-- Ventas por Género -->
             <div class="chart-card">
                 <div class="chart-header">
                     <h3>Ventas por Género</h3>
@@ -72,7 +68,6 @@
             </div>
         </div>
 
-        <!-- Orders Table -->
         <div class="orders-card">
             <h3 class="orders-title">Pedidos Recientes</h3>
             <div class="table-container">
@@ -126,7 +121,6 @@
             </div>
         </div>
 
-        <!-- Top Products Section -->
         @if (topProductos != null && topProductos.Any())
         {
             <div class="orders-card" style="margin-top: 24px;">
@@ -160,7 +154,6 @@
             </div>
         }
 
-        <!-- Low Stock Alert -->
         @if (productosStockBajo != null && productosStockBajo.Any())
         {
             <div class="orders-card alert-card" style="margin-top: 24px;">
@@ -197,7 +190,6 @@
             </div>
         }
 
-        <!-- Top Clients Section -->
         @if (topClientes != null && topClientes.Any())
         {
             <div class="orders-card" style="margin-top: 24px;">
@@ -236,335 +228,6 @@
     }
 </section>
 
-<style>
-    .loading-spinner {
-        font-size: 18px;
-        color: #8b5cf6;
-        font-weight: 500;
-    }
-
-    .stats-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 24px;
-        margin-bottom: 24px;
-    }
-
-    .stat-card {
-        background: white;
-        border-radius: 16px;
-        padding: 24px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-
-        .stat-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 8px 12px rgba(0, 0, 0, 0.15);
-        }
-
-    .stat-content {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
-    .stat-info h3 {
-        font-size: 32px;
-        margin: 8px 0 0 0;
-        color: #1f2937;
-    }
-
-    .stat-info p {
-        margin: 0;
-        font-size: 14px;
-        font-weight: 500;
-    }
-
-    .stat-subtitle {
-        font-size: 12px;
-        color: #6b7280;
-        margin-top: 4px;
-    }
-
-    .stat-icon {
-        width: 60px;
-        height: 60px;
-        border-radius: 12px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 28px;
-        color: white;
-    }
-
-        .stat-icon.purple {
-            background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
-        }
-
-        .stat-icon.blue {
-            background: linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%);
-        }
-
-        .stat-icon.green {
-            background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
-        }
-
-        .stat-icon.orange {
-            background: linear-gradient(135deg, #f59e0b 0%, #fb923c 100%);
-        }
-
-        .stat-icon.red {
-            background: linear-gradient(135deg, #ef4444 0%, #f87171 100%);
-        }
-
-        .stat-icon.indigo {
-            background: linear-gradient(135deg, #6366f1 0%, #818cf8 100%);
-        }
-
-    /* Charts Grid */
-    .charts-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-        gap: 24px;
-        margin-bottom: 24px;
-    }
-
-    .chart-card {
-        background: white;
-        border-radius: 16px;
-        padding: 24px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    }
-
-    .chart-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 24px;
-    }
-
-        .chart-header h3 {
-            font-size: 20px;
-            font-weight: bold;
-            color: #1f2937;
-            margin: 0;
-        }
-
-    .view-more-btn {
-        background: none;
-        border: none;
-        color: #8b5cf6;
-        font-size: 14px;
-        font-weight: 500;
-        cursor: pointer;
-        padding: 4px 8px;
-        transition: color 0.2s ease;
-    }
-
-        .view-more-btn:hover {
-            color: #7c3aed;
-        }
-
-    .chart-content {
-        height: 300px;
-        display: flex;
-        justify-content: center;
-    }
-
-    /* Orders Table */
-    .orders-card {
-        background: white;
-        border-radius: 16px;
-        padding: 24px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    }
-
-    .alert-card {
-        border: 2px solid #fecaca;
-    }
-
-    .orders-title {
-        font-size: 20px;
-        font-weight: bold;
-        color: #1f2937;
-        margin: 0 0 16px 0;
-    }
-
-    .table-container {
-        overflow-x: auto;
-    }
-
-    .orders-table {
-        width: 100%;
-        border-collapse: collapse;
-    }
-
-        .orders-table thead tr {
-            border-bottom: 1px solid #e5e7eb;
-        }
-
-        .orders-table th {
-            text-align: left;
-            padding: 12px;
-            color: #6b7280;
-            font-weight: 500;
-            font-size: 14px;
-        }
-
-        .orders-table tbody tr {
-            border-bottom: 1px solid #e5e7eb;
-            transition: background-color 0.2s ease;
-        }
-
-            .orders-table tbody tr:hover {
-                background-color: #f9fafb;
-            }
-
-        .orders-table td {
-            padding: 12px;
-            font-size: 14px;
-        }
-
-    .order-id {
-        font-weight: 500;
-        color: #8b5cf6;
-    }
-
-    .order-total {
-        font-weight: 600;
-        color: #10b981;
-    }
-
-    .order-date {
-        color: #6b7280;
-    }
-
-    .customer-info {
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-    }
-
-    .customer-email {
-        font-size: 12px;
-        color: #6b7280;
-    }
-
-    .status-badge {
-        display: inline-block;
-        padding: 4px 12px;
-        border-radius: 9999px;
-        font-size: 12px;
-        font-weight: 500;
-    }
-
-        .status-badge.pending, .status-badge.pendiente {
-            background-color: #fef3c7;
-            color: #92400e;
-        }
-
-        .status-badge.completed, .status-badge.completado, .status-badge.entregado {
-            background-color: #d1fae5;
-            color: #065f46;
-        }
-
-        .status-badge.processing, .status-badge.en-proceso {
-            background-color: #dbeafe;
-            color: #1e40af;
-        }
-
-        .status-badge.cancelled, .status-badge.cancelado {
-            background-color: #fee2e2;
-            color: #991b1b;
-        }
-
-    .stock-badge {
-        display: inline-block;
-        padding: 4px 12px;
-        border-radius: 9999px;
-        font-size: 12px;
-        font-weight: 600;
-        background-color: #fee2e2;
-        color: #991b1b;
-    }
-
-    /* Products Grid */
-    .products-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-        gap: 16px;
-        margin-top: 16px;
-    }
-
-    .product-card {
-        background: white;
-        border: 1px solid #e5e7eb;
-        border-radius: 12px;
-        padding: 16px;
-        transition: all 0.2s ease;
-    }
-
-        .product-card:hover {
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            transform: translateY(-2px);
-        }
-
-    .product-image {
-        width: 100%;
-        height: 150px;
-        object-fit: cover;
-        border-radius: 8px;
-        margin-bottom: 12px;
-    }
-
-    .product-image-placeholder {
-        width: 100%;
-        height: 150px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: #f3f4f6;
-        border-radius: 8px;
-        font-size: 48px;
-        margin-bottom: 12px;
-    }
-
-    .product-info h4 {
-        font-size: 14px;
-        font-weight: 600;
-        color: #1f2937;
-        margin: 0 0 4px 0;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
-
-    .product-brand {
-        font-size: 12px;
-        color: #6b7280;
-        margin: 0 0 8px 0;
-    }
-
-    .product-stats {
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-        font-size: 12px;
-        color: #4b5563;
-        margin-bottom: 8px;
-    }
-
-    .product-revenue {
-        font-size: 14px;
-        font-weight: 600;
-        color: #10b981;
-        margin-top: 8px;
-        padding-top: 8px;
-        border-top: 1px solid #e5e7eb;
-    }
-</style>
-
 @code {
     private BarChart<double> barChartCategoria;
     private BarChart<double> barChartGenero;
@@ -573,7 +236,6 @@
     private bool isLoading = true;
     private string errorMessage = string.Empty;
 
-    // Data Models
     public class StatCard
     {
         public string Title { get; set; }
@@ -583,14 +245,12 @@
         public string Subtitle { get; set; }
     }
 
-    // Statistics data
     private List<StatCard> stats = new List<StatCard>();
     private List<PedidoRecienteDTO> pedidosRecientes = new List<PedidoRecienteDTO>();
     private List<TopProductoDTO> topProductos = new List<TopProductoDTO>();
     private List<ProductoStockBajoDTO> productosStockBajo = new List<ProductoStockBajoDTO>();
     private List<TopClienteDTO> topClientes = new List<TopClienteDTO>();
 
-    // Chart data
     private List<VentaCategoriaDTO> ventasPorCategoria = new List<VentaCategoriaDTO>();
     private List<VentaGeneroDTO> ventasPorGenero = new List<VentaGeneroDTO>();
 
@@ -614,7 +274,6 @@
             isLoading = true;
             errorMessage = string.Empty;
 
-            // Cargar todas las estadísticas en paralelo
             var tasks = new List<Task>
             {
                 CargarMetricasDashboard(),
@@ -782,7 +441,6 @@
         await barChartGenero.AddLabelsDatasetsAndUpdate(labels, GetBarChartDataset(data, "Ventas por Género"));
     }
 
-    // Chart Dataset Generators
     private BarChartDataset<double> GetBarChartDataset(List<double> data, string label)
     {
         return new BarChartDataset<double>
@@ -824,7 +482,6 @@
         };
     }
 
-    // Refresh Methods
     private async Task RefreshVentasCategoria()
     {
         await CargarVentasPorCategoria();
@@ -837,7 +494,6 @@
         await RenderizarVentasPorGenero();
     }
 
-    // Status Helper Methods
     private string GetStatusClass(string status)
     {
         return status.ToLower() switch

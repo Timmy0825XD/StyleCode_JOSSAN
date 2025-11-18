@@ -11,7 +11,7 @@
     <div class="page-header">
         <h2 style="font-size: 28px; font-weight: 700;"> Gestión de Productos </h2>
         <button class="btn-primary" @onclick="AbrirModalNuevoProducto">
-            <span>➕</span>
+            <span><i class="fa-solid fa-plus"></i></span>
             Nuevo Producto
         </button>
     </div>
@@ -34,7 +34,7 @@
         @if (cargando)
         {
             <div class="empty-state">
-                <span class="empty-icon">⏳</span>
+                <span class="empty-icon"><i class="fa-solid fa-clock"></i></span>
                 <p>Cargando productos...</p>
             </div>
         }
@@ -86,7 +86,7 @@
                                 </td>
                                 <td>
                                     <div class="action-buttons">
-                                        <!-- 🆕 MENÚ DESPLEGABLE PARA EDICIÓN -->
+
                                         <div class="dropdown">
                                             <button class="btn-action btn-edit" title="Editar">
                                                 <Icon Name="IconName.Pen" />
@@ -116,7 +116,7 @@
                 @if (!ProductosFiltrados.Any())
                 {
                     <div class="empty-state">
-                        <span class="empty-icon">📦</span>
+                        <span class="empty-icon"><i class="fa-solid fa-box"></i></span>
                         <p>No se encontraron productos</p>
                     </div>
                 }
@@ -207,13 +207,13 @@
     </div>
 }
 
-<!-- MODAL CONFIRMACIÓN ELIMINAR -->
+
 @if (mostrarModalConfirmacion)
 {
     <div class="modal-overlay" @onclick="CerrarModalConfirmacion">
         <div class="modal-content modal-small" @onclick:stopPropagation>
             <div class="modal-header">
-                <h3>⚠️ Confirmar Eliminación</h3>
+                <h3> Confirmar Eliminación</h3>
                 <button class="btn-close" @onclick="CerrarModalConfirmacion">✕</button>
             </div>
 
@@ -237,7 +237,7 @@
                         }
                         else
                         {
-                            <span>🗑️ Eliminar</span>
+                            <span> Eliminar</span>
                         }
                     </button>
                 </div>
@@ -246,7 +246,7 @@
     </div>
 }
 
-<!-- 🆕 MODAL CREAR PRODUCTO (Paso a paso) -->
+
 @if (mostrarModalCrear)
 {
     <div class="modal-overlay" @onclick="CerrarModalCrear">
@@ -382,7 +382,7 @@
                                             </div>
                                         </div>
                                         <button type="button" class="btn-remove-variant" @onclick="() => EliminarVariante(index)">
-                                            🗑️
+                                            <i class="fa-solid fa-trash"></i>
                                         </button>
                                     </div>
                                 }
@@ -391,7 +391,6 @@
                             @if (!nuevoProducto.Variantes.Any())
                             {
                                 <div class="empty-variants">
-                                    <span>📦</span>
                                     <p>No hay variantes. Agrega al menos una.</p>
                                 </div>
                             }
@@ -405,7 +404,7 @@
 
                             <div class="image-upload-area">
                                 <div class="upload-box">
-                                    <span class="upload-icon">📸</span>
+                                    <span class="upload-icon"><i class="fa-solid fa-camera"></i></span>
                                     <p>Sube imágenes desde tu computadora</p>
 
                                     <label class="btn-upload" style="cursor:pointer; display: inline-block; margin-top: 10px;">
@@ -427,11 +426,11 @@
                                             style="margin-top: 10px; background-color: #059669;">
                                         @if (subiendoImagen)
                                         {
-                                            <span>⏳ Subiendo...</span>
+                                            <span> Subiendo...</span>
                                         }
                                         else
                                         {
-                                            <span>📤 Subir imagen</span>
+                                            <span> Subir imagen</span>
                                         }
                                     </button>
                                 </div>
@@ -461,7 +460,6 @@
                             @if (!nuevoProducto.Imagenes.Any())
                             {
                                 <div class="empty-images">
-                                    <span>🖼️</span>
                                     <p>No se han agregado imágenes</p>
                                 </div>
                             }
@@ -471,7 +469,6 @@
                     @if (!string.IsNullOrEmpty(mensajeErrorModal))
                     {
                         <div class="error-message-modal">
-                            <span>⚠️</span>
                             <span>@mensajeErrorModal</span>
                         </div>
                     }
@@ -498,7 +495,7 @@
                                 }
                                 else
                                 {
-                                    <span>💾 Guardar Producto</span>
+                                    <span>Guardar Producto</span>
                                 }
                             </button>
                         }
@@ -509,7 +506,7 @@
     </div>
 }
 
-<!-- 🆕 MODAL EDITAR INFORMACIÓN -->
+
 @if (mostrarModalEditarInfo)
 {
     <div class="modal-overlay" @onclick="CerrarModalEditarInfo">
@@ -574,7 +571,6 @@
                     @if (!string.IsNullOrEmpty(mensajeErrorModal))
                     {
                         <div class="error-message-modal">
-                            <span>⚠️</span>
                             <span>@mensajeErrorModal</span>
                         </div>
                     }
@@ -590,7 +586,7 @@
                             }
                             else
                             {
-                                <span>💾 Guardar Cambios</span>
+                                <span>Guardar Cambios</span>
                             }
                         </button>
                     </div>
@@ -600,7 +596,6 @@
     </div>
 }
 
-<!-- 🆕 MODAL EDITAR VARIANTES -->
 @if (mostrarModalEditarVariantes)
 {
     <div class="modal-overlay" @onclick="CerrarModalEditarVariantes">
@@ -614,7 +609,7 @@
                 <div class="variantes-header">
                     <h4>Variantes (Talla y Color)</h4>
                     <button type="button" class="btn-add-variant" @onclick="AgregarVarianteEdicion">
-                        ➕ Agregar Variante
+                         Agregar Variante
                     </button>
                 </div>
 
@@ -653,7 +648,7 @@
                                 </div>
                             </div>
                             <button type="button" class="btn-remove-variant" @onclick="() => EliminarVarianteEdicion(index)">
-                                🗑️
+                                <i class="fa-solid fa-trash"></i>
                             </button>
                         </div>
                     }
@@ -662,7 +657,6 @@
                 @if (!variantesEditando.Any())
                 {
                     <div class="empty-variants">
-                        <span>📦</span>
                         <p>No hay variantes. Agrega al menos una.</p>
                     </div>
                 }
@@ -670,7 +664,6 @@
                 @if (!string.IsNullOrEmpty(mensajeErrorModal))
                 {
                     <div class="error-message-modal">
-                        <span>⚠️</span>
                         <span>@mensajeErrorModal</span>
                     </div>
                 }
@@ -686,7 +679,7 @@
                         }
                         else
                         {
-                            <span>💾 Guardar Variantes</span>
+                            <span> Guardar Variantes</span>
                         }
                     </button>
                 </div>
@@ -695,7 +688,6 @@
     </div>
 }
 
-<!-- 🆕 MODAL EDITAR IMÁGENES -->
 @if (mostrarModalEditarImagenes)
 {
     <div class="modal-overlay" @onclick="CerrarModalEditarImagenes">
@@ -711,7 +703,6 @@
 
                     <div class="image-upload-area">
                         <div class="upload-box">
-                            <span class="upload-icon">📸</span>
                             <p>Sube nuevas imágenes desde tu computadora</p>
 
                             <label class="btn-upload" style="cursor:pointer; display: inline-block; margin-top: 10px;">
@@ -733,11 +724,11 @@
                                     style="margin-top: 10px; background-color: #059669;">
                                 @if (subiendoImagenEdicion)
                                 {
-                                    <span>⏳ Subiendo...</span>
+                                    <span> Subiendo...</span>
                                 }
                                 else
                                 {
-                                    <span>📤 Subir imagen</span>
+                                    <span>Subir imagen</span>
                                 }
                             </button>
                         </div>
@@ -767,7 +758,6 @@
                     @if (!imagenesEditando.Any())
                     {
                         <div class="empty-images">
-                            <span>🖼️</span>
                             <p>No hay imágenes. Agrega al menos una.</p>
                         </div>
                     }
@@ -776,7 +766,6 @@
                 @if (!string.IsNullOrEmpty(mensajeErrorModal))
                 {
                     <div class="error-message-modal">
-                        <span>⚠️</span>
                         <span>@mensajeErrorModal</span>
                     </div>
                 }
@@ -792,7 +781,7 @@
                         }
                         else
                         {
-                            <span>💾 Guardar Imágenes</span>
+                            <span> Guardar Imágenes</span>
                         }
                     </button>
                 </div>
@@ -802,7 +791,7 @@
 }
 
 <style>
-    /* Estilos para el menú desplegable */
+
     .dropdown {
         position: relative;
         display: inline-block;
@@ -844,7 +833,7 @@
 </style>
 
 @code {
-    // Variables existentes
+
     private string searchText = "";
     private List<ArticuloListaDTO> products = new();
     private bool mostrarModalFiltros = false;
@@ -865,7 +854,6 @@
     private string nombreProductoAEliminar = "";
     private bool eliminandoProducto = false;
 
-    // 🆕 Variables para CREAR producto
     private bool mostrarModalCrear = false;
     private int pasoModal = 1;
     private ArticuloCreacionDTO nuevoProducto = new();
@@ -875,16 +863,13 @@
     private bool hayImagenSeleccionada => file != null;
     private bool subiendoImagen = false;
 
-    // 🆕 Variables para EDITAR INFORMACIÓN
     private bool mostrarModalEditarInfo = false;
     private ArticuloActualizacionDTO productoEditando = new();
 
-    // 🆕 Variables para EDITAR VARIANTES
     private bool mostrarModalEditarVariantes = false;
     private int idProductoEditandoVariantes = 0;
     private List<VarianteActualizacionDTO> variantesEditando = new();
 
-    // 🆕 Variables para EDITAR IMÁGENES
     private bool mostrarModalEditarImagenes = false;
     private int idProductoEditandoImagenes = 0;
     private List<ImagenActualizacionDTO> imagenesEditando = new();
@@ -917,10 +902,7 @@
             {
                 products = resultado.ListObject.ToList();
             }
-            else
-            {
-                Console.WriteLine($"Error al cargar productos: {resultado.Message}");
-            }
+
         }
         catch (Exception ex)
         {
@@ -1000,7 +982,6 @@
         }
     }
 
-    // ========== MÉTODOS DE FILTROS ==========
     private void AbrirModalFiltros()
     {
         mostrarModalFiltros = true;
@@ -1026,7 +1007,6 @@
         filtroPrecioMax = null;
     }
 
-    // ========== MÉTODOS PARA CREAR PRODUCTO ==========
     private void AbrirModalNuevoProducto()
     {
         nuevoProducto = new ArticuloCreacionDTO();
@@ -1249,7 +1229,6 @@
         }
     }
 
-    // ========== 🆕 MÉTODOS PARA EDITAR INFORMACIÓN ==========
     private async Task EditarInformacion(int id)
     {
         try
@@ -1275,10 +1254,6 @@
 
                 mensajeErrorModal = "";
                 mostrarModalEditarInfo = true;
-            }
-            else
-            {
-                Console.WriteLine($"Error al cargar producto: {resultado.Message}");
             }
         }
         catch (Exception ex)
@@ -1328,7 +1303,6 @@
         }
     }
 
-    // ========== 🆕 MÉTODOS PARA EDITAR VARIANTES ==========
     private async Task EditarVariantes(int id)
     {
         try
@@ -1352,10 +1326,6 @@
 
                 mensajeErrorModal = "";
                 mostrarModalEditarVariantes = true;
-            }
-            else
-            {
-                Console.WriteLine($"Error al cargar producto: {resultado.Message}");
             }
         }
         catch (Exception ex)
@@ -1392,7 +1362,6 @@
     {
         var variante = variantesEditando[index];
 
-        // Si la variante tiene ID, significa que existe en BD y debe eliminarse
         if (variante.IdVariante.HasValue && variante.IdVariante.Value > 0)
         {
             try
@@ -1416,7 +1385,6 @@
         }
         else
         {
-            // Si no tiene ID, solo la removemos de la lista (aún no está en BD)
             variantesEditando.RemoveAt(index);
         }
     }
@@ -1445,20 +1413,16 @@
         {
             guardandoProducto = true;
 
-            // 🔥 AQUÍ ESTÁ LO QUE FALTABA - Procesar variantes
             foreach (var variante in variantesEditando)
             {
                 Response<bool> resultado;
 
                 if (variante.IdVariante.HasValue && variante.IdVariante.Value > 0)
                 {
-                    // Si tiene ID, es una variante existente - ACTUALIZAR
                     resultado = await ArticuloService.ActualizarVariante(variante);
                 }
                 else
                 {
-                    // Si no tiene ID, es una variante nueva - necesitarías un método RegistrarVariante
-                    // Por ahora, mostraremos un mensaje
                     mensajeErrorModal = "No se puede agregar nuevas variantes desde esta pantalla. Use el formulario de creación.";
                     return;
                 }
@@ -1470,7 +1434,6 @@
                 }
             }
 
-            // Si todo salió bien, recargar productos y cerrar modal
             await CargarProductos();
             CerrarModalEditarVariantes();
         }
@@ -1484,7 +1447,6 @@
         }
     }
 
-    // ========== 🆕 MÉTODOS PARA EDITAR IMÁGENES ==========
     private async Task EditarImagenes(int id)
     {
         try
@@ -1600,7 +1562,6 @@
     {
         var imagen = imagenesEditando[index];
 
-        // Si la imagen tiene ID, significa que existe en BD y debe eliminarse
         if (imagen.IdImagen.HasValue && imagen.IdImagen.Value > 0)
         {
             try
@@ -1611,13 +1572,11 @@
                 {
                     imagenesEditando.RemoveAt(index);
 
-                    // Si era la principal y quedan más imágenes, marcar la primera como principal
                     if (imagen.EsPrincipal == 'S' && imagenesEditando.Any())
                     {
                         imagenesEditando[0].EsPrincipal = 'S';
                     }
 
-                    // Reordenar
                     for (int i = 0; i < imagenesEditando.Count; i++)
                     {
                         imagenesEditando[i].Orden = i + 1;
@@ -1637,7 +1596,6 @@
         }
         else
         {
-            // Si no tiene ID, solo la removemos de la lista (aún no está en BD)
             imagenesEditando.RemoveAt(index);
 
             if (imagen.EsPrincipal == 'S' && imagenesEditando.Any())
@@ -1691,20 +1649,16 @@
         {
             guardandoProducto = true;
 
-            // 🔥 AQUÍ ESTÁ LO QUE FALTABA - Procesar imágenes
             foreach (var imagen in imagenesEditando)
             {
                 Response<bool> resultado;
 
                 if (imagen.IdImagen.HasValue && imagen.IdImagen.Value > 0)
                 {
-                    // Si tiene ID, es una imagen existente - ACTUALIZAR
                     resultado = await ArticuloService.ActualizarImagen(imagen);
                 }
                 else
                 {
-                    // Si no tiene ID, es una imagen nueva - necesitarías un método RegistrarImagen
-                    // Por ahora, mostraremos un mensaje
                     mensajeErrorModal = "No se puede agregar nuevas imágenes desde esta pantalla. Use el formulario de creación.";
                     return;
                 }
@@ -1716,7 +1670,6 @@
                 }
             }
 
-            // Si hay una imagen marcada como principal, establecerla
             var imagenPrincipal = imagenesEditando.FirstOrDefault(img => img.EsPrincipal == 'S');
             if (imagenPrincipal != null && imagenPrincipal.IdImagen.HasValue)
             {
@@ -1732,7 +1685,6 @@
                 }
             }
 
-            // Si todo salió bien, recargar productos y cerrar modal
             await CargarProductos();
             CerrarModalEditarImagenes();
         }
@@ -1746,7 +1698,6 @@
         }
     }
 
-    // ========== MÉTODOS PARA ELIMINAR ==========
     private void ConfirmarEliminarProducto(int id, string nombre)
     {
         idProductoAEliminar = id;
@@ -1775,10 +1726,6 @@
                 await CargarProductos();
                 CerrarModalConfirmacion();
             }
-            else
-            {
-                Console.WriteLine($"Error al eliminar: {resultado.Message}");
-            }
         }
         catch (Exception ex)
         {
@@ -1790,7 +1737,6 @@
         }
     }
 
-    // ========== MÉTODOS AUXILIARES ==========
     private string GetVariantesClass(int total)
     {
         return total > 0 ? "stock-normal" : "stock-low";

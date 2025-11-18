@@ -133,20 +133,17 @@
             {
                 UserDisplayName = usuario.NombreCompleto;
                 EstaLogueado = true;
-                Console.WriteLine($"✅ Usuario cargado en layout: {UserDisplayName} (ID: {usuario.IdUsuario})");
             }
             else
             {
                 UserDisplayName = "Invitado";
                 EstaLogueado = false;
-                Console.WriteLine("⚠️ No hay usuario logueado en layout");
             }
         }
         catch (Exception ex)
         {
             UserDisplayName = "Invitado";
             EstaLogueado = false;
-            Console.WriteLine($"❌ Error al cargar usuario en layout: {ex.Message}");
         }
     }
 

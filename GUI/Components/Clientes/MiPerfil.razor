@@ -23,7 +23,7 @@
     else if (usuario == null)
     {
         <div class="empty-state">
-            <span class="empty-icon">⚠️</span>
+            <span class="empty-icon"><i class="fa-solid fa-circle-exclamation"></i></span>
             <p>No se pudo cargar la información del usuario</p>
             <button class="btn-primary" @onclick="@(() => Navigation.NavigateTo("/login"))">
                 Iniciar Sesión
@@ -285,14 +285,12 @@
                 return;
             }
 
-            // ✅ USAR EL MÉTODO QUE SÍ FUNCIONA (igual que en Checkout)
             var resultadoUsuarioConDireccion = await UsuarioService.ObtenerUsuarioConDireccion(idUsuario.Value);
 
             if (resultadoUsuarioConDireccion.IsSuccess && resultadoUsuarioConDireccion.Object != null)
             {
                 var usuarioConDireccion = resultadoUsuarioConDireccion.Object;
 
-                // Ahora necesitamos cargar el usuario completo para tener TODOS los campos
                 var resultadoUsuarioCompleto = await UsuarioService.ObtenerTodosLosUsuarios();
 
                 if (resultadoUsuarioCompleto.IsSuccess && resultadoUsuarioCompleto.ListObject != null)
@@ -301,7 +299,6 @@
 
                     if (usuario != null)
                     {
-                        // Guardar copia original
                         usuarioOriginal = new UsuarioDTO
                         {
                             Id = usuario.Id,
@@ -320,29 +317,25 @@
                             Contrasena = usuario.Contrasena
                         };
 
-                        // ✅ SI TIENE DIRECCIÓN, MAPEARLA DESDE usuarioConDireccion (que SÍ funciona)
                         if (usuarioConDireccion.IdDireccion.HasValue && usuarioConDireccion.IdDireccion.Value > 0)
                         {
-                            // Crear DireccionDetalleDTO desde los datos de usuarioConDireccion
                             direccion = new DireccionDetalleDTO
                             {
                                 IdDireccion = usuarioConDireccion.IdDireccion.Value,
-                                CiudadId = 0, // Lo obtendremos buscando en las ciudades
+                                CiudadId = 0,
                                 DireccionCompleta = usuarioConDireccion.DireccionCompleta ?? "",
                                 Barrio = usuarioConDireccion.Barrio ?? "",
                                 CodigoPostal = usuarioConDireccion.CodigoPostal,
-                                Referencia = "", // No viene en UsuarioConDireccionDTO
+                                Referencia = "",
                                 CiudadNombre = usuarioConDireccion.CiudadNombre ?? "",
                                 CiudadDepartamento = usuarioConDireccion.Departamento ?? ""
                             };
 
-                            // Cargar ciudades primero para poder obtener el CiudadId
                             var resultadoCiudades = await DireccionService.ObtenerTodasLasCiudades();
                             if (resultadoCiudades.IsSuccess && resultadoCiudades.ListObject != null)
                             {
                                 ciudades = resultadoCiudades.ListObject.ToList();
 
-                                // Buscar el CiudadId comparando nombre y departamento
                                 var ciudadEncontrada = ciudades.FirstOrDefault(c =>
                                     c.Nombre == usuarioConDireccion.CiudadNombre &&
                                     c.Departamento == usuarioConDireccion.Departamento);
@@ -357,7 +350,6 @@
                                 ciudades = new List<CiudadDTO>();
                             }
 
-                            // Inicializar direccionEditar para poder editarla
                             direccionEditar = new DireccionActualizacionDTO
                             {
                                 IdDireccion = direccion.IdDireccion,
@@ -370,7 +362,6 @@
                         }
                         else
                         {
-                            // Si no tiene dirección, igual cargar ciudades
                             var resultadoCiudades = await DireccionService.ObtenerTodasLasCiudades();
                             if (resultadoCiudades.IsSuccess && resultadoCiudades.ListObject != null)
                             {
@@ -387,7 +378,6 @@
         }
         catch (Exception ex)
         {
-            // Manejar error silenciosamente
         }
         finally
         {

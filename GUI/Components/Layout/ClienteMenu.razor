@@ -22,7 +22,6 @@
         <span class="nav-text">Inicio</span>
     </NavLink>
 
-    <!-- Páginas que requieren login -->
     <a class="nav-item" @onclick="@(() => IrAPagina("virtual-tryon"))" style="cursor: pointer;">
         <span class="nav-icon"><Icon Name="IconName.Eye" /></span>
         <span class="nav-text">Prueba Virtual</span>
@@ -43,7 +42,7 @@
         <span class="nav-text">Mi Perfil</span>
     </a>
 
-    <a class="nav-item" @onclick="@(() => IrAPagina("asistente"))" style="cursor: pointer;">
+    <a class="nav-item" @onclick="@(() => IrAPagina("webcam-tryon"))" style="cursor: pointer;">
         <span class="nav-icon"><Icon Name="IconName.Comment" /></span>
         <span class="nav-text">Asistente Virtual</span>
     </a>
@@ -66,7 +65,6 @@
     }
 </div>
 
-<!-- Modal de login requerido -->
 @if (mostrarModalLogin)
 {
     <div class="modal-overlay" @onclick="CerrarModalLogin">
@@ -173,7 +171,6 @@
             box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
         }
 
-    /* Estilos del modal */
     .modal-overlay {
         position: fixed;
         top: 0;
@@ -342,30 +339,24 @@
         try
         {
             EstaLogueado = await SesionService.EstaLogueado();
-            Console.WriteLine($"✅ Estado de sesión en menú: {(EstaLogueado ? "Logueado" : "No logueado")}");
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"❌ Error al verificar sesión en menú: {ex.Message}");
             EstaLogueado = false;
         }
     }
 
     private async Task IrAPagina(string pagina)
     {
-        await VerificarSesion(); // Verificar sesión antes de navegar
+        await VerificarSesion();
 
         if (!EstaLogueado)
         {
-            // Usuario no logueado, guardar destino y mostrar modal
             paginaDestino = pagina;
             mostrarModalLogin = true;
-            Console.WriteLine($"⚠️ Usuario no logueado intentando acceder a: {pagina}");
         }
         else
         {
-            // Usuario logueado, permitir navegación
-            Console.WriteLine($"✅ Usuario logueado, navegando a: {pagina}");
             Navigation.NavigateTo($"/{pagina}");
         }
     }
@@ -378,7 +369,6 @@
 
     private void IrALoginDesdeModal()
     {
-        // Guardar la página de destino en sessionStorage o como query parameter
         Navigation.NavigateTo($"/login?returnUrl={paginaDestino}");
     }
 
@@ -396,21 +386,14 @@
     {
         try
         {
-            // 1️⃣ Cerrar sesión en SesionService (limpia ProtectedLocalStorage)
             await SesionService.CerrarSesion();
 
-            // 2️⃣ Cerrar sesión en UsuarioService (limpia variable estática)
             UsuarioService.CerrarSesion();
 
-            Console.WriteLine("🚪 Sesión cerrada completamente desde Cliente");
-
-            // 3️⃣ Redirigir al inicio con recarga forzada
             Navigation.NavigateTo("/", forceLoad: true);
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"❌ Error al cerrar sesión: {ex.Message}");
-            // Aún así redirigir al inicio
             Navigation.NavigateTo("/", forceLoad: true);
         }
     }

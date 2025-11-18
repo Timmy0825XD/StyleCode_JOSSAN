@@ -1,0 +1,484 @@
+﻿/* webcam-tryon-styles.css */
+
+/* ========== Gradientes y Colores ========== */
+:root {
+    --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --gradient-success: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    --gradient-danger: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
+    --gradient-info: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    --gradient-warning: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+/* ========== Header con Gradiente ========== */
+.gradient-header {
+    background: var(--gradient-primary);
+    color: white;
+    padding: 2rem;
+    border-radius: 15px;
+    margin-bottom: 2rem;
+    box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+}
+
+    .gradient-header .display-4 {
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+
+    .gradient-header .lead {
+        opacity: 0.95;
+        font-size: 1.1rem;
+    }
+
+/* ========== Health Indicators ========== */
+.health-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+    .health-indicator.healthy {
+        background: rgba(56, 239, 125, 0.2);
+        color: #11998e;
+        border: 2px solid #11998e;
+    }
+
+    .health-indicator.unhealthy {
+        background: rgba(235, 51, 73, 0.2);
+        color: #eb3349;
+        border: 2px solid #eb3349;
+    }
+
+    .health-indicator.streaming {
+        background: rgba(255, 0, 0, 0.1);
+        color: #ff0000;
+        border: 2px solid #ff0000;
+        animation: pulse 1.5s ease-in-out infinite;
+    }
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.6;
+    }
+}
+
+/* ========== Stat Cards ========== */
+.stat-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+    text-align: center;
+}
+
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+    }
+
+.stat-number {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.stat-label {
+    color: #6c757d;
+    font-size: 0.95rem;
+    font-weight: 500;
+}
+
+/* ========== Mode Cards ========== */
+.mode-card {
+    background: white;
+    border: 3px solid #e0e0e0;
+    border-radius: 15px;
+    padding: 2rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+    .mode-card:hover {
+        border-color: #667eea;
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(102, 126, 234, 0.2);
+    }
+
+    .mode-card.active {
+        background: var(--gradient-primary);
+        border-color: #667eea;
+        color: white;
+        box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+    }
+
+.mode-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+.mode-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.mode-subtitle {
+    font-size: 0.95rem;
+    opacity: 0.9;
+}
+
+/* ========== Webcam Card ========== */
+.webcam-card {
+    background: white;
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+}
+
+.webcam-header {
+    background: var(--gradient-primary);
+    color: white;
+    padding: 1rem 1.5rem;
+    font-weight: 600;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.video-container {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16/9;
+    background: #000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+    .video-container video,
+    .video-container canvas {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+.video-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+}
+
+.video-overlay-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+}
+
+.webcam-controls {
+    background: #f8f9fa;
+    border-top: 1px solid #dee2e6;
+}
+
+/* ========== Library Card ========== */
+.library-card {
+    background: white;
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    position: sticky;
+    top: 20px;
+}
+
+.library-header {
+    background: var(--gradient-success);
+    color: white;
+    padding: 1rem 1.5rem;
+    font-weight: 600;
+}
+
+.items-list {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.item-card {
+    padding: 1rem;
+    border-bottom: 1px solid #e0e0e0;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+    .item-card:hover {
+        background: #f8f9fa;
+    }
+
+    .item-card.selected {
+        background: linear-gradient(135deg, #667eea22 0%, #764ba222 100%);
+        border-left: 4px solid #667eea;
+        font-weight: 600;
+    }
+
+.item-name {
+    flex: 1;
+}
+
+.item-badge {
+    background: #667eea;
+    color: white;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+}
+
+/* ========== Tips Card ========== */
+.tips-card {
+    background: white;
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.tips-header {
+    background: var(--gradient-warning);
+    color: white;
+    padding: 1rem 1.5rem;
+    font-weight: 600;
+}
+
+.tips-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+    .tips-list li {
+        padding: 0.75rem 0;
+        border-bottom: 1px solid #f0f0f0;
+        position: relative;
+        padding-left: 1.5rem;
+    }
+
+        .tips-list li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #11998e;
+            font-weight: bold;
+        }
+
+        .tips-list li:last-child {
+            border-bottom: none;
+        }
+
+/* ========== Captured Photo Card ========== */
+.captured-photo-card {
+    background: white;
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    animation: slideInUp 0.4s ease;
+}
+
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ========== Alerts ========== */
+.alert-custom {
+    border-radius: 12px;
+    border: none;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    padding: 1.25rem;
+}
+
+.alert-success-custom {
+    background: linear-gradient(135deg, #11998e22 0%, #38ef7d22 100%);
+    color: #11998e;
+    border-left: 4px solid #11998e;
+}
+
+/* ========== Modal ========== */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1050;
+    animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+.modal-content {
+    background: white;
+    border-radius: 15px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    animation: slideInDown 0.3s ease;
+}
+
+@keyframes slideInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-50px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.modal-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid #dee2e6;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+    .modal-header h5 {
+        margin: 0;
+        font-weight: 600;
+    }
+
+.modal-body {
+    padding: 1.5rem;
+}
+
+.modal-footer {
+    padding: 1.5rem;
+    border-top: 1px solid #dee2e6;
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+}
+
+.btn-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    opacity: 0.5;
+    transition: opacity 0.2s;
+}
+
+    .btn-close:hover {
+        opacity: 1;
+    }
+
+    .btn-close:before {
+        content: "×";
+    }
+
+/* ========== Botones Personalizados ========== */
+.btn-lg {
+    padding: 0.75rem 1.5rem;
+    font-size: 1.1rem;
+    border-radius: 10px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-success {
+    background: var(--gradient-success);
+    border: none;
+}
+
+    .btn-success:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(17, 153, 142, 0.3);
+    }
+
+.btn-danger {
+    background: var(--gradient-danger);
+    border: none;
+}
+
+    .btn-danger:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(235, 51, 73, 0.3);
+    }
+
+.btn-primary {
+    background: var(--gradient-primary);
+    border: none;
+}
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+    }
+
+/* ========== Responsive ========== */
+@media (max-width: 768px) {
+    .gradient-header {
+        padding: 1.5rem;
+    }
+
+        .gradient-header .display-4 {
+            font-size: 2rem;
+        }
+
+    .mode-card {
+        padding: 1.5rem;
+    }
+
+    .mode-icon {
+        font-size: 2rem;
+    }
+
+    .stat-number {
+        font-size: 2rem;
+    }
+
+    .library-card {
+        position: static;
+        margin-top: 1rem;
+    }
+}

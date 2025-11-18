@@ -157,14 +157,12 @@
             using var workbook = new XLWorkbook();
             var worksheet = workbook.Worksheets.Add("Usuarios");
 
-            // Estilo del encabezado
             var headerRange = worksheet.Range("A1:F1");
             headerRange.Style.Font.Bold = true;
             headerRange.Style.Fill.BackgroundColor = XLColor.FromHtml("#4F46E5");
             headerRange.Style.Font.FontColor = XLColor.White;
             headerRange.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
 
-            // Encabezados
             worksheet.Cell(1, 1).Value = "Nombre Completo";
             worksheet.Cell(1, 2).Value = "Cédula";
             worksheet.Cell(1, 3).Value = "Correo Electrónico";
@@ -172,7 +170,6 @@
             worksheet.Cell(1, 5).Value = "Estado";
             worksheet.Cell(1, 6).Value = "Fecha Registro";
 
-            // Datos
             int row = 2;
             foreach (var usuario in usuariosParaExportar)
             {
@@ -183,7 +180,6 @@
                 worksheet.Cell(row, 5).Value = GetEstadoText(usuario.Estado);
                 worksheet.Cell(row, 6).Value = usuario.FechaRegistro.ToString("dd/MM/yyyy");
 
-                // Estilo condicional para el estado
                 var estadoCell = worksheet.Cell(row, 5);
                 if (usuario.Estado == "A")
                 {
@@ -199,13 +195,10 @@
                 row++;
             }
 
-            // Ajustar ancho de columnas
             worksheet.Columns().AdjustToContents();
 
-            // Agregar filtros
             worksheet.RangeUsed().SetAutoFilter();
 
-            // Convertir a base64
             using var stream = new MemoryStream();
             workbook.SaveAs(stream);
             var bytes = stream.ToArray();
@@ -268,19 +261,16 @@
 
             if (usuario.Estado == "A")
             {
-                // Si está activo, lo desactivamos usando EliminarUsuario
                 resultado = await UsuarioService.EliminarUsuario(usuario.Id);
             }
             else
             {
-                // Si está inactivo, lo activamos actualizando su estado
                 usuario.Estado = "A";
                 resultado = await UsuarioService.ActualizarUsuario(usuario);
             }
 
             if (resultado.IsSuccess)
             {
-                // Recargar la lista
                 await CargarUsuarios();
             }
             else

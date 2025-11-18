@@ -34,6 +34,10 @@
             <span style="font-size: 22px"><Icon Name="IconName.File" /></span>
             <span>Facturas</span>
         </NavLink>
+        <NavLink class="nav-item" href="ListaAlertas">
+            <span style="font-size: 22px"><Icon Name="IconName.Bell" /></span>
+            <span>Alertas</span>
+        </NavLink>
     </nav>
     <button class="logout-btn" @onclick="CerrarSesion">
         <span class="logout-icon"><Icon Name="IconName.AngleLeft" /></span>
@@ -69,21 +73,14 @@
     {
         try
         {
-            // 1️⃣ Cerrar sesión en SesionService (limpia ProtectedLocalStorage)
             await SesionService.CerrarSesion();
-
-            // 2️⃣ Cerrar sesión en UsuarioService (limpia variable estática)
             UsuarioService.CerrarSesion();
 
-            Console.WriteLine("🚪 Sesión cerrada completamente desde Admin");
 
-            // 3️⃣ Redirigir al inicio con recarga forzada
             Navigation.NavigateTo("/", forceLoad: true);
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"❌ Error al cerrar sesión: {ex.Message}");
-            // Aún así redirigir al inicio
             Navigation.NavigateTo("/", forceLoad: true);
         }
     }

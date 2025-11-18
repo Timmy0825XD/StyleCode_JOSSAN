@@ -263,7 +263,6 @@
                 );
             }
 
-            // ✅ ARREGLADO: Filtro de fecha
             if (filterFecha.HasValue)
             {
                 resultado = resultado.Where(f => f.FechaEmision.Date == filterFecha.Value.Date);
@@ -326,10 +325,8 @@
 
             using var workbook = new XLWorkbook();
 
-            // HOJA 1: FACTURAS
             var worksheet = workbook.Worksheets.Add("Facturas");
 
-            // Encabezados con estilo
             var headerRange = worksheet.Range("A1:J1");
             headerRange.Style.Font.Bold = true;
             headerRange.Style.Fill.BackgroundColor = XLColor.FromHtml("#4F46E5");
@@ -347,7 +344,6 @@
             worksheet.Cell(1, 9).Value = "Total";
             worksheet.Cell(1, 10).Value = "Estado DIAN";
 
-            // Datos
             int row = 2;
             foreach (var factura in facturasParaExportar)
             {
@@ -362,12 +358,10 @@
                 worksheet.Cell(row, 9).Value = factura.Total;
                 worksheet.Cell(row, 10).Value = string.IsNullOrEmpty(factura.EstadoDian) ? "Sin estado" : factura.EstadoDian;
 
-                // Formato de moneda
                 worksheet.Cell(row, 7).Style.NumberFormat.Format = "$#,##0.00";
                 worksheet.Cell(row, 8).Style.NumberFormat.Format = "$#,##0.00";
                 worksheet.Cell(row, 9).Style.NumberFormat.Format = "$#,##0.00";
 
-                // Estilo condicional para el estado
                 var estadoCell = worksheet.Cell(row, 10);
                 if (factura.EstadoDian?.ToLower() == "aprobada")
                 {
@@ -387,13 +381,10 @@
                 row++;
             }
 
-            // Ajustar ancho de columnas
             worksheet.Columns().AdjustToContents();
 
-            // Agregar filtros
             worksheet.RangeUsed().SetAutoFilter();
 
-            // HOJA 2: RESUMEN
             var resumenSheet = workbook.Worksheets.Add("Resumen");
 
             resumenSheet.Cell(1, 1).Value = "Resumen de Facturas Electrónicas";
@@ -436,7 +427,6 @@
 
             resumenSheet.Columns().AdjustToContents();
 
-            // Convertir y descargar
             using var stream = new MemoryStream();
             workbook.SaveAs(stream);
             var bytes = stream.ToArray();

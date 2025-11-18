@@ -1,0 +1,191 @@
+﻿/* CONTENEDOR PRINCIPAL */
+.notification-container {
+    position: relative;
+    display: inline-block;
+}
+
+/* CAMPANITA */
+.notification-bell {
+    position: relative;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 8px;
+    font-size: 24px;
+    color: #1f2937;
+    transition: transform 0.2s;
+}
+
+    .notification-bell:hover {
+        transform: scale(1.1);
+    }
+
+    /* BADGE CONTADOR */
+    .notification-bell .badge {
+        position: absolute;
+        top: 0;
+        right: 0;
+        background: #ef4444;
+        color: white;
+        border-radius: 10px;
+        padding: 2px 6px;
+        font-size: 10px;
+        font-weight: bold;
+        min-width: 16px;
+        text-align: center;
+    }
+
+/* PANEL DE NOTIFICACIONES */
+.notification-panel {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    width: 380px;
+    max-height: 500px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    z-index: 1000;
+    overflow: hidden;
+    animation: slideDown 0.2s ease;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* HEADER */
+.notification-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
+    color: white;
+}
+
+    .notification-header h4 {
+        margin: 0;
+        font-size: 16px;
+        font-weight: 600;
+    }
+
+.btn-close {
+    background: rgba(255,255,255,0.2);
+    border: none;
+    color: white;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background 0.2s;
+}
+
+    .btn-close:hover {
+        background: rgba(255,255,255,0.3);
+    }
+
+/* ESTADOS: LOADING Y EMPTY */
+.notification-loading,
+.notification-empty {
+    padding: 40px 20px;
+    text-align: center;
+    color: #6b7280;
+}
+
+.spinner {
+    width: 30px;
+    height: 30px;
+    margin: 0 auto 12px;
+    border: 3px solid #f3f4f6;
+    border-top-color: #a855f7;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* LISTA DE NOTIFICACIONES */
+.notification-list {
+    display:flex;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.notification-item {
+    display: flex;
+    gap: 12px;
+    padding: 16px;
+    border-bottom: 1px solid #f3f4f6;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+    .notification-item:hover {
+        background: #faf5ff;
+    }
+
+    .notification-item:last-child {
+        border-bottom: none;
+    }
+
+/* IMAGEN DEL PRODUCTO */
+.product-img {
+    width:20%;
+}
+
+/* INFO DEL PRODUCTO */
+.product-info {
+    flex: 1;
+    min-width: 0;
+}
+
+    .product-info h5 {
+        margin: 0 0 6px 0;
+        font-size: 14px;
+        font-weight: 600;
+        color: #111827;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+.sku-stock {
+    display: flex;
+    gap: 12px;
+    margin: 4px 0;
+    font-size: 12px;
+    color: #6b7280;
+}
+
+.variant {
+    font-size: 12px;
+    color: #9ca3af;
+    margin: 4px 0;
+}
+
+.time {
+    font-size: 11px;
+    color: #9ca3af;
+}
+
+/* RESPONSIVE */
+@media (max-width: 480px) {
+    .notification-panel {
+        width: calc(100vw - 40px);
+        right: -100px;
+    }
+}

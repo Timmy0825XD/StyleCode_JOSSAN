@@ -1,0 +1,120 @@
+﻿@using ENTITY.Alertas
+@using BLL.Interfaces
+@inject IAlertaService AlertaService
+@inject NavigationManager Navigation
+@implements IDisposable
+
+<div class="notification-container">
+    <button class="notification-bell" @onclick="ToggleNotifications">
+        <Icon Name="IconName.Bell" />
+        @if (cantidadPendientes > 0)
+        {
+            <span class="badge">@cantidadPendientes</span>
+        }
+    </button>
+
+    @if (mostrarPanel)
+    {
+        <div class="notification-panel">
+            <div class="notification-header">
+                <h4>Alertas de Stock</h4>
+                <button class="btn-close" @onclick="ToggleNotifications">✕</button>
+            </div>
+
+            @if (cargando)
+            {
+                <div class="notification-loading">
+                    <div class="spinner"></div>
+                    <p>Cargando...</p>
+                </div>
+            }
+            else if (!alertas.Any())
+            {
+                <div class="notification-empty">
+                    <p>No hay alertas pendientes</p>
+                </div>
+            }
+            else
+            {
+                <div class="notification-list">
+                    @foreach (var alerta in alertas.Take(5))
+                    {
+                        <div class="notification-item" @onclick="() => VerDetalle(alerta.IdAlerta)">
+                            <img src="@alerta.ImagenProducto" alt="@alerta.NombreProducto" class="product-img" />
+                            <div class="product-info">
+                                <h5>@alerta.NombreProducto</h5>
+                                <p class="sku-stock">
+                                    <span>SKU: @alerta.CodigoSku</span>
+                                    <span>Stock: @alerta.StockActual</span>
+                                </p>
+                                <p class="variant">@alerta.Talla - @alerta.Color</p>
+                                <span class="time">Hace @alerta.DiasPendiente día(s)</span>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    private bool mostrarPanel = false;
+    private bool cargando = false;
+    private List<AlertaStockDTO> alertas = new();
+    private int cantidadPendientes = 0;
+    private System.Threading.Timer? timer;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarAlertas();
+
+        timer = new System.Threading.Timer(async _ =>
+        {
+            await InvokeAsync(async () =>
+            {
+                await CargarAlertas();
+                StateHasChanged();
+            });
+        }, null, TimeSpan.FromMinutes(2), TimeSpan.FromMinutes(2));
+    }
+
+    private async Task CargarAlertas()
+    {
+        cargando = true;
+        try
+        {
+            var response = await AlertaService.ObtenerAlertasPendientes();
+
+            if (response.IsSuccess && response.ListObject != null)
+            {
+                alertas = response.ListObject.OrderByDescending(a => a.DiasPendiente).ToList();
+                cantidadPendientes = alertas.Count;
+            }
+            else
+            {
+                alertas = new();
+                cantidadPendientes = 0;
+            }
+        }
+        catch
+        {
+            alertas = new();
+            cantidadPendientes = 0;
+        }
+        finally
+        {
+            cargando = false;
+        }
+    }
+
+    private void ToggleNotifications() => mostrarPanel = !mostrarPanel;
+
+    private void VerDetalle(int idAlerta)
+    {
+        mostrarPanel = false;
+        Navigation.NavigateTo($"/admin/alertas/detalle/{idAlerta}");
+    }
+
+    public void Dispose() => timer?.Dispose();
+}

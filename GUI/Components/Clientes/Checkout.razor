@@ -277,13 +277,11 @@
 
         if (usuario == null)
         {
-            Console.WriteLine("No hay usuario en sesión - redirigiendo al login");
             Navigation.NavigateTo("/", forceLoad: true);
             return;
         }
 
         idUsuarioAutenticado = usuario.IdUsuario;
-        Console.WriteLine($"Usuario en checkout: {usuario.NombreCompleto} (ID: {idUsuarioAutenticado})");
 
         items = Carrito.ObtenerItems();
         ActualizarTotales();
@@ -303,11 +301,6 @@
             if (response.IsSuccess && response.Object != null)
             {
                 usuarioConDireccion = response.Object;
-                Console.WriteLine($"Dirección cargada: {usuarioConDireccion.DireccionCompleta}");
-            }
-            else
-            {
-                Console.WriteLine($"No se pudo cargar la dirección: {response.Message}");
             }
         }
         catch (Exception ex)
@@ -426,9 +419,6 @@
                     Cantidad = i.Cantidad
                 }).ToList()
             };
-
-            Console.WriteLine($" Creando pedido para usuario ID: {pedido.IdUsuario}");
-            Console.WriteLine($"Dirección de envío ID: {pedido.IdDireccionEnvio}");
 
             var response = await PedidoService.CrearPedido(pedido);
 

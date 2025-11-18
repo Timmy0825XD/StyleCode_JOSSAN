@@ -85,9 +85,6 @@
                                 <span class="badge-type bg-light">
                                     <span>@(stats.Stats.By_Type.ContainsKey("lower") ? stats.Stats.By_Type["lower"] : 0) Inferiores</span>
                                 </span>
-                                <span class="badge-type bg-light">
-                                    <span>@(stats.Stats.By_Type.ContainsKey("dress") ? stats.Stats.By_Type["dress"] : 0) Vestidos</span>
-                                </span>
                             </div>
                         </div>
                     </div>
@@ -110,13 +107,6 @@
                  @onclick="@(() => OnGarmentTypeChanged(GarmentType.Lower))">
                 <div class="garment-title">Parte Inferior</div>
                 <div class="garment-subtitle">Pantalones, jeans, faldas</div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="garment-type-card @(selectedGarmentType == GarmentType.Dress ? "selected" : "")"
-                 @onclick="@(() => OnGarmentTypeChanged(GarmentType.Dress))">
-                <div class="garment-title">Vestido</div>
-                <div class="garment-subtitle">Vestidos, monos</div>
             </div>
         </div>
     </div>
@@ -441,7 +431,6 @@
 
         if (file != null)
         {
-            // Validar tamaño (máx 10MB)
             if (file.Size > 10 * 1024 * 1024)
             {
                 statusMessage = "La imagen es muy grande. Máximo 10MB.";
@@ -451,14 +440,12 @@
 
             try
             {
-                // Leer datos
                 using var stream = file.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024);
                 using var memoryStream = new MemoryStream();
                 await stream.CopyToAsync(memoryStream);
                 personImageData = memoryStream.ToArray();
                 personFileName = file.Name;
 
-                // Crear preview
                 personImagePreview = $"data:{file.ContentType};base64,{Convert.ToBase64String(personImageData)}";
 
                 statusMessage = "Imagen de persona cargada correctamente";
@@ -539,13 +526,11 @@
                 autoMask
             );
 
-            // Convertir resultado a base64 para mostrar
             resultImageUrl = $"data:image/jpeg;base64,{Convert.ToBase64String(resultBytes)}";
 
             statusMessage = $"¡Try-On de {GetGarmentTypeName()} completado exitosamente!";
             statusAlertClass = "alert-success-custom";
 
-            // Recargar estadísticas
             await LoadStats();
         }
         catch (Exception ex)

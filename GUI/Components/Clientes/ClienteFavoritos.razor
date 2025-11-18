@@ -235,15 +235,6 @@
     {
         estaLogueado = await SesionService.EstaLogueado();
         idUsuarioActual = await SesionService.ObtenerIdUsuario();
-
-        if (!estaLogueado)
-        {
-            Console.WriteLine("Usuario no logueado");
-        }
-        else
-        {
-            Console.WriteLine($" Usuario logueado con ID: {idUsuarioActual}");
-        }
     }
 
     private async Task CargarFavoritos()
@@ -264,7 +255,6 @@
             if (response.IsSuccess && response.ListObject != null)
             {
                 articulosFavoritos = response.ListObject.ToList();
-                Console.WriteLine($" Favoritos cargados: {articulosFavoritos.Count}");
 
                 if (articulosFavoritos.Any())
                 {
@@ -284,13 +274,11 @@
             else
             {
                 errorMessage = response.Message ?? "Error al cargar los favoritos";
-                Console.WriteLine($" Error: {errorMessage}");
             }
         }
         catch (Exception ex)
         {
             errorMessage = $"Error: {ex.Message}";
-            Console.WriteLine($" Excepción en CargarFavoritos: {ex}");
         }
         finally
         {
@@ -352,13 +340,8 @@
 
             if (response.IsSuccess)
             {
-                Console.WriteLine($" Favorito eliminado: {idArticulo}");
-                await CargarFavoritos(); // Recargar la lista
+                await CargarFavoritos();
                 StateHasChanged();
-            }
-            else
-            {
-                Console.WriteLine($" Error al eliminar favorito: {response.Message}");
             }
         }
         catch (Exception ex)
@@ -378,13 +361,11 @@
 
         try
         {
-            // Eliminar cada favorito uno por uno
             foreach (var favorito in articulosFavoritos.ToList())
             {
                 await FavoritoService.EliminarFavorito(idUsuarioActual.Value, favorito.IdArticulo);
             }
 
-            Console.WriteLine(" Todos los favoritos eliminados");
             await CargarFavoritos();
         }
         catch (Exception ex)

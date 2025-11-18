@@ -280,25 +280,20 @@
                 if (resultado.ListObject != null && resultado.ListObject.Count > 0)
                 {
                     ciudades = resultado.ListObject.ToList();
-                    Console.WriteLine($" Se cargaron {ciudades.Count} ciudades desde la BD");
                 }
                 else
                 {
                     mensajeError = "No hay ciudades disponibles en la base de datos";
-                    Console.WriteLine("La consulta fue exitosa pero no hay ciudades");
                 }
             }
             else
             {
                 mensajeError = $"Error al cargar ciudades: {resultado.Message}";
-                Console.WriteLine($" Error en servicio: {resultado.Message}");
             }
         }
         catch (Exception ex)
         {
             mensajeError = "Error al conectar con el servidor";
-            Console.WriteLine($"Excepción al cargar ciudades: {ex.Message}");
-            Console.WriteLine($"Stack trace: {ex.StackTrace}");
         }
         finally
         {
@@ -449,7 +444,6 @@
         catch (Exception ex)
         {
             mensajeError = $"Error inesperado: {ex.Message}";
-            Console.WriteLine($"Error en registro: {ex}");
         }
         finally
         {

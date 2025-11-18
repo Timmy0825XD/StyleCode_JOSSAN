@@ -1,0 +1,193 @@
+﻿@page "/ListaAlertas"
+@using ENTITY.Alertas
+@using BLL.Interfaces
+@inject IAlertaService AlertaService
+@inject NavigationManager Navigation
+
+<div class="alertas-container">
+    <div class="alertas-header">
+        <div>
+            <h2> Gestión de Alertas de Stock</h2>
+            <p class="subtitle">Monitorea y gestiona las alertas de productos con bajo inventario</p>
+        </div>
+        <div class="header-actions">
+            <button class="btn-refresh" @onclick="CargarAlertas">
+                 Actualizar
+            </button>
+        </div>
+    </div>
+
+    <div class="filtros-card">
+        <div class="filtro-item">
+            <label>Estado:</label>
+            <select @bind="filtroEstado" @bind:after="AplicarFiltros" class="form-select">
+                <option value="">Todas</option>
+                <option value="Pendiente">Pendientes</option>
+                <option value="Resuelta">Resueltas</option>
+            </select>
+        </div>
+        <div class="filtro-item">
+            <label>Ordenar por:</label>
+            <select @bind="ordenarPor" @bind:after="AplicarFiltros" class="form-select">
+                <option value="fecha">Fecha</option>
+                <option value="dias">Días pendiente</option>
+                <option value="stock">Stock</option>
+            </select>
+        </div>
+    </div>
+
+    @if (cargando)
+    {
+        <div class="loading-container">
+            <div class="spinner-large"></div>
+            <p>Cargando alertas...</p>
+        </div>
+    }
+    else if (alertasFiltradas == null || !alertasFiltradas.Any())
+    {
+        <div class="empty-state">
+            <div class="empty-icon">📭</div>
+            <h3>No hay alertas</h3>
+            <p>No se encontraron alertas con los filtros seleccionados</p>
+        </div>
+    }
+    else
+    {
+        <div class="table-card">
+            <table class="alertas-table">
+                <thead>
+                    <tr>
+                        <th>Producto</th>
+                        <th>SKU</th>
+                        <th>Variante</th>
+                        <th>Fecha Alerta</th>
+                        <th>Días Pendiente</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var alerta in alertasFiltradas)
+                    {
+                        <tr class="alerta-row @GetRowClass(alerta)">
+                            <td>
+                                <div class="producto-cell">
+                                    <div>
+                                        <div class="producto-nombre">@alerta.NombreProducto</div>
+                                        <div class="producto-marca">@alerta.Marca</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td><code class="sku-code">@alerta.CodigoSku</code></td>
+                            <td>
+                                <div class="variante-info">
+                                    <span class="badge-talla">@alerta.Talla</span>
+                                    <span class="badge-color">@alerta.Color</span>
+                                </div>
+                            </td>
+                            <td>@alerta.FechaAlerta.ToString("dd/MM/yyyy HH:mm")</td>
+                            <td>
+                                <span class="dias-badge @GetDiasClass(alerta.DiasPendiente)">
+                                    @alerta.DiasPendiente día(s)
+                                    @if (alerta.DiasPendiente >= 7)
+                                    {
+                                        <span class="critico-icon"><i class="fa-solid fa-circle-exclamation"></i></span>
+                                    }
+                                </span>
+                            </td>
+                            <td>
+                                <span class="estado-badge estado-@alerta.Estado.ToLower()">
+                                    @alerta.Estado
+                                </span>
+                            </td>
+                            <td>
+                                <button class="btn-ver-detalle" @onclick="() => VerDetalle(alerta.IdAlerta)">
+                                    Ver Detalle
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div class="resumen-footer">
+            <p>Mostrando <strong>@alertasFiltradas.Count</strong> alerta(s)</p>
+        </div>
+    }
+</div>
+
+<style>
+
+</style>
+
+@code {
+    private bool cargando = false;
+    private List<AlertaStockDTO> alertas = new();
+    private List<AlertaStockDTO> alertasFiltradas = new();
+    private string filtroEstado = "";
+    private string ordenarPor = "fecha";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarAlertas();
+    }
+
+    private async Task CargarAlertas()
+    {
+        cargando = true;
+        try
+        {
+            var response = await AlertaService.ObtenerTodasAlertas(null);
+
+            if (response.IsSuccess && response.ListObject != null)
+            {
+                alertas = response.ListObject.ToList();
+                AplicarFiltros();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al cargar alertas: {ex.Message}");
+        }
+        finally
+        {
+            cargando = false;
+        }
+    }
+
+    private void AplicarFiltros()
+    {
+        alertasFiltradas = alertas;
+
+        if (!string.IsNullOrEmpty(filtroEstado))
+        {
+            alertasFiltradas = alertasFiltradas.Where(a => a.Estado == filtroEstado).ToList();
+        }
+
+        alertasFiltradas = ordenarPor switch
+        {
+            "fecha" => alertasFiltradas.OrderByDescending(a => a.FechaAlerta).ToList(),
+            "dias" => alertasFiltradas.OrderByDescending(a => a.DiasPendiente).ToList(),
+            "stock" => alertasFiltradas.OrderBy(a => a.StockActual).ToList(),
+            _ => alertasFiltradas
+        };
+    }
+
+    private string GetRowClass(AlertaStockDTO alerta)
+    {
+        return alerta.DiasPendiente >= 7 ? "critica" : "";
+    }
+
+    private string GetDiasClass(int dias)
+    {
+        if (dias >= 3) return "dias-critico";
+        if (dias >= 1) return "dias-alto";
+        return "dias-normal";
+    }
+
+    private void VerDetalle(int idAlerta)
+    {
+        Navigation.NavigateTo($"/admin/alertas/detalle/{idAlerta}");
+    }
+}

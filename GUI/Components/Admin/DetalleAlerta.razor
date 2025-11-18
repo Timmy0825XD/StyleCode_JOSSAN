@@ -1,0 +1,187 @@
+﻿@page "/admin/alertas/detalle/{IdAlerta:int}"
+@using ENTITY.Alertas
+@using BLL.Interfaces
+@inject IAlertaService AlertaService
+@inject NavigationManager Navigation
+
+<div class="detalle-container">
+    @if (cargando)
+    {
+        <div class="loading-container">
+            <div class="spinner-large"></div>
+            <p>Cargando detalle de la alerta...</p>
+        </div>
+    }
+    else if (detalle == null)
+    {
+        <div class="error-container">
+            <div class="error-icon">❌</div>
+            <h2>Alerta no encontrada</h2>
+            <p>No se pudo cargar la información de esta alerta.</p>
+            <button class="btn-volver" @onclick="Volver">
+                ← Volver a Alertas
+            </button>
+        </div>
+    }
+    else
+    {
+        <div class="detalle-header">
+            <button class="btn-back" @onclick="Volver">
+                ← Volver
+            </button>
+            <div class="header-info">
+                <h2>Detalle de Alerta #@detalle.IdAlerta</h2>
+                <span class="estado-badge estado-@detalle.Estado.ToLower()">
+                    @detalle.Estado
+                </span>
+            </div>
+        </div>
+
+        <div class="detalle-grid">
+            <div class="info-card">
+                <h3> Información del Producto</h3>
+                <div class="producto-detalle">
+                    @if (!string.IsNullOrEmpty(detalle.ImagenProducto))
+                    {
+                        <img src="@detalle.ImagenProducto" alt="@detalle.NombreProducto" class="producto-imagen-grande" />
+                    }
+                    else
+                    {
+                        <div class="producto-imagen-placeholder-grande"></div>
+                    }
+                    <div class="producto-info-detalle">
+                        <h4>@detalle.NombreProducto</h4>
+                        <p class="marca">Marca: <strong>@detalle.Marca</strong></p>
+                        <p class="precio">Precio: <strong>$@detalle.PrecioBase.ToString("N2")</strong></p>
+                        <div class="variante-detalle">
+                            <span class="badge-talla">Talla: @detalle.Talla</span>
+                            <span class="badge-color">Color: @detalle.Color</span>
+                        </div>
+                        <p class="sku-detalle">SKU: <code>@detalle.CodigoSku</code></p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="info-card">
+                <h3> Información de Stock</h3>
+                <div class="stock-info-grid">
+                    <div class="stat-item">
+                        <div class="stat-label">Stock al Crear Alerta</div>
+                        <div class="stat-value">@detalle.StockAlCrearAlerta</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Stock Actual</div>
+                        <div class="stat-value @GetStockClass(detalle.StockActual)">
+                            @detalle.StockActual
+                        </div>
+                    </div>
+                </div>
+                @if (detalle.StockActual != detalle.StockAlCrearAlerta)
+                {
+                    <div class="stock-cambio">
+                        @if (detalle.StockActual > detalle.StockAlCrearAlerta)
+                        {
+                            <span class="cambio-positivo">
+                                ↑ +@(detalle.StockActual - detalle.StockAlCrearAlerta) unidades
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="cambio-negativo">
+                                ↓ @(detalle.StockActual - detalle.StockAlCrearAlerta) unidades
+                            </span>
+                        }
+                    </div>
+                }
+            </div>
+
+            <div class="info-card">
+                <h3> Información de la Alerta</h3>
+                <div class="alerta-info-list">
+                    <div class="info-row">
+                        <span class="info-label">Fecha de Creación:</span>
+                        <span class="info-value">@detalle.FechaAlerta.ToString("dd/MM/yyyy HH:mm")</span>
+                    </div>
+                    @if (detalle.FechaResolucion.HasValue)
+                    {
+                        <div class="info-row">
+                            <span class="info-label">Fecha de Resolución:</span>
+                            <span class="info-value">@detalle.FechaResolucion.Value.ToString("dd/MM/yyyy HH:mm")</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Días de Resolución:</span>
+                            <span class="info-value">@detalle.DiasResolucion día(s)</span>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="info-row">
+                            <span class="info-label">Días Pendiente:</span>
+                            <span class="info-value dias-badge @GetDiasClass(detalle.DiasResolucion)">
+                                @detalle.DiasResolucion día(s)
+                                @if (detalle.DiasResolucion >= 7)
+                                {
+                                    <span> CRÍTICO</span>
+                                }
+                            </span>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public int IdAlerta { get; set; }
+
+    private bool cargando = false;
+    private DetalleAlertaDTO? detalle;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarDetalle();
+    }
+
+    private async Task CargarDetalle()
+    {
+        cargando = true;
+        try
+        {
+            var response = await AlertaService.ObtenerDetalleAlerta(IdAlerta);
+
+            if (response.IsSuccess && response.Object != null)
+            {
+                detalle = response.Object;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al cargar detalle: {ex.Message}");
+        }
+        finally
+        {
+            cargando = false;
+        }
+    }
+
+    private string GetStockClass(int stock)
+    {
+        if (stock == 0) return "stock-critico";
+        if (stock <= 5) return "stock-bajo";
+        return "stock-normal";
+    }
+
+    private string GetDiasClass(int dias)
+    {
+        if (dias >= 7) return "dias-critico";
+        if (dias >= 3) return "dias-alto";
+        return "dias-normal";
+    }
+
+    private void Volver()
+    {
+        Navigation.NavigateTo("/ListaAlertas");
+    }
+}

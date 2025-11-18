@@ -20,6 +20,7 @@
 
 <body>
     <Routes @rendermode="InteractiveServer" />
+    <script src="https://kit.fontawesome.com/18e37a1a1c.js" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.1/chart.min.js"></script>
     <script src="_framework/blazor.web.js"></script>
     <script>
@@ -40,6 +41,149 @@
             link.click();
             document.body.removeChild(link);
         }
+
+
+
+        // webcam-handler.js
+        // Manejo de webcam para Virtual Try-On
+
+        let video = null;
+        let canvas = null;
+        let ctx = null;
+        let stream = null;
+        let currentFacingMode = 'user'; // 'user' o 'environment'
+
+        window.initializeWebcam = () => {
+            video = document.getElementById('webcam');
+            canvas = document.getElementById('canvas');
+
+            if (canvas) {
+                ctx = canvas.getContext('2d');
+            }
+
+            console.log('Webcam inicializada');
+        };
+
+        window.startWebcam = async () => {
+            try {
+                const constraints = {
+                    video: {
+                        facingMode: currentFacingMode,
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
+                    },
+                    audio: false
+                };
+
+                stream = await navigator.mediaDevices.getUserMedia(constraints);
+
+                if (video) {
+                    video.srcObject = stream;
+
+                    // Esperar a que el video esté listo
+                    await new Promise((resolve) => {
+                        video.onloadedmetadata = () => {
+                            video.play();
+
+                            // Configurar canvas con las dimensiones del video
+                            if (canvas) {
+                                canvas.width = video.videoWidth;
+                                canvas.height = video.videoHeight;
+                            }
+
+                            resolve();
+                        };
+                    });
+
+                    console.log('Webcam iniciada correctamente');
+                    return true;
+                }
+
+                return false;
+            } catch (error) {
+                console.error('Error al acceder a la webcam:', error);
+                return false;
+            }
+        };
+
+        window.stopWebcam = () => {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                stream = null;
+            }
+
+            if (video) {
+                video.srcObject = null;
+            }
+
+            console.log('Webcam detenida');
+        };
+
+        window.switchCamera = async () => {
+            // Cambiar entre cámara frontal y trasera
+            currentFacingMode = currentFacingMode === 'user' ? 'environment' : 'user';
+
+            // Detener stream actual
+            window.stopWebcam();
+
+            // Iniciar con nueva cámara
+            return await window.startWebcam();
+        };
+
+        window.getFrame = () => {
+            if (!video || !canvas || !ctx) {
+                return null;
+            }
+
+            try {
+                // Dibujar el frame actual del video en el canvas
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+                // Convertir a base64
+                const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+
+                // Retornar solo la parte base64 (sin el prefijo data:image/jpeg;base64,)
+                return dataUrl.split(',')[1];
+            } catch (error) {
+                console.error('Error obteniendo frame:', error);
+                return null;
+            }
+        };
+
+        window.displayFrame = (base64Image) => {
+            if (!canvas || !ctx) {
+                return;
+            }
+
+            try {
+                const img = new Image();
+                img.onload = () => {
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                };
+                img.src = 'data:image/jpeg;base64,' + base64Image;
+            } catch (error) {
+                console.error('Error mostrando frame:', error);
+            }
+        };
+
+        window.captureFrame = () => {
+            if (!canvas) {
+                return null;
+            }
+
+            try {
+                // Retornar el canvas actual como data URL
+                return canvas.toDataURL('image/jpeg', 0.95);
+            } catch (error) {
+                console.error('Error capturando frame:', error);
+                return null;
+            }
+        };
+
+        // Cleanup al cerrar la página
+        window.addEventListener('beforeunload', () => {
+            window.stopWebcam();
+        });
     </script>
 </body>
 

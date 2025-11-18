@@ -1,29 +1,26 @@
-﻿@inherits LayoutComponentBase
+﻿@using GUI.Components.Admin
+@inherits LayoutComponentBase
 
 <div class="layout-container">
     <div class="page">
-
         <aside class="sidebar @(isMenuVisible ? "" : "collapsed")">
             <AdminMenu />
         </aside>
-
         <main class="main-content @(isMenuVisible ? "" : "expanded")">
-
             <div class="header">
                 <div>
                     <button class="btn-toggle" @onclick="ToggleMenu">
                         @(isMenuVisible ? "✕" : "☰")
                     </button>
                 </div>
-
                 <div class="header-right">
+                    <Notificaciones />
                     <div class="user-menu">
                         <div class="user-avatar">AD</div>
                         <div class="user-name">Administrador</div>
                     </div>
                 </div>
             </div>
-
             <article class="content" style="overflow-y:auto">
                 @Body
             </article>
@@ -33,7 +30,7 @@
 
 @code {
     private bool isMenuVisible = false;
-
+    
     private void ToggleMenu()
     {
         isMenuVisible = !isMenuVisible;

@@ -264,6 +264,60 @@
     }
 </section>
 
+
+<footer class="site-footer">
+    <div class="footer-content">
+        <div class="footer-section">
+            <h4>Sobre Nosotros</h4>
+            <p>Tu tienda de confianza para las mejores marcas y productos de calidad.</p>
+            <div class="social-links">
+                <a href="#" title="Facebook"><i class="fa-brands fa-facebook-f"></i></a>
+                <a href="#" title="Instagram"><i class="fa-brands fa-instagram"></i></a>
+                <a href="#" title="Twitter"><i class="fa-brands fa-twitter"></i>></a>
+            </div>
+        </div>
+
+        <div class="footer-section">
+            <h4>Ayuda</h4>
+            <ul class="footer-links">
+                <li><a href="#">Preguntas Frecuentes</a></li>
+                <li><a href="#">Información de Envíos</a></li>
+                <li><a href="#">Política de Devoluciones</a></li>
+                <li><a href="#">Contáctanos</a></li>
+            </ul>
+        </div>
+
+        <div class="footer-section">
+            <h4>Cuenta</h4>
+            <ul class="footer-links">
+                <li><a href="#">Mi Cuenta</a></li>
+                <li><a href="#">Mis Pedidos</a></li>
+                <li><a href="#">Mis Favoritos</a></li>
+                <li><a href="#">Direcciones</a></li>
+            </ul>
+        </div>
+
+        <div class="footer-section">
+            <h4>Información</h4>
+            <ul class="footer-links">
+                <li><a href="#">Términos y Condiciones</a></li>
+                <li><a href="#">Política de Privacidad</a></li>
+                <li><a href="#">Sobre Nosotros</a></li>
+                <li><a href="#">Nuestras Tiendas</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="footer-bottom">
+        <p>&copy; @DateTime.Now.Year Tu Tienda. Todos los derechos reservados.</p>
+        <div class="payment-methods">
+            <span>Métodos de pago:</span>
+            <Icon Name="IconName.CreditCard" />
+            <Icon Name="IconName.DollarSign" />
+        </div>
+    </div>
+</footer>
+
 <ModalAgregarCarrito IdArticulo="idArticuloSeleccionado" mostrarModal="mostrarModalAgregar" OnCerrar="CerrarModalAgregar" />
 
 <style>
@@ -395,7 +449,6 @@
         catch (Exception ex)
         {
             errorMessage = $"Error inesperado: {ex.Message}";
-            Console.WriteLine($"Error en LoadProducts: {ex}");
         }
         finally
         {
@@ -414,7 +467,6 @@
             if (response.IsSuccess && response.ListObject != null)
             {
                 favorites = response.ListObject.Select(f => f.IdArticulo).ToHashSet();
-                Console.WriteLine($"Favoritos cargados en catálogo: {favorites.Count}");
             }
         }
         catch (Exception ex)
@@ -452,10 +504,6 @@
                 }
 
                 StateHasChanged();
-            }
-            else
-            {
-                Console.WriteLine($" Error: {response.Message}");
             }
         }
         catch (Exception ex)
