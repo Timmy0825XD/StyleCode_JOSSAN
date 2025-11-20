@@ -97,23 +97,6 @@ namespace BLL.Implementaciones
                 return Response<bool>.Fail($"Error en la capa de negocio: {ex.Message}");
             }
         }
-
-        public async Task<Response<DireccionDetalleDTO>> ObtenerDireccionPorId(int idDireccion)
-        {
-            try
-            {
-                if (idDireccion <= 0)
-                {
-                    return Response<DireccionDetalleDTO>.Fail("ID de dirección inválido");
-                }
-
-                return await _direccionDAO.ObtenerDireccionPorId(idDireccion);
-            }
-            catch (Exception ex)
-            {
-                return Response<DireccionDetalleDTO>.Fail($"Error en la capa de negocio: {ex.Message}");
-            }
-        }
         public async Task<Response<CiudadDTO>> ObtenerTodasLasCiudades()
         {
             try

@@ -12,7 +12,6 @@ namespace DAL.Interfaces
     {
         Task<Response<int>> CrearDireccion(DireccionCreacionDTO direccion);
         Task<Response<bool>> ActualizarDireccion(DireccionActualizacionDTO direccion);
-        Task<Response<DireccionDetalleDTO>> ObtenerDireccionPorId(int idDireccion);
         Task<Response<CiudadDTO>> ObtenerTodasLasCiudades();
     }
 }

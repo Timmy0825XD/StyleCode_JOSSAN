@@ -113,65 +113,6 @@ namespace DAL.Implementaciones
             }
         }
 
-        public async Task<Response<DireccionDetalleDTO>> ObtenerDireccionPorId(int idDireccion)
-        {
-            try
-            {
-                using (var connection = new OracleConnection(_connectionString))
-                {
-                    await connection.OpenAsync();
-
-                    using (var command = connection.CreateCommand())
-                    {
-                        command.CommandText = "pkg_direcciones.obtener_direccion_por_id";
-                        command.CommandType = CommandType.StoredProcedure;
-
-                        command.Parameters.Add("p_id_direccion", OracleDbType.Int32).Value = idDireccion;
-
-                        var cursorParam = new OracleParameter("p_cursor", OracleDbType.RefCursor, ParameterDirection.Output);
-                        command.Parameters.Add(cursorParam);
-
-                        await command.ExecuteNonQueryAsync();
-
-                        DireccionDetalleDTO direccion = null;
-
-                        using (var reader = ((OracleRefCursor)cursorParam.Value).GetDataReader())
-                        {
-                            if (await reader.ReadAsync())
-                            {
-                                direccion = new DireccionDetalleDTO
-                                {
-                                    IdDireccion = reader.GetInt32(reader.GetOrdinal("ID_DIRECCION")),
-                                    CiudadId = reader.GetInt32(reader.GetOrdinal("ID_CIUDAD")),
-                                    DireccionCompleta = reader.GetString(reader.GetOrdinal("DIRECCION_COMPLETA")),
-                                    Barrio = reader.GetString(reader.GetOrdinal("BARRIO")),
-                                    CodigoPostal = reader.IsDBNull(reader.GetOrdinal("CODIGO_POSTAL"))
-                                        ? null
-                                        : reader.GetString(reader.GetOrdinal("CODIGO_POSTAL")),
-                                    Referencia = reader.IsDBNull(reader.GetOrdinal("REFERENCIA"))
-                                        ? null
-                                        : reader.GetString(reader.GetOrdinal("REFERENCIA")),
-                                    CiudadNombre = reader.GetString(reader.GetOrdinal("CIUDAD_NOMBRE")),
-                                    CiudadDepartamento = reader.GetString(reader.GetOrdinal("CIUDAD_DEPARTAMENTO"))
-                                };
-                            }
-                        }
-
-                        if (direccion == null)
-                        {
-                            return Response<DireccionDetalleDTO>.Fail("Dirección no encontrada");
-                        }
-
-                        return Response<DireccionDetalleDTO>.Done("Dirección obtenida exitosamente", direccion, null);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                return Response<DireccionDetalleDTO>.Fail($"Error al obtener dirección: {ex.Message}");
-            }
-        }
-
         public async Task<Response<CiudadDTO>> ObtenerTodasLasCiudades()
         {
             try
