@@ -177,45 +177,6 @@ namespace DAL.Implementaciones
                 return Response<bool>.Fail($"Error inesperado: {ex.Message}");
             }
         }
-
-        public async Task<Response<bool>> ActualizarStock(ActualizarStockDTO stockDTO)
-        {
-            try
-            {
-                using (var connection = new OracleConnection(_connectionString))
-                {
-                    await connection.OpenAsync();
-
-                    using (var command = connection.CreateCommand())
-                    {
-                        command.CommandText = "pkg_articulos.actualizar_stock_variante";
-                        command.CommandType = CommandType.StoredProcedure;
-
-                        command.Parameters.Add("p_id_articulo", OracleDbType.Int32).Value = stockDTO.IdArticulo;
-                        command.Parameters.Add("p_talla", OracleDbType.Varchar2).Value = stockDTO.Talla;
-                        command.Parameters.Add("p_color", OracleDbType.Varchar2).Value = stockDTO.Color;
-                        command.Parameters.Add("p_nuevo_stock", OracleDbType.Int32).Value = stockDTO.NuevoStock;
-
-                        await command.ExecuteNonQueryAsync();
-
-                        return Response<bool>.Done("Stock actualizado exitosamente", true);
-                    }
-                }
-            }
-            catch (OracleException ex)
-            {
-                if (ex.Message.Contains("ORA-20006"))
-                {
-                    return Response<bool>.Fail("No existe una variante con los parámetros especificados");
-                }
-                return Response<bool>.Fail($"Error en Oracle: {ex.Message}");
-            }
-            catch (Exception ex)
-            {
-                return Response<bool>.Fail($"Error inesperado: {ex.Message}");
-            }
-        }
-
         public async Task<Response<ArticuloListaDTO>> ObtenerArticulosActivos()
         {
             try

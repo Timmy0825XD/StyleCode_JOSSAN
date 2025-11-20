@@ -65,17 +65,5 @@ namespace BLL.Implementaciones
                 return Response<DetalleAlertaDTO>.Fail($"Error en la capa de negocio: {ex.Message}");
             }
         }
-
-        public async Task<Response<EstadisticaAlertaDTO>> ObtenerEstadisticasAlertas()
-        {
-            try
-            {
-                return await _alertaDAO.ObtenerEstadisticasAlertas();
-            }
-            catch (Exception ex)
-            {
-                return Response<EstadisticaAlertaDTO>.Fail($"Error en la capa de negocio: {ex.Message}");
-            }
-        }
     }
 }

@@ -184,49 +184,5 @@ namespace DAL.Implementaciones
                 return Response<DetalleAlertaDTO>.Fail($"Error al obtener detalle de alerta: {ex.Message}");
             }
         }
-
-        public async Task<Response<EstadisticaAlertaDTO>> ObtenerEstadisticasAlertas()
-        {
-            using var connection = _context.CreateConnection() as OracleConnection;
-            await connection.OpenAsync();
-
-            try
-            {
-                using var command = new OracleCommand("pkg_alertas.obtener_estadisticas_alertas", connection)
-                {
-                    CommandType = CommandType.StoredProcedure
-                };
-
-                var paramCursor = new OracleParameter("p_cursor", OracleDbType.RefCursor)
-                {
-                    Direction = ParameterDirection.Output
-                };
-                command.Parameters.Add(paramCursor);
-
-                using var reader = await command.ExecuteReaderAsync();
-
-                if (await reader.ReadAsync())
-                {
-                    var estadisticas = new EstadisticaAlertaDTO
-                    {
-                        TotalAlertas = reader.GetInt32(reader.GetOrdinal("total_alertas")),
-                        AlertasPendientes = reader.GetInt32(reader.GetOrdinal("alertas_pendientes")),
-                        AlertasResueltas = reader.GetInt32(reader.GetOrdinal("alertas_resueltas")),
-                        AlertasCriticas = reader.GetInt32(reader.GetOrdinal("alertas_criticas")),
-                        DiasPromedioResolucion = reader.IsDBNull(reader.GetOrdinal("dias_promedio_resolucion")) ? 0 : reader.GetDecimal(reader.GetOrdinal("dias_promedio_resolucion")),
-                        AlertasHoy = reader.GetInt32(reader.GetOrdinal("alertas_hoy")),
-                        AlertasSemana = reader.GetInt32(reader.GetOrdinal("alertas_semana"))
-                    };
-
-                    return Response<EstadisticaAlertaDTO>.Done("Estadísticas obtenidas exitosamente", estadisticas);
-                }
-
-                return Response<EstadisticaAlertaDTO>.Fail("No se pudieron obtener las estadísticas");
-            }
-            catch (Exception ex)
-            {
-                return Response<EstadisticaAlertaDTO>.Fail($"Error al obtener estadísticas: {ex.Message}");
-            }
-        }
     }
 }

@@ -12,7 +12,6 @@ namespace DAL.Interfaces
     {
         Task<Response<int>> RegistrarArticuloCompleto(ArticuloCreacionDTO articulo);
         Task<Response<bool>> ActualizarArticulo(ArticuloActualizacionDTO articulo);
-        Task<Response<bool>> ActualizarStock(ActualizarStockDTO stockDTO);
         Task<Response<ArticuloListaDTO>> ObtenerArticulosActivos();
         Task<Response<ArticuloDetalleDTO>> ObtenerArticuloPorId(int idArticulo);
         Task<Response<bool>> EliminarArticulo(int idArticulo);

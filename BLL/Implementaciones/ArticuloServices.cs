@@ -111,38 +111,6 @@ namespace BLL.Implementaciones
             }
         }
 
-        public async Task<Response<bool>> ActualizarStock(ActualizarStockDTO stockDTO)
-        {
-            try
-            {
-                if (stockDTO.IdArticulo <= 0)
-                {
-                    return Response<bool>.Fail("ID de artículo inválido");
-                }
-
-                if (string.IsNullOrWhiteSpace(stockDTO.Talla))
-                {
-                    return Response<bool>.Fail("La talla es requerida");
-                }
-
-                if (string.IsNullOrWhiteSpace(stockDTO.Color))
-                {
-                    return Response<bool>.Fail("El color es requerido");
-                }
-
-                if (stockDTO.NuevoStock < 0)
-                {
-                    return Response<bool>.Fail("El stock no puede ser negativo");
-                }
-
-                return await _articuloDAO.ActualizarStock(stockDTO);
-            }
-            catch (Exception ex)
-            {
-                return Response<bool>.Fail($"Error en la capa de negocio: {ex.Message}");
-            }
-        }
-
         public async Task<Response<ArticuloListaDTO>> ObtenerArticulosActivos()
         {
             try

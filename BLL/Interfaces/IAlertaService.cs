@@ -13,6 +13,5 @@ namespace BLL.Interfaces
         Task<Response<AlertaStockDTO>> ObtenerAlertasPendientes();
         Task<Response<AlertaStockDTO>> ObtenerTodasAlertas(string? estado = null);
         Task<Response<DetalleAlertaDTO>> ObtenerDetalleAlerta(int idAlerta);
-        Task<Response<EstadisticaAlertaDTO>> ObtenerEstadisticasAlertas();
     }
 }
