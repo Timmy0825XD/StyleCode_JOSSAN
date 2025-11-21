@@ -219,6 +219,7 @@ namespace DAL.Implementaciones
                                     CostoEnvio = reader.GetDecimal(reader.GetOrdinal("COSTO_ENVIO")),
                                     Impuesto = reader.GetDecimal(reader.GetOrdinal("IMPUESTO")),
                                     Total = reader.GetDecimal(reader.GetOrdinal("TOTAL")),
+                                    Cedula = reader.GetString(reader.GetOrdinal("CEDULA")),
                                     NombreCliente = reader.GetString(reader.GetOrdinal("NOMBRE_CLIENTE")),
                                     CorreoCliente = reader.GetString(reader.GetOrdinal("CORREO_CLIENTE")),
                                     TelefonoPrincipal = reader.GetString(reader.GetOrdinal("TELEFONO_PRINCIPAL")),

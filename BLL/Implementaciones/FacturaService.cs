@@ -150,26 +150,43 @@ namespace BLL.Implementaciones
                 PaymentMethodCode = MapearMetodoPago(pedido.MetodoPago),
                 Customer = new FactusCustomer
                 {
-                    Identification = "222222222", // Por defecto
+                    Identification = pedido.Cedula ?? "1067602721", 
                     Names = pedido.NombreCliente,
                     Email = pedido.CorreoCliente,
                     Phone = pedido.TelefonoPrincipal,
                     Address = pedido.DireccionCompleta,
-                    LegalOrganizationId = "2", // Persona Natural
-                    TributeId = "21" // No aplica
+                    LegalOrganizationId = "2", 
+                    TributeId = "21" 
                 },
-                Items = pedido.Productos?.Select(detalle => new FactusItem
+                Items = pedido.Productos?.Select(detalle =>
                 {
-                    CodeReference = detalle.CodigoSKU ?? "SKU-DEFAULT",
-                    Name = detalle.NombreProducto ?? "Artículo",
-                    Quantity = detalle.Cantidad,
-                    Price = detalle.PrecioUnitario,
-                    DiscountRate = 0,
-                    TaxRate = "19.00", // IVA 19%
-                    UnitMeasureId = 70, // unidad
-                    StandardCodeId = 1,
-                    IsExcluded = 0,
-                    TributeId = 1 // IVA
+
+                    decimal precioConIva = detalle.PrecioUnitario;
+                    decimal precioBaseUnitario = Math.Round(precioConIva / 1.19m, 2);
+
+                    // DEBUG: Ver qué valores estamos enviando
+                    Console.WriteLine($"===========================================");
+                    Console.WriteLine($"DEBUG - Producto: {detalle.NombreProducto}");
+                    Console.WriteLine($"DEBUG - PrecioUnitario desde BD: {detalle.PrecioUnitario}");
+                    Console.WriteLine($"DEBUG - Cantidad: {detalle.Cantidad}");
+                    Console.WriteLine($"DEBUG - SubtotalLinea desde BD: {detalle.SubtotalLinea}");
+                    Console.WriteLine($"DEBUG - PrecioBase calculado (÷1.19): {precioBaseUnitario}");
+                    Console.WriteLine($"DEBUG - Enviando a FACTUS -> Price: {precioBaseUnitario}");
+                    Console.WriteLine($"===========================================");
+
+                    return new FactusItem
+                    {
+                        CodeReference = detalle.CodigoSKU ?? "SKU-DEFAULT",
+                        Name = detalle.NombreProducto ?? "Artículo",
+                        Quantity = detalle.Cantidad,
+                        Price = precioBaseUnitario,  
+                        DiscountRate = 0,
+                        TaxRate = "19.00",           
+                        UnitMeasureId = 70,          
+                        StandardCodeId = 1,
+                        IsExcluded = 0,
+                        TributeId = 1                
+                    };
                 }).ToList() ?? new List<FactusItem>()
             };
 
@@ -183,7 +200,22 @@ namespace BLL.Implementaciones
                 _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {token}");
                 _httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
 
-                var jsonContent = JsonContent.Create(request);
+                // Configurar serialización JSON con cultura invariante (punto decimal)
+                var jsonOptions = new JsonSerializerOptions
+                {
+                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                    WriteIndented = false
+                };
+
+                var jsonContent = JsonContent.Create(request, options: jsonOptions);
+
+                // DEBUG: Ver el JSON que se está enviando
+                var jsonString = await jsonContent.ReadAsStringAsync();
+                Console.WriteLine("===========================================");
+                Console.WriteLine("DEBUG - JSON enviado a FACTUS:");
+                Console.WriteLine(jsonString);
+                Console.WriteLine("===========================================");
+
                 var response = await _httpClient.PostAsync($"{_factusBaseUrl}/v1/bills/validate", jsonContent);
 
                 var responseText = await response.Content.ReadAsStringAsync();

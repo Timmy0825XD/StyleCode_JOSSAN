@@ -18,6 +18,7 @@ namespace ENTITY.Pedidos
         public decimal Total { get; set; }
 
         public int IdUsuario { get; set; }
+        public string Cedula { get; set; } = null!;  
         public string NombreCliente { get; set; } = null!;
         public string CorreoCliente { get; set; } = null!;
         public string TelefonoPrincipal { get; set; } = null!;

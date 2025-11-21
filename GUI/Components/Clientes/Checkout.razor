@@ -216,17 +216,12 @@
 
                     <div class="resumen-linea">
                         <span>Productos (@totalProductos)</span>
-                        <span>@subtotal.ToString("C")</span>
+                        <span>@total.ToString("C")</span>
                     </div>
 
                     <div class="resumen-linea">
                         <span>Envío</span>
                         <span class="envio-gratis">GRATIS</span>
-                    </div>
-
-                    <div class="resumen-linea">
-                        <span>IVA (19%)</span>
-                        <span>@impuesto.ToString("C")</span>
                     </div>
 
                     <div class="resumen-divider"></div>
@@ -256,8 +251,6 @@
     private List<CarritoItemDTO> items = new();
     private List<MetodoPagoDTO> metodosPago = new();
     private int totalProductos = 0;
-    private decimal subtotal = 0;
-    private decimal impuesto = 0;
     private decimal total = 0;
 
     private int pasoActual = 1;
@@ -316,8 +309,6 @@
     private void ActualizarTotales()
     {
         totalProductos = Carrito.ObtenerCantidadTotal();
-        subtotal = Carrito.ObtenerSubtotal();
-        impuesto = Carrito.ObtenerImpuesto();
         total = Carrito.ObtenerTotal();
     }
 

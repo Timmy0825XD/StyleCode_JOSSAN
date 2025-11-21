@@ -78,20 +78,11 @@ namespace GUI.Services
             return _items.Sum(i => i.Cantidad);
         }
 
-        public decimal ObtenerSubtotal()
-        {
-            return _items.Sum(i => i.Subtotal);
-        }
-
-        public decimal ObtenerImpuesto()
-        {
-            return ObtenerSubtotal() * 0.19m;
-        }
-
-
         public decimal ObtenerTotal()
         {
-            return ObtenerSubtotal() + ObtenerImpuesto();
+            // El total es la suma directa de todos los subtotales
+            // Los precios ya incluyen IVA, no lo mostramos por separado al cliente
+            return _items.Sum(i => i.Subtotal);
         }
 
         public bool EstaVacio()
