@@ -26,7 +26,7 @@ namespace DAL.Implementaciones
             try
             {
                 using var connection = new OracleConnection(_connectionString);
-                using var command = new OracleCommand("PKG_ESTADISTICAS.sp_obtener_resumen_financiero", connection)
+                using var command = new OracleCommand("pkg_reportes.sp_obtener_resumen_financiero", connection)
                 {
                     CommandType = CommandType.StoredProcedure
                 };
@@ -80,7 +80,7 @@ namespace DAL.Implementaciones
             try
             {
                 using var connection = new OracleConnection(_connectionString);
-                using var command = new OracleCommand("PKG_ESTADISTICAS.sp_obtener_top_productos", connection)
+                using var command = new OracleCommand("pkg_reportes.sp_obtener_top_productos", connection)
                 {
                     CommandType = CommandType.StoredProcedure
                 };
@@ -134,7 +134,7 @@ namespace DAL.Implementaciones
             try
             {
                 using var connection = new OracleConnection(_connectionString);
-                using var command = new OracleCommand("PKG_ESTADISTICAS.sp_obtener_detalle_ventas", connection)
+                using var command = new OracleCommand("pkg_reportes.sp_obtener_detalle_ventas", connection)
                 {
                     CommandType = CommandType.StoredProcedure
                 };
@@ -191,7 +191,7 @@ namespace DAL.Implementaciones
             try
             {
                 using var connection = new OracleConnection(_connectionString);
-                using var command = new OracleCommand("PKG_ESTADISTICAS.sp_obtener_resumen_cupones", connection)
+                using var command = new OracleCommand("pkg_reportes.sp_obtener_resumen_cupones", connection)
                 {
                     CommandType = CommandType.StoredProcedure
                 };
