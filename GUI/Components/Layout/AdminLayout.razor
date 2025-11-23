@@ -1,12 +1,18 @@
 ﻿@using GUI.Components.Admin
 @inherits LayoutComponentBase
-
 <div class="layout-container">
     <div class="page">
         <aside class="sidebar @(isMenuVisible ? "" : "collapsed")">
             <AdminMenu />
         </aside>
-        <main class="main-content @(isMenuVisible ? "" : "expanded")">
+
+        @* Overlay para cerrar el menú al hacer clic fuera *@
+        @if (isMenuVisible)
+        {
+            <div class="overlay" @onclick="ToggleMenu"></div>
+        }
+
+        <main class="main-content">
             <div class="header">
                 <div>
                     <button class="btn-toggle" @onclick="ToggleMenu">
@@ -28,9 +34,158 @@
     </div>
 </div>
 
+<style>
+    .layout-container {
+        width: 100%;
+        height: 100vh;
+        overflow: hidden;
+    }
+
+    .page {
+        display: block; /* Cambiado de flex a block */
+        height: 100%;
+        width: 100%;
+        position: relative;
+    }
+
+    /* SIDEBAR - position FIXED para superponerse */
+    .sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        width: 280px;
+        height: 100vh;
+        background: white;
+        box-shadow: 4px 0 20px rgba(0, 0, 0, 0.15);
+        transition: transform 0.3s ease;
+        z-index: 1001;
+        overflow-y: auto;
+        transform: translateX(0);
+    }
+
+        .sidebar.collapsed {
+            transform: translateX(-100%);
+        }
+
+    /* OVERLAY */
+    .overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        animation: fadeIn 0.3s ease;
+        cursor: pointer;
+    }
+
+    @@keyframes fadeIn {
+        from {
+            opacity: 0;
+        }
+
+        to {
+            opacity: 1;
+        }
+    }
+
+    /* MAIN CONTENT - Ocupa TODO el espacio disponible */
+    .main-content {
+        width: 100%; /* Ocupa todo el ancho */
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        margin-left: 0; /* Sin margen */
+    }
+
+    /* HEADER */
+    .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem 2rem;
+        background: white;
+        border-bottom: 1px solid #e5e7eb;
+        z-index: 10;
+        width: 100%;
+    }
+
+    .header-right {
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+    }
+
+    .btn-toggle {
+        background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
+        color: white;
+        border: none;
+        padding: 0.75rem 1rem;
+        border-radius: 12px;
+        cursor: pointer;
+        font-size: 1.25rem;
+        transition: transform 0.2s ease;
+        width: 45px;
+        height: 45px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+        .btn-toggle:hover {
+            transform: scale(1.05);
+        }
+
+    .user-menu {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .user-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 600;
+    }
+
+    .user-name {
+        font-weight: 500;
+        color: #374151;
+    }
+
+    .content {
+        flex: 1;
+        padding: 2rem;
+        background: #f9fafb;
+        width: 100%;
+    }
+
+    /* Responsive para tablets y móviles */
+    @@media (max-width: 768px) {
+        .sidebar {
+            width: 280px;
+        }
+
+        .header {
+            padding: 1rem;
+        }
+
+        .content {
+            padding: 1rem;
+        }
+    }
+</style>
+
 @code {
     private bool isMenuVisible = false;
-    
+
     private void ToggleMenu()
     {
         isMenuVisible = !isMenuVisible;

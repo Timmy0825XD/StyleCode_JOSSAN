@@ -1,0 +1,526 @@
+﻿@page "/ReportesEspecificos"
+@layout AdminLayout
+@using Blazorise
+@using Blazorise.Charts
+@using System.Collections.Generic
+@using GUI.Components.Layout
+@using BLL.Interfaces
+@using ENTITY.Reportes
+@using ENTITY.Utilidades
+@inject IReporteService ReporteService
+
+<section style="padding: 24px">
+    <div style="margin-bottom: 32px;">
+        <h2 style="font-size: 28px; font-weight: bold; color: #1f2937; margin: 0 0 8px 0;">
+            📊 Reportes y Análisis
+        </h2>
+        <p style="color: #6b7280; font-size: 14px;">
+            Consulta reportes financieros y análisis detallados de tu negocio
+        </p>
+    </div>
+
+    <!-- Filtros de Fecha -->
+    <div class="filters-card">
+        <div class="filters-content">
+            <div class="date-inputs">
+                <div class="input-group">
+                    <label>Fecha Inicio</label>
+                    <input type="date"
+                           value="@fechaInicio.ToString("yyyy-MM-dd")"
+                           @onchange="@(e => CambiarFechaInicio(e.Value?.ToString()))"
+                           class="date-input"
+                           max="@DateTime.Now.ToString("yyyy-MM-dd")" />
+                </div>
+                <div class="input-group">
+                    <label>Fecha Fin</label>
+                    <input type="date"
+                           value="@fechaFin.ToString("yyyy-MM-dd")"
+                           @onchange="@(e => CambiarFechaFin(e.Value?.ToString()))"
+                           class="date-input"
+                           max="@DateTime.Now.ToString("yyyy-MM-dd")" />
+                </div>
+            </div>
+            <div class="filter-actions">
+                <button class="btn-secondary" @onclick="() => EstablecerRangoRapido(7)">
+                    📅 Última Semana
+                </button>
+                <button class="btn-secondary" @onclick="() => EstablecerRangoRapido(30)">
+                    📅 Último Mes
+                </button>
+                <button class="btn-secondary" @onclick="() => EstablecerRangoRapido(90)">
+                    📅 Últimos 3 Meses
+                </button>
+                <button class="btn-primary" @onclick="GenerarReportes" disabled="@isLoading">
+                    @if (isLoading)
+                    {
+                        <span>⏳ Generando...</span>
+                    }
+                    else
+                    {
+                        <span>🔍 Generar Reportes</span>
+                    }
+                </button>
+            </div>
+        </div>
+        @if (reportesGenerados)
+        {
+            <div style="margin-top: 12px; padding: 12px; background: #f0fdf4; border-radius: 8px; border: 1px solid #86efac;">
+                <span style="color: #15803d; font-size: 14px; font-weight: 500;">
+                    ✅ Reportes del @fechaInicio.ToString("dd/MM/yyyy") al @fechaFin.ToString("dd/MM/yyyy")
+                </span>
+            </div>
+        }
+    </div>
+
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="alert alert-danger" role="alert" style="margin-top: 16px;">
+            <strong>⚠️ Error:</strong> @errorMessage
+        </div>
+    }
+
+    @if (reportesGenerados)
+    {
+        <!-- Resumen Financiero -->
+        @if (resumenFinanciero != null)
+        {
+            <div style="margin-top: 32px;">
+                <h3 class="section-title">💰 Resumen Financiero</h3>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-content">
+                            <div class="stat-info">
+                                <p style="color: grey;">Total Ventas</p>
+                                <h3 style="font-weight:bold">$@resumenFinanciero.TotalVentas.ToString("N2")</h3>
+                                <p class="stat-subtitle">Ingresos brutos del período</p>
+                            </div>
+                            <div class="stat-icon purple">
+                                <Icon Name="IconName.DollarSign" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-content">
+                            <div class="stat-info">
+                                <p style="color: grey;">Total Pedidos</p>
+                                <h3 style="font-weight:bold">@resumenFinanciero.TotalPedidos.ToString("N0")</h3>
+                                <p class="stat-subtitle">Pedidos completados</p>
+                            </div>
+                            <div class="stat-icon blue">
+                                <Icon Name="IconName.ShoppingCart" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-content">
+                            <div class="stat-info">
+                                <p style="color: grey;">Ticket Promedio</p>
+                                <h3 style="font-weight:bold">$@resumenFinanciero.TicketPromedio.ToString("N2")</h3>
+                                <p class="stat-subtitle">Valor promedio por pedido</p>
+                            </div>
+                            <div class="stat-icon green">
+                                <i class="fa-solid fa-arrow-trend-up"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-content">
+                            <div class="stat-info">
+                                <p style="color: grey;">Ingresos Netos</p>
+                                <h3 style="font-weight:bold">$@resumenFinanciero.IngresosNetos.ToString("N2")</h3>
+                                <p class="stat-subtitle">Después de descuentos</p>
+                            </div>
+                            <div class="stat-icon indigo">
+                                <Icon Name="IconName.CreditCard" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-content">
+                            <div class="stat-info">
+                                <p style="color: grey;">Total Descuentos</p>
+                                <h3 style="font-weight:bold">$@resumenFinanciero.TotalDescuentos.ToString("N2")</h3>
+                                <p class="stat-subtitle">Descuentos aplicados</p>
+                            </div>
+                            <div class="stat-icon orange">
+                                <Icon Name="IconName.Tag" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-content">
+                            <div class="stat-info">
+                                <p style="color: grey;">IVA Total</p>
+                                <h3 style="font-weight:bold">$@resumenFinanciero.IvaTotal.ToString("N2")</h3>
+                                <p class="stat-subtitle">Impuestos recaudados</p>
+                            </div>
+                            <div class="stat-icon red">
+                                <i class="fa-solid fa-file"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-content">
+                            <div class="stat-info">
+                                <p style="color: grey;">Subtotal</p>
+                                <h3 style="font-weight:bold">$@resumenFinanciero.SubtotalTotal.ToString("N2")</h3>
+                                <p class="stat-subtitle">Sin impuestos</p>
+                            </div>
+                            <div class="stat-icon blue">
+                                <i class="fa-solid fa-calculator"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-content">
+                            <div class="stat-info">
+                                <p style="color: grey;">Clientes Activos</p>
+                                <h3 style="font-weight:bold">@resumenFinanciero.ClientesActivos.ToString("N0")</h3>
+                                <p class="stat-subtitle">@resumenFinanciero.ClientesNuevos nuevos</p>
+                            </div>
+                            <div class="stat-icon green">
+                                <Icon Name="IconName.Users" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+
+        <!-- Top Productos -->
+        @if (topProductos != null && topProductos.Any())
+        {
+            <div style="margin-top: 32px;">
+                <h3 class="section-title">🏆 Top 10 Productos Más Vendidos</h3>
+
+                <div class="orders-card">
+                    <div class="table-container">
+                        <table class="orders-table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Producto</th>
+                                    <th>Marca</th>
+                                    <th>Categoría Tipo</th>
+                                    <th>Categoría Ocasión</th>
+                                    <th>Cantidad Vendida</th>
+                                    <th>Ingresos Generados</th>
+                                    <th>Precio Promedio</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @for (int i = 0; i < topProductos.Count; i++)
+                                {
+                                    var producto = topProductos[i];
+                                    <tr>
+                                        <td><span class="ranking-badge">@(i + 1)</span></td>
+                                        <td class="product-name">@producto.NombreProducto</td>
+                                        <td>@producto.Marca</td>
+                                        <td>@producto.CategoriaTipo</td>
+                                        <td>@producto.CategoriaOcasion</td>
+                                        <td><span class="quantity-badge">@producto.CantidadVendida</span></td>
+                                        <td class="order-total">$@producto.IngresosGenerados.ToString("N2")</td>
+                                        <td>$@producto.PrecioPromedio.ToString("N2")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="empty-state" style="margin-top: 32px;">
+                <div class="empty-icon">🏆</div>
+                <h3>No hay productos vendidos</h3>
+                <p>No se encontraron productos vendidos en el período seleccionado</p>
+            </div>
+        }
+
+        <!-- Detalle de Ventas -->
+        @if (detalleVentas != null && detalleVentas.Any())
+        {
+            <div style="margin-top: 32px;">
+                <h3 class="section-title">📋 Detalle de Ventas (@detalleVentas.Count pedidos)</h3>
+
+                <div class="orders-card">
+                    <div class="table-container">
+                        <table class="orders-table">
+                            <thead>
+                                <tr>
+                                    <th>Número Pedido</th>
+                                    <th>Fecha</th>
+                                    <th>Cliente</th>
+                                    <th>Método Pago</th>
+                                    <th>Subtotal</th>
+                                    <th>Impuesto</th>
+                                    <th>Descuento</th>
+                                    <th>Total</th>
+                                    <th>Estado</th>
+                                    <th>Factura</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var venta in detalleVentas)
+                                {
+                                    <tr>
+                                        <td class="order-id">@venta.NumeroPedido</td>
+                                        <td class="order-date">@venta.FechaPedido.ToString("dd/MM/yyyy HH:mm")</td>
+                                        <td>
+                                            <div class="customer-info">
+                                                <div>@venta.NombreCliente</div>
+                                                <div class="customer-email">@venta.CorreoCliente</div>
+                                            </div>
+                                        </td>
+                                        <td>@venta.MetodoPago</td>
+                                        <td>$@venta.Subtotal.ToString("N2")</td>
+                                        <td>$@venta.Impuesto.ToString("N2")</td>
+                                        <td class="discount-amount">-$@venta.Descuento.ToString("N2")</td>
+                                        <td class="order-total">$@venta.Total.ToString("N2")</td>
+                                        <td>
+                                            <span class="status-badge @GetStatusClass(venta.Estado)">
+                                                @GetStatusText(venta.Estado)
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="factura-badge @(venta.TieneFactura == "SI" ? "si" : "no")">
+                                                @venta.TieneFactura
+                                            </span>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        }
+
+        <!-- Resumen de Cupones -->
+        @if (resumenCupones != null && resumenCupones.Any())
+        {
+            <div style="margin-top: 32px; margin-bottom: 32px;">
+                <h3 class="section-title">🎟️ Resumen de Cupones Utilizados</h3>
+
+                <div class="orders-card">
+                    <div class="table-container">
+                        <table class="orders-table">
+                            <thead>
+                                <tr>
+                                    <th>Código Cupón</th>
+                                    <th>Descripción</th>
+                                    <th>Tipo Descuento</th>
+                                    <th>Valor Descuento</th>
+                                    <th>Veces Usado</th>
+                                    <th>Total Descontado</th>
+                                    <th>Descuento Promedio</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var cupon in resumenCupones)
+                                {
+                                    <tr>
+                                        <td class="coupon-code">@cupon.CodigoCupon</td>
+                                        <td>@cupon.Descripcion</td>
+                                        <td>
+                                            <span class="type-badge">@cupon.TipoDescuento</span>
+                                        </td>
+                                        <td>
+                                            @if (cupon.TipoDescuento == "PORCENTAJE")
+                                            {
+                                                <span>@cupon.ValorDescuento%</span>
+                                            }
+                                            else
+                                            {
+                                                <span>$@cupon.ValorDescuento.ToString("N2")</span>
+                                            }
+                                        </td>
+                                        <td><span class="usage-badge">@cupon.VecesUsado</span></td>
+                                        <td class="discount-total">-$@cupon.TotalDescontado.ToString("N2")</td>
+                                        <td>$@cupon.DescuentoPromedio.ToString("N2")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+    else if (!isLoading)
+    {
+        <div class="empty-state">
+            <div class="empty-icon">📊</div>
+            <h3>Genera tu primer reporte</h3>
+            <p>Selecciona un rango de fechas y haz clic en "Generar Reportes" para ver los análisis de tu negocio</p>
+        </div>
+    }
+    else
+    {
+        <div style="display: flex; justify-content: center; align-items: center; min-height: 400px;">
+            <div class="loading-spinner">⏳ Cargando reportes...</div>
+        </div>
+    }
+</section>
+
+@code {
+    // Usar DateTime directamente en lugar de strings
+    private DateTime fechaInicio = DateTime.Now.AddMonths(-1);
+    private DateTime fechaFin = DateTime.Now;
+
+    private bool isLoading = false;
+    private bool reportesGenerados = false;
+    private string errorMessage = string.Empty;
+
+    private ResumenFinancieroDTO resumenFinanciero;
+    private List<ProductoMasVendidoDTO> topProductos = new();
+    private List<DetalleVentaDTO> detalleVentas = new();
+    private List<ResumenCuponDTO> resumenCupones = new();
+
+    // Métodos para manejar cambios en las fechas
+    private void CambiarFechaInicio(string valor)
+    {
+        if (!string.IsNullOrEmpty(valor) && DateTime.TryParse(valor, out DateTime nuevaFecha))
+        {
+            fechaInicio = nuevaFecha;
+        }
+    }
+
+    private void CambiarFechaFin(string valor)
+    {
+        if (!string.IsNullOrEmpty(valor) && DateTime.TryParse(valor, out DateTime nuevaFecha))
+        {
+            fechaFin = nuevaFecha;
+        }
+    }
+
+    private async Task GenerarReportes()
+    {
+        try
+        {
+            isLoading = true;
+            errorMessage = string.Empty;
+            reportesGenerados = false;
+            StateHasChanged();
+
+            // Validaciones
+            if (fechaInicio > fechaFin)
+            {
+                errorMessage = "La fecha de inicio no puede ser posterior a la fecha fin";
+                return;
+            }
+
+            Console.WriteLine($"Generando reportes desde {fechaInicio:yyyy-MM-dd} hasta {fechaFin:yyyy-MM-dd}");
+
+            var tasks = new List<Task>
+            {
+                CargarResumenFinanciero(),
+                CargarTopProductos(),
+                CargarDetalleVentas(),
+                CargarResumenCupones()
+            };
+
+            await Task.WhenAll(tasks);
+
+            reportesGenerados = true;
+
+            Console.WriteLine($"Reportes generados - Resumen: {resumenFinanciero != null}, Productos: {topProductos.Count}, Ventas: {detalleVentas.Count}");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error al generar reportes: {ex.Message}";
+            Console.WriteLine($"Error completo: {ex}");
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task CargarResumenFinanciero()
+    {
+        var response = await ReporteService.ObtenerResumenFinancieroAsync(fechaInicio, fechaFin);
+
+        Console.WriteLine($"Response Resumen: Success={response.IsSuccess}, Message={response.Message}");
+
+        if (response.IsSuccess && response.Object != null)
+        {
+            resumenFinanciero = response.Object;
+        }
+        else if (!string.IsNullOrEmpty(response.Message))
+        {
+            errorMessage += $" Resumen: {response.Message}";
+        }
+    }
+
+    private async Task CargarTopProductos()
+    {
+        var response = await ReporteService.ObtenerTopProductosAsync(fechaInicio, fechaFin, 10);
+
+        if (response.IsSuccess && response.ListObject != null)
+        {
+            topProductos = response.ListObject.ToList();
+        }
+    }
+
+    private async Task CargarDetalleVentas()
+    {
+        var response = await ReporteService.ObtenerDetalleVentasAsync(fechaInicio, fechaFin);
+
+        if (response.IsSuccess && response.ListObject != null)
+        {
+            detalleVentas = response.ListObject.ToList();
+        }
+    }
+
+    private async Task CargarResumenCupones()
+    {
+        var response = await ReporteService.ObtenerResumenCuponesAsync(fechaInicio, fechaFin);
+
+        if (response.IsSuccess && response.ListObject != null)
+        {
+            resumenCupones = response.ListObject.ToList();
+        }
+    }
+
+    private void EstablecerRangoRapido(int dias)
+    {
+        fechaFin = DateTime.Now;
+        fechaInicio = DateTime.Now.AddDays(-dias);
+        StateHasChanged();
+    }
+
+    private string GetStatusClass(string status)
+    {
+        return status.ToLower() switch
+        {
+            "completado" or "completed" or "entregado" => "completed",
+            "en proceso" or "processing" or "en-proceso" => "processing",
+            "pendiente" or "pending" => "pending",
+            "cancelado" or "cancelled" => "cancelled",
+            _ => "pending"
+        };
+    }
+
+    private string GetStatusText(string status)
+    {
+        return status.ToLower() switch
+        {
+            "completado" or "completed" or "entregado" => "Completado",
+            "en proceso" or "processing" or "en-proceso" => "En Proceso",
+            "pendiente" or "pending" => "Pendiente",
+            "cancelado" or "cancelled" => "Cancelado",
+            _ => status
+        };
+    }
+}

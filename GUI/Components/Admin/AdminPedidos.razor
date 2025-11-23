@@ -1,6 +1,5 @@
 ﻿@page "/AdminPedidos"
 @using System.Collections.Generic
-@using ClosedXML.Excel
 @using ENTITY.Pedidos
 @using BLL.Interfaces
 @using GUI.Components.Admin
@@ -9,6 +8,9 @@
 @inject IFacturaService FacturaService
 @inject IPedidoService PedidoService
 @inject NavigationManager Navigation
+@using QuestPDF.Fluent
+@using QuestPDF.Helpers
+@using QuestPDF.Infrastructure
 
 <div class="container">
     <div class="header-section">
@@ -43,9 +45,9 @@
                     </select>
                     <input type="date" class="filter-date" @bind="filterDate" @bind:format="yyyy-MM-dd" />
                 </div>
-                <button class="btn-secondary" @onclick="ExportarPedidos">
+                <button class="btn-secondary" @onclick="ExportarPedidosPDF">
                     <span class="icon"><Icon Name="IconName.FileDownload" /></span>
-                    Exportar
+                    Exportar PDF
                 </button>
             </div>
 
@@ -270,6 +272,7 @@
 
     protected override async Task OnInitializedAsync()
     {
+        QuestPDF.Settings.License = LicenseType.Community;
         await CargarPedidos();
     }
 
@@ -299,6 +302,282 @@
         {
             cargando = false;
         }
+    }
+
+    private async Task ExportarPedidosPDF()
+    {
+        try
+        {
+            var pedidosParaExportar = PedidosFiltrados.ToList();
+
+            if (!pedidosParaExportar.Any())
+            {
+                errorMessage = "No hay pedidos para exportar";
+                return;
+            }
+
+            var document = Document.Create(container =>
+            {
+                container.Page(page =>
+                {
+                    page.Size(PageSizes.A4.Landscape());
+                    page.Margin(40);
+                    page.DefaultTextStyle(x => x.FontSize(9).FontFamily("Arial"));
+
+                    // Header
+                    page.Header().Element(ComposeHeader);
+
+                    // Content
+                    page.Content().Element(container => ComposeContent(container, pedidosParaExportar));
+
+                    // Footer
+                    page.Footer().Element(ComposeFooter);
+                });
+            });
+
+            var pdfBytes = document.GeneratePdf();
+            var base64 = Convert.ToBase64String(pdfBytes);
+            var fileName = $"Reporte_Pedidos_{DateTime.Now:yyyyMMdd_HHmmss}.pdf";
+
+            await JSRuntime.InvokeVoidAsync("downloadFile", fileName, base64);
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error al generar PDF: {ex.Message}";
+        }
+    }
+
+    private void ComposeHeader(IContainer container)
+    {
+        container.Column(column =>
+        {
+            column.Item().Row(row =>
+            {
+                row.RelativeItem().Column(col =>
+                {
+                    col.Item().Text("REPORTE DE PEDIDOS")
+                        .FontSize(20)
+                        .Bold()
+                        .FontColor("#1e40af");
+
+                    col.Item().PaddingTop(5).Text("Sistema de Gestión de Pedidos")
+                        .FontSize(10)
+                        .FontColor("#64748b");
+
+                    col.Item().PaddingTop(3).Text($"Generado el {DateTime.Now:dd/MM/yyyy HH:mm:ss}")
+                        .FontSize(8)
+                        .FontColor("#94a3b8");
+                });
+
+                row.ConstantItem(220).Column(col =>
+                {
+                    col.Item().Background("#f8fafc").Padding(10).Row(statsRow =>
+                    {
+                        statsRow.RelativeItem().Column(c =>
+                        {
+                            c.Item().Text("TOTAL").FontSize(8).FontColor("#64748b");
+                            c.Item().Text(pedidos.Count.ToString())
+                                .FontSize(22).Bold().FontColor("#1e40af");
+                        });
+
+                        statsRow.RelativeItem().Column(c =>
+                        {
+                            c.Item().Text("ENTREGADOS").FontSize(8).FontColor("#64748b");
+                            c.Item().Text(pedidos.Count(p => p.Estado == "Entregado").ToString())
+                                .FontSize(22).Bold().FontColor("#10b981");
+                        });
+
+                        statsRow.RelativeItem().Column(c =>
+                        {
+                            c.Item().Text("PENDIENTES").FontSize(8).FontColor("#64748b");
+                            c.Item().Text(pedidos.Count(p => p.Estado == "Pendiente").ToString())
+                                .FontSize(22).Bold().FontColor("#f59e0b");
+                        });
+                    });
+                });
+            });
+
+            column.Item().PaddingTop(15).PaddingBottom(10).LineHorizontal(2).LineColor("#e2e8f0");
+        });
+    }
+
+    private void ComposeContent(IContainer container, List<PedidoListaDTO> pedidosExportar)
+    {
+        container.PaddingTop(10).Column(column =>
+        {
+            // Resumen financiero
+            column.Item().PaddingBottom(15).Background("#f8fafc").Padding(12).Row(row =>
+            {
+                row.RelativeItem().Column(col =>
+                {
+                    col.Item().Text("RESUMEN FINANCIERO").FontSize(11).Bold().FontColor("#0f172a");
+                    col.Item().PaddingTop(5).Row(summaryRow =>
+                    {
+                        summaryRow.RelativeItem().Column(c =>
+                        {
+                            c.Item().Text("Valor Total Pedidos").FontSize(8).FontColor("#64748b");
+                            c.Item().Text($"${pedidos.Sum(p => p.Total):N2}")
+                                .FontSize(14).Bold().FontColor("#1e40af");
+                        });
+
+                        summaryRow.RelativeItem().Column(c =>
+                        {
+                            c.Item().Text("Promedio por Pedido").FontSize(8).FontColor("#64748b");
+                            var promedio = pedidos.Any() ? pedidos.Average(p => p.Total) : 0;
+                            c.Item().Text($"${promedio:N2}")
+                                .FontSize(14).Bold().FontColor("#0f172a");
+                        });
+
+                        summaryRow.RelativeItem().Column(c =>
+                        {
+                            c.Item().Text("Pedidos Activos").FontSize(8).FontColor("#64748b");
+                            var activos = pedidos.Count(p => p.Estado != "Cancelado" && p.Estado != "Entregado");
+                            c.Item().Text(activos.ToString())
+                                .FontSize(14).Bold().FontColor("#f59e0b");
+                        });
+
+                        summaryRow.RelativeItem().Column(c =>
+                        {
+                            c.Item().Text("Tasa de Entrega").FontSize(8).FontColor("#64748b");
+                            var tasa = pedidos.Any() ? (pedidos.Count(p => p.Estado == "Entregado") * 100.0 / pedidos.Count) : 0;
+                            c.Item().Text($"{tasa:F1}%")
+                                .FontSize(14).Bold().FontColor("#10b981");
+                        });
+                    });
+                });
+            });
+
+            // Tabla de pedidos
+            column.Item().Table(table =>
+            {
+                table.ColumnsDefinition(columns =>
+                {
+                    columns.RelativeColumn(1.2f); // Número
+                    columns.RelativeColumn(2f);   // Cliente
+                    columns.RelativeColumn(1.8f); // Email
+                    columns.RelativeColumn(1.3f); // Fecha
+                    columns.RelativeColumn(1f);   // Total
+                    columns.RelativeColumn(1f);   // Estado
+                    columns.RelativeColumn(1.2f); // Método Pago
+                });
+
+                table.Header(header =>
+                {
+                    header.Cell().Element(CellStyle).Background("#1e40af").Padding(6)
+                        .Text("N° PEDIDO").FontSize(8).Bold().FontColor("#ffffff");
+                    header.Cell().Element(CellStyle).Background("#1e40af").Padding(6)
+                        .Text("CLIENTE").FontSize(8).Bold().FontColor("#ffffff");
+                    header.Cell().Element(CellStyle).Background("#1e40af").Padding(6)
+                        .Text("CORREO").FontSize(8).Bold().FontColor("#ffffff");
+                    header.Cell().Element(CellStyle).Background("#1e40af").Padding(6)
+                        .Text("FECHA").FontSize(8).Bold().FontColor("#ffffff");
+                    header.Cell().Element(CellStyle).Background("#1e40af").Padding(6)
+                        .Text("TOTAL").FontSize(8).Bold().FontColor("#ffffff");
+                    header.Cell().Element(CellStyle).Background("#1e40af").Padding(6)
+                        .Text("ESTADO").FontSize(8).Bold().FontColor("#ffffff");
+                    header.Cell().Element(CellStyle).Background("#1e40af").Padding(6)
+                        .Text("MÉTODO PAGO").FontSize(8).Bold().FontColor("#ffffff");
+                });
+
+                var index = 0;
+                foreach (var pedido in pedidosExportar)
+                {
+                    var backgroundColor = index % 2 == 0 ? "#ffffff" : "#f8fafc";
+
+                    table.Cell().Element(CellStyle).Background(backgroundColor).Padding(6)
+                        .Text(pedido.NumeroPedido).FontSize(8).Bold().FontColor("#0f172a");
+
+                    table.Cell().Element(CellStyle).Background(backgroundColor).Padding(6)
+                        .Text(pedido.NombreCliente).FontSize(7.5f).FontColor("#475569");
+
+                    var correo = pedido.CorreoCliente;
+                    if (correo.Length > 28)
+                        correo = correo.Substring(0, 25) + "...";
+                    table.Cell().Element(CellStyle).Background(backgroundColor).Padding(6)
+                        .Text(correo).FontSize(7).FontColor("#64748b");
+
+                    table.Cell().Element(CellStyle).Background(backgroundColor).Padding(6)
+                        .Text(pedido.FechaPedido.ToString("dd/MM/yy HH:mm")).FontSize(7).FontColor("#64748b");
+
+                    table.Cell().Element(CellStyle).Background(backgroundColor).Padding(6)
+                        .AlignRight().Text($"${pedido.Total:N2}").FontSize(8).Bold().FontColor("#0f172a");
+
+                    var estadoColor = GetEstadoColor(pedido.Estado);
+                    var estadoBgColor = GetEstadoBgColor(pedido.Estado);
+                    table.Cell().Element(CellStyle).Background(backgroundColor).Padding(6)
+                        .AlignCenter().Column(col =>
+                        {
+                            col.Item().MaxWidth(70).Height(18)
+                                .AlignCenter().AlignMiddle()
+                                .Text(pedido.Estado)
+                                .FontSize(6.5f).Bold().FontColor(estadoColor);
+                        });
+
+                    table.Cell().Element(CellStyle).Background(backgroundColor).Padding(6)
+                        .Text(pedido.MetodoPago).FontSize(7).FontColor("#475569");
+
+                    index++;
+                }
+            });
+        });
+    }
+
+    private void ComposeFooter(IContainer container)
+    {
+        container.AlignBottom().Column(column =>
+        {
+            column.Item().LineHorizontal(1).LineColor("#e2e8f0");
+
+            column.Item().PaddingTop(8).Row(row =>
+            {
+                row.RelativeItem().Column(col =>
+                {
+                    col.Item().Text("Sistema de Gestión de Pedidos")
+                        .FontSize(8).Bold().FontColor("#475569");
+                    col.Item().Text("Reporte generado automáticamente")
+                        .FontSize(7).FontColor("#94a3b8");
+                });
+
+                row.RelativeItem().AlignRight().Text(page =>
+                {
+                    page.Span("Página ").FontSize(8).FontColor("#64748b");
+                    page.CurrentPageNumber().FontSize(8).Bold().FontColor("#475569");
+                    page.Span(" de ").FontSize(8).FontColor("#64748b");
+                    page.TotalPages().FontSize(8).Bold().FontColor("#475569");
+                });
+            });
+        });
+    }
+
+    private IContainer CellStyle(IContainer container)
+    {
+        return container.Border(0.5f).BorderColor("#e2e8f0");
+    }
+
+    private string GetEstadoColor(string estado)
+    {
+        return estado switch
+        {
+            "Entregado" => "#10b981",
+            "Enviado" => "#3b82f6",
+            "Confirmado" => "#8b5cf6",
+            "Pendiente" => "#f59e0b",
+            "Cancelado" => "#ef4444",
+            _ => "#64748b"
+        };
+    }
+
+    private string GetEstadoBgColor(string estado)
+    {
+        return estado switch
+        {
+            "Entregado" => "#d1fae5",
+            "Enviado" => "#dbeafe",
+            "Confirmado" => "#ede9fe",
+            "Pendiente" => "#fef3c7",
+            "Cancelado" => "#fee2e2",
+            _ => "#f1f5f9"
+        };
     }
 
     private IEnumerable<PedidoListaDTO> PedidosFiltrados
@@ -429,63 +708,10 @@
         }
     }
 
-    private async Task ExportarPedidos()
-    {
-        try
-        {
-            var pedidosParaExportar = PedidosFiltrados.ToList();
-
-            if (!pedidosParaExportar.Any())
-            {
-                errorMessage = "No hay pedidos para exportar";
-                return;
-            }
-
-            using var workbook = new XLWorkbook();
-            var worksheet = workbook.Worksheets.Add("Pedidos");
-
-            worksheet.Cell(1, 1).Value = "Número Pedido";
-            worksheet.Cell(1, 2).Value = "Cliente";
-            worksheet.Cell(1, 3).Value = "Email";
-            worksheet.Cell(1, 4).Value = "Fecha";
-            worksheet.Cell(1, 5).Value = "Total";
-            worksheet.Cell(1, 6).Value = "Estado";
-            worksheet.Cell(1, 7).Value = "Método Pago";
-
-            int row = 2;
-            foreach (var pedido in pedidosParaExportar)
-            {
-                worksheet.Cell(row, 1).Value = pedido.NumeroPedido;
-                worksheet.Cell(row, 2).Value = pedido.NombreCliente;
-                worksheet.Cell(row, 3).Value = pedido.CorreoCliente;
-                worksheet.Cell(row, 4).Value = pedido.FechaPedido.ToString("dd/MM/yyyy HH:mm");
-                worksheet.Cell(row, 5).Value = pedido.Total;
-                worksheet.Cell(row, 6).Value = pedido.Estado;
-                worksheet.Cell(row, 7).Value = pedido.MetodoPago;
-                row++;
-            }
-
-            worksheet.Columns().AdjustToContents();
-
-            using var stream = new MemoryStream();
-            workbook.SaveAs(stream);
-            var bytes = stream.ToArray();
-            var base64 = Convert.ToBase64String(bytes);
-            var fileName = $"pedidos_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
-
-            await JSRuntime.InvokeVoidAsync("downloadFile", fileName, base64);
-        }
-        catch (Exception ex)
-        {
-            errorMessage = $"Error al exportar: {ex.Message}";
-        }
-    }
-
     private string GetStatusClass(string status)
     {
         return status;
     }
-
 
     private void AbrirModalFactura(int idPedido)
     {
@@ -502,8 +728,6 @@
     private async Task OnFacturaGenerada(int idFactura)
     {
         await CargarPedidos();
-
         StateHasChanged();
     }
 }
-

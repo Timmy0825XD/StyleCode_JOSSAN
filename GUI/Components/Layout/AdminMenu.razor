@@ -6,6 +6,7 @@
 @inject NavigationManager Navigation
 
 <aside>
+
     <div class="sidebar-logo">
         <div class="logo-circle">V</div>
         <div class="logo-text">
@@ -13,11 +14,26 @@
             <div style="color:grey">Admin Panel</div>
         </div>
     </div>
+
     <nav class="sidebar-nav">
-        <NavLink class="nav-item" href="AdminDashboard">
-            <span style="font-size: 22px"><Icon Name="IconName.Dashboard" /></span>
-            <span>Dashboard</span>
-        </NavLink>
+        <div class="nav-item-container">
+            <div class="nav-item @(reportesMenuAbierto ? "active" : "")" @onclick="ToggleReportesMenu">
+                <span style="font-size: 22px"><Icon Name="IconName.Dashboard" /></span> Reportes
+                <span class="submenu-arrow @(reportesMenuAbierto ? "rotated" : "")">▼</span>
+            </div>
+            @if (reportesMenuAbierto)
+            {
+                <div class="submenu">
+                    <NavLink class="submenu-item" href="AdminDashboard">
+                        <span>Reportes Generales</span>
+                    </NavLink>
+                    <NavLink class="submenu-item" href="ReportesEspecificos">
+                        <span>Reportes Específicos</span>
+                    </NavLink>
+                </div>
+            }
+        </div>
+
         <NavLink class="nav-item" href="AdminProductos">
             <span style="font-size: 22px"><Icon Name="IconName.Store" /></span>
             <span>Productos</span>
@@ -59,6 +75,7 @@
         color: #6b7280;
         text-decoration: none;
         transition: all 0.3s ease;
+        cursor: pointer;
     }
 
         .nav-item:hover {
@@ -70,17 +87,77 @@
             background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
             color: white;
         }
+
+    .nav-item-container {
+        position: relative;
+    }
+
+    .submenu-arrow {
+        margin-left: auto;
+        font-size: 12px;
+        transition: transform 0.3s ease;
+    }
+
+        .submenu-arrow.rotated {
+            transform: rotate(180deg);
+        }
+
+    .submenu {
+        margin-left: 20px;
+        margin-top: 5px;
+        animation: slideDown 0.3s ease;
+    }
+
+    .submenu-item {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        padding: 10px 20px;
+        padding-left: 50px;
+        border-radius: 12px;
+        color: #6b7280;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        font-size: 14px;
+    }
+
+        .submenu-item:hover {
+            background-color: #f3f4f6;
+            transform: translateX(5px);
+        }
+
+        .submenu-item.active {
+            background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
+            color: white;
+        }
+
+    @@keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
 </style>
 
 @code {
+    private bool reportesMenuAbierto = false;
+
+    private void ToggleReportesMenu()
+    {
+        reportesMenuAbierto = !reportesMenuAbierto;
+    }
+
     private async Task CerrarSesion()
     {
         try
         {
             await SesionService.CerrarSesion();
             UsuarioService.CerrarSesion();
-
-
             Navigation.NavigateTo("/", forceLoad: true);
         }
         catch (Exception ex)

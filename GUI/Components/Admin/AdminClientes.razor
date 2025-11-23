@@ -1,11 +1,13 @@
 ﻿@page "/AdminClientes"
-@using ClosedXML.Excel
 @using ENTITY.Usuarios
 @using BLL.Interfaces
 @using System.Text
 @using ENTITY.Utilidades
 @inject IJSRuntime JSRuntime
 @inject IUsuarioService UsuarioService
+@using QuestPDF.Fluent
+@using QuestPDF.Helpers
+@using QuestPDF.Infrastructure
 
 <div class="container">
 
@@ -24,9 +26,9 @@
                 <option value="I">Inactivos</option>
             </select>
 
-            <button class="btn-secondary" @onclick="ExportarUsuarios">
+            <button class="btn-secondary" @onclick="ExportarUsuariosPDF">
                 <span class="icon"><Icon Name="IconName.FileDownload" /></span>
-                Exportar
+                Exportar PDF
             </button>
 
         </div>
@@ -127,6 +129,7 @@
 
     protected override async Task OnInitializedAsync()
     {
+        QuestPDF.Settings.License = LicenseType.Community;
         await CargarUsuarios();
     }
 
@@ -143,7 +146,7 @@
         cargando = false;
     }
 
-    private async Task ExportarUsuarios()
+    private async Task ExportarUsuariosPDF()
     {
         try
         {
@@ -151,66 +154,259 @@
 
             if (!usuariosParaExportar.Any())
             {
+                await JSRuntime.InvokeVoidAsync("alert", "No hay usuarios para exportar");
                 return;
             }
 
-            using var workbook = new XLWorkbook();
-            var worksheet = workbook.Worksheets.Add("Usuarios");
-
-            var headerRange = worksheet.Range("A1:F1");
-            headerRange.Style.Font.Bold = true;
-            headerRange.Style.Fill.BackgroundColor = XLColor.FromHtml("#4F46E5");
-            headerRange.Style.Font.FontColor = XLColor.White;
-            headerRange.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
-
-            worksheet.Cell(1, 1).Value = "Nombre Completo";
-            worksheet.Cell(1, 2).Value = "Cédula";
-            worksheet.Cell(1, 3).Value = "Correo Electrónico";
-            worksheet.Cell(1, 4).Value = "Teléfono";
-            worksheet.Cell(1, 5).Value = "Estado";
-            worksheet.Cell(1, 6).Value = "Fecha Registro";
-
-            int row = 2;
-            foreach (var usuario in usuariosParaExportar)
+            var document = Document.Create(container =>
             {
-                worksheet.Cell(row, 1).Value = usuario.ObtenerNombreCompleto();
-                worksheet.Cell(row, 2).Value = usuario.Cedula;
-                worksheet.Cell(row, 3).Value = usuario.Correo;
-                worksheet.Cell(row, 4).Value = usuario.TelefonoPrincipal;
-                worksheet.Cell(row, 5).Value = GetEstadoText(usuario.Estado);
-                worksheet.Cell(row, 6).Value = usuario.FechaRegistro.ToString("dd/MM/yyyy");
-
-                var estadoCell = worksheet.Cell(row, 5);
-                if (usuario.Estado == "A")
+                container.Page(page =>
                 {
-                    estadoCell.Style.Font.FontColor = XLColor.FromHtml("#10B981");
-                    estadoCell.Style.Font.Bold = true;
-                }
-                else
-                {
-                    estadoCell.Style.Font.FontColor = XLColor.FromHtml("#EF4444");
-                    estadoCell.Style.Font.Bold = true;
-                }
+                    page.Size(PageSizes.A4);
+                    page.Margin(40);
+                    page.DefaultTextStyle(x => x.FontSize(9).FontFamily("Arial"));
 
-                row++;
-            }
+                    // Header
+                    page.Header().Element(ComposeHeader);
 
-            worksheet.Columns().AdjustToContents();
+                    // Content
+                    page.Content().Element(container => ComposeContent(container, usuariosParaExportar));
 
-            worksheet.RangeUsed().SetAutoFilter();
+                    // Footer
+                    page.Footer().Element(ComposeFooter);
+                });
+            });
 
-            using var stream = new MemoryStream();
-            workbook.SaveAs(stream);
-            var bytes = stream.ToArray();
-            var base64 = Convert.ToBase64String(bytes);
-            var fileName = $"usuarios_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
+            var pdfBytes = document.GeneratePdf();
+            var base64 = Convert.ToBase64String(pdfBytes);
+            var fileName = $"Reporte_Usuarios_{DateTime.Now:yyyyMMdd_HHmmss}.pdf";
 
             await JSRuntime.InvokeVoidAsync("downloadFile", fileName, base64);
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Error al exportar: {ex.Message}");
+            await JSRuntime.InvokeVoidAsync("alert", $"Error al generar PDF: {ex.Message}");
         }
+    }
+
+    private void ComposeHeader(IContainer container)
+    {
+        container.Column(column =>
+        {
+            // Título y estadísticas
+            column.Item().Row(row =>
+            {
+                row.RelativeItem().Column(col =>
+                {
+                    col.Item().Text("DIRECTORIO DE USUARIOS")
+                        .FontSize(20)
+                        .Bold()
+                        .FontColor("#1e40af");
+
+                    col.Item().PaddingTop(5).Text("Sistema de Gestión de Clientes")
+                        .FontSize(10)
+                        .FontColor("#64748b");
+
+                    col.Item().PaddingTop(3).Text($"Generado el {DateTime.Now:dd/MM/yyyy HH:mm:ss}")
+                        .FontSize(8)
+                        .FontColor("#94a3b8");
+                });
+
+                row.ConstantItem(140).Column(col =>
+                {
+                    col.Item().Background("#f8fafc").Padding(12).Column(statsCol =>
+                    {
+                        statsCol.Item().Row(statsRow =>
+                        {
+                            statsRow.RelativeItem().Column(c =>
+                            {
+                                c.Item().Text("TOTAL").FontSize(8).FontColor("#64748b");
+                                c.Item().Text(usuarios.Count.ToString())
+                                    .FontSize(24).Bold();
+                            });
+
+                            statsRow.ConstantItem(60).Column(c =>
+                            {
+                                c.Item().Text("ACTIVOS").FontSize(8).FontColor("#64748b");
+                                c.Item().Text(usuarios.Count(u => u.Estado == "A").ToString())
+                                    .FontSize(24).Bold();
+                            });
+                        });
+                    });
+                });
+            });
+
+            // Línea divisoria
+            column.Item().PaddingTop(15).PaddingBottom(10).LineHorizontal(2).LineColor("#e2e8f0");
+        });
+    }
+
+    private void ComposeContent(IContainer container, List<UsuarioDTO> usuariosExportar)
+    {
+        container.PaddingTop(10).Column(column =>
+        {
+            // Resumen de estados
+            column.Item().PaddingBottom(15).Background("#f8fafc").Padding(12).Row(row =>
+            {
+                row.RelativeItem().Column(col =>
+                {
+                    col.Item().Text("RESUMEN DE ESTADOS").FontSize(11).Bold().FontColor("#0f172a");
+                    col.Item().PaddingTop(5).Row(summaryRow =>
+                    {
+                        summaryRow.RelativeItem().Column(c =>
+                        {
+                            c.Item().Text("Usuarios Activos").FontSize(8).FontColor("#64748b");
+                            c.Item().Row(r =>
+                            {
+                                r.RelativeItem().PaddingLeft(5).Text($"{usuarios.Count(u => u.Estado == "A")} usuarios")
+                                    .FontSize(11).Bold().FontColor("#10b981");
+                            });
+                        });
+
+                        summaryRow.RelativeItem().Column(c =>
+                        {
+                            c.Item().Text("Usuarios Inactivos").FontSize(8).FontColor("#64748b");
+                            c.Item().Row(r =>
+                            {
+                                r.RelativeItem().PaddingLeft(5).Text($"{usuarios.Count(u => u.Estado == "I")} usuarios")
+                                    .FontSize(11).Bold().FontColor("#ef4444");
+                            });
+                        });
+
+                        summaryRow.RelativeItem().Column(c =>
+                        {
+                            c.Item().Text("Tasa de Actividad").FontSize(8).FontColor("#64748b");
+                            var tasaActividad = usuarios.Any() ? (usuarios.Count(u => u.Estado == "A") * 100.0 / usuarios.Count) : 0;
+                            c.Item().Text($"{tasaActividad:F1}%")
+                                .FontSize(14).Bold().FontColor("#1e40af");
+                        });
+                    });
+                });
+            });
+
+            // Tabla de usuarios
+            column.Item().Table(table =>
+            {
+                // Definir columnas con tamaños optimizados
+                table.ColumnsDefinition(columns =>
+                {
+                    columns.RelativeColumn(2.2f);  // Nombre completo
+                    columns.RelativeColumn(1f);    // Cédula
+                    columns.RelativeColumn(2f);    // Correo
+                    columns.RelativeColumn(1.2f);  // Teléfono
+                    columns.RelativeColumn(0.8f);  // Estado
+                    columns.RelativeColumn(1f);    // Fecha
+                });
+
+                // Header de tabla
+                table.Header(header =>
+                {
+                    header.Cell().Element(CellStyle).Background("#1e40af").Padding(5)
+                        .Text("NOMBRE").FontSize(7).Bold().FontColor("#ffffff");
+                    header.Cell().Element(CellStyle).Background("#1e40af").Padding(5)
+                        .Text("CÉDULA").FontSize(7).Bold().FontColor("#ffffff");
+                    header.Cell().Element(CellStyle).Background("#1e40af").Padding(5)
+                        .Text("CORREO").FontSize(7).Bold().FontColor("#ffffff");
+                    header.Cell().Element(CellStyle).Background("#1e40af").Padding(5)
+                        .Text("TELÉFONO").FontSize(7).Bold().FontColor("#ffffff");
+                    header.Cell().Element(CellStyle).Background("#1e40af").Padding(5)
+                        .Text("ESTADO").FontSize(7).Bold().FontColor("#ffffff");
+                    header.Cell().Element(CellStyle).Background("#1e40af").Padding(5)
+                        .Text("FECHA").FontSize(7).Bold().FontColor("#ffffff");
+                });
+
+                // Filas de datos
+                var index = 0;
+                foreach (var usuario in usuariosExportar)
+                {
+                    var backgroundColor = index % 2 == 0 ? "#ffffff" : "#f8fafc";
+
+                    // Nombre con iniciales
+                    table.Cell().Element(CellStyle).Background(backgroundColor).Padding(5).Row(row =>
+                    {
+                        row.ConstantItem(24).Height(24).Background("#e0e7ff")
+                            .AlignCenter().AlignMiddle()
+                            .Text(GetIniciales(usuario.ObtenerNombreCompleto()))
+                            .FontSize(8).Bold().FontColor("#3730a3");
+
+                        row.RelativeItem().PaddingLeft(5).AlignMiddle()
+                            .Text(usuario.ObtenerNombreCompleto())
+                            .FontSize(7.5f).Bold().FontColor("#0f172a");
+                    });
+
+                    // Cédula
+                    table.Cell().Element(CellStyle).Background(backgroundColor).Padding(5)
+                        .AlignMiddle().Text(usuario.Cedula ?? "N/A")
+                        .FontSize(7).FontColor("#475569");
+
+                    // Correo - truncar si es muy largo
+                    var correo = usuario.Correo ?? "N/A";
+                    if (correo.Length > 25)
+                        correo = correo.Substring(0, 22) + "...";
+
+                    table.Cell().Element(CellStyle).Background(backgroundColor).Padding(5)
+                        .AlignMiddle().Text(correo)
+                        .FontSize(7).FontColor("#475569");
+
+                    // Teléfono
+                    table.Cell().Element(CellStyle).Background(backgroundColor).Padding(5)
+                        .AlignMiddle().Text(usuario.TelefonoPrincipal ?? "N/A")
+                        .FontSize(7).FontColor("#475569");
+
+                    // Estado con badge
+                    var estadoColor = usuario.Estado == "A" ? "#10b981" : "#ef4444";
+                    var estadoBgColor = usuario.Estado == "A" ? "#d1fae5" : "#fee2e2";
+                    table.Cell().Element(CellStyle).Background(backgroundColor).Padding(5)
+                        .AlignMiddle().AlignCenter().Column(col =>
+                        {
+                            col.Item().MaxWidth(50).Height(18)
+                                .AlignCenter().AlignMiddle()
+                                .Text(GetEstadoText(usuario.Estado))
+                                .FontSize(6.5f).Bold().FontColor(estadoColor);
+                        });
+
+                    // Fecha
+                    table.Cell().Element(CellStyle).Background(backgroundColor).Padding(5)
+                        .AlignMiddle().Text(usuario.FechaRegistro.ToString("dd/MM/yy"))
+                        .FontSize(7).FontColor("#64748b");
+
+                    index++;
+                }
+            });
+        });
+    }
+
+    private void ComposeFooter(IContainer container)
+    {
+        container.AlignBottom().Column(column =>
+        {
+            column.Item().LineHorizontal(1).LineColor("#e2e8f0");
+
+            column.Item().PaddingTop(8).Row(row =>
+            {
+                row.RelativeItem().Column(col =>
+                {
+                    col.Item().Text("Sistema de Gestión de Usuarios")
+                        .FontSize(8).Bold().FontColor("#475569");
+                    col.Item().Text("Documento confidencial - Uso interno")
+                        .FontSize(7).FontColor("#94a3b8");
+                });
+
+                row.RelativeItem().AlignRight().Text(page =>
+                {
+                    page.Span("Página ").FontSize(8).FontColor("#64748b");
+                    page.CurrentPageNumber().FontSize(8).Bold().FontColor("#475569");
+                    page.Span(" de ").FontSize(8).FontColor("#64748b");
+                    page.TotalPages().FontSize(8).Bold().FontColor("#475569");
+                });
+            });
+        });
+    }
+
+    private IContainer CellStyle(IContainer container)
+    {
+        return container.Border(0.5f).BorderColor("#e2e8f0");
     }
 
     private IEnumerable<UsuarioDTO> UsuariosFiltrados

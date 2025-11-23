@@ -5,15 +5,17 @@
 @inject IFacturaService FacturaService
 @inject IJSRuntime JS
 @inject NavigationManager Navigation
-@using ClosedXML.Excel
+@using QuestPDF.Fluent
+@using QuestPDF.Helpers
+@using QuestPDF.Infrastructure
 
 <div class="container">
     <div class="header-section">
         <h2 class="page-title">Gestión de Facturas Electrónicas</h2>
-            <button class="btn-secondary" @onclick="ExportarFacturas">
+        <button class="btn-secondary" @onclick="ExportarFacturasPDF">
             <span class="icon"><Icon Name="IconName.FileDownload" /></span>
-                Exportar
-            </button>
+            Exportar PDF
+        </button>
     </div>
 
     @if (cargando)
@@ -113,7 +115,6 @@
                                                     @(factura.Cufe.Length > 25 ? factura.Cufe.Substring(0, 25) + "..." : factura.Cufe)
                                                 </span>
                                                 <button class="btn-copy-mini" @onclick="() => CopiarCUFE(factura.Cufe)" title="Copiar CUFE">
-                                                    
                                                 </button>
                                             </div>
                                         }
@@ -200,6 +201,7 @@
 
     protected override async Task OnInitializedAsync()
     {
+        QuestPDF.Settings.License = LicenseType.Community;
         await CargarFacturas();
     }
 
@@ -311,7 +313,7 @@
         StateHasChanged();
     }
 
-    private async Task ExportarFacturas()
+    private async Task ExportarFacturasPDF()
     {
         try
         {
@@ -323,124 +325,234 @@
                 return;
             }
 
-            using var workbook = new XLWorkbook();
-
-            var worksheet = workbook.Worksheets.Add("Facturas");
-
-            var headerRange = worksheet.Range("A1:J1");
-            headerRange.Style.Font.Bold = true;
-            headerRange.Style.Fill.BackgroundColor = XLColor.FromHtml("#4F46E5");
-            headerRange.Style.Font.FontColor = XLColor.White;
-            headerRange.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
-
-            worksheet.Cell(1, 1).Value = "ID";
-            worksheet.Cell(1, 2).Value = "Número Factura";
-            worksheet.Cell(1, 3).Value = "Fecha Emisión";
-            worksheet.Cell(1, 4).Value = "ID Pedido";
-            worksheet.Cell(1, 5).Value = "ID Usuario";
-            worksheet.Cell(1, 6).Value = "CUFE";
-            worksheet.Cell(1, 7).Value = "Subtotal";
-            worksheet.Cell(1, 8).Value = "IVA";
-            worksheet.Cell(1, 9).Value = "Total";
-            worksheet.Cell(1, 10).Value = "Estado DIAN";
-
-            int row = 2;
-            foreach (var factura in facturasParaExportar)
+            var document = Document.Create(container =>
             {
-                worksheet.Cell(row, 1).Value = factura.Id;
-                worksheet.Cell(row, 2).Value = factura.NumeroFactura;
-                worksheet.Cell(row, 3).Value = factura.FechaEmision.ToString("dd/MM/yyyy HH:mm");
-                worksheet.Cell(row, 4).Value = $"PED-{factura.IdPedido}";
-                worksheet.Cell(row, 5).Value = factura.IdUsuario;
-                worksheet.Cell(row, 6).Value = factura.Cufe ?? "N/A";
-                worksheet.Cell(row, 7).Value = factura.Subtotal;
-                worksheet.Cell(row, 8).Value = factura.Impuesto;
-                worksheet.Cell(row, 9).Value = factura.Total;
-                worksheet.Cell(row, 10).Value = string.IsNullOrEmpty(factura.EstadoDian) ? "Sin estado" : factura.EstadoDian;
-
-                worksheet.Cell(row, 7).Style.NumberFormat.Format = "$#,##0.00";
-                worksheet.Cell(row, 8).Style.NumberFormat.Format = "$#,##0.00";
-                worksheet.Cell(row, 9).Style.NumberFormat.Format = "$#,##0.00";
-
-                var estadoCell = worksheet.Cell(row, 10);
-                if (factura.EstadoDian?.ToLower() == "aprobada")
+                container.Page(page =>
                 {
-                    estadoCell.Style.Font.FontColor = XLColor.FromHtml("#10B981");
-                    estadoCell.Style.Font.Bold = true;
-                }
-                else if (factura.EstadoDian?.ToLower() == "rechazada")
-                {
-                    estadoCell.Style.Font.FontColor = XLColor.FromHtml("#EF4444");
-                    estadoCell.Style.Font.Bold = true;
-                }
-                else
-                {
-                    estadoCell.Style.Font.FontColor = XLColor.FromHtml("#F59E0B");
-                }
+                    page.Size(PageSizes.A4.Landscape());
+                    page.Margin(40);
+                    page.DefaultTextStyle(x => x.FontSize(9).FontFamily("Arial"));
 
-                row++;
-            }
+                    // Header
+                    page.Header().Element(ComposeHeader);
 
-            worksheet.Columns().AdjustToContents();
+                    // Content
+                    page.Content().Element(container => ComposeContent(container, facturasParaExportar));
 
-            worksheet.RangeUsed().SetAutoFilter();
+                    // Footer
+                    page.Footer().Element(ComposeFooter);
+                });
+            });
 
-            var resumenSheet = workbook.Worksheets.Add("Resumen");
-
-            resumenSheet.Cell(1, 1).Value = "Resumen de Facturas Electrónicas";
-            resumenSheet.Cell(1, 1).Style.Font.Bold = true;
-            resumenSheet.Cell(1, 1).Style.Font.FontSize = 16;
-            resumenSheet.Range("A1:B1").Merge();
-
-            resumenSheet.Cell(3, 1).Value = "Métrica";
-            resumenSheet.Cell(3, 2).Value = "Valor";
-            var resumenHeader = resumenSheet.Range("A3:B3");
-            resumenHeader.Style.Font.Bold = true;
-            resumenHeader.Style.Fill.BackgroundColor = XLColor.FromHtml("#E5E7EB");
-
-            resumenSheet.Cell(4, 1).Value = "Total Facturas";
-            resumenSheet.Cell(4, 2).Value = facturas.Count;
-
-            resumenSheet.Cell(5, 1).Value = "Facturas Aprobadas";
-            resumenSheet.Cell(5, 2).Value = facturas.Count(f => f.EstadoDian == "Aprobada");
-            resumenSheet.Cell(5, 2).Style.Font.FontColor = XLColor.FromHtml("#10B981");
-
-            resumenSheet.Cell(6, 1).Value = "Facturas Pendientes";
-            resumenSheet.Cell(6, 2).Value = facturas.Count(f => f.EstadoDian != "Aprobada");
-            resumenSheet.Cell(6, 2).Style.Font.FontColor = XLColor.FromHtml("#F59E0B");
-
-            resumenSheet.Cell(8, 1).Value = "Subtotal Acumulado";
-            resumenSheet.Cell(8, 2).Value = facturas.Sum(f => f.Subtotal);
-            resumenSheet.Cell(8, 2).Style.NumberFormat.Format = "$#,##0.00";
-
-            resumenSheet.Cell(9, 1).Value = "IVA Total";
-            resumenSheet.Cell(9, 2).Value = facturas.Sum(f => f.Impuesto);
-            resumenSheet.Cell(9, 2).Style.NumberFormat.Format = "$#,##0.00";
-
-            resumenSheet.Cell(10, 1).Value = "Total General";
-            resumenSheet.Cell(10, 2).Value = facturas.Sum(f => f.Total);
-            resumenSheet.Cell(10, 2).Style.NumberFormat.Format = "$#,##0.00";
-            resumenSheet.Cell(10, 2).Style.Font.Bold = true;
-
-            resumenSheet.Cell(12, 1).Value = "Fecha de Exportación";
-            resumenSheet.Cell(12, 2).Value = DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss");
-
-            resumenSheet.Columns().AdjustToContents();
-
-            using var stream = new MemoryStream();
-            workbook.SaveAs(stream);
-            var bytes = stream.ToArray();
-            var base64 = Convert.ToBase64String(bytes);
-            var fileName = $"facturas_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
+            var pdfBytes = document.GeneratePdf();
+            var base64 = Convert.ToBase64String(pdfBytes);
+            var fileName = $"Reporte_Facturas_{DateTime.Now:yyyyMMdd_HHmmss}.pdf";
 
             await JS.InvokeVoidAsync("downloadFile", fileName, base64);
 
-            MostrarNotificacion($"Se exportaron {facturasParaExportar.Count} facturas correctamente", "success");
+            MostrarNotificacion($"PDF generado exitosamente con {facturasParaExportar.Count} facturas", "success");
         }
         catch (Exception ex)
         {
-            MostrarNotificacion($"Error al exportar: {ex.Message}", "error");
+            MostrarNotificacion($"Error al generar PDF: {ex.Message}", "error");
         }
+    }
+
+    private void ComposeHeader(IContainer container)
+    {
+        container.Column(column =>
+        {
+            // Logo y título principal
+            column.Item().Row(row =>
+            {
+                row.RelativeItem().Column(col =>
+                {
+                    col.Item().Text("REPORTE DE FACTURAS ELECTRÓNICAS")
+                        .FontSize(18)
+                        .Bold()
+                        .FontColor("#1e40af");
+
+                    col.Item().PaddingTop(5).Text($"Generado el {DateTime.Now:dd/MM/yyyy HH:mm:ss}")
+                        .FontSize(9)
+                        .FontColor("#64748b");
+                });
+
+                row.ConstantItem(120).AlignRight().Column(col =>
+                {
+                    col.Item().Background("#f1f5f9").Padding(8).Column(statsCol =>
+                    {
+                        statsCol.Item().Text("Estadísticas").FontSize(8).Bold().FontColor("#475569");
+                        statsCol.Item().PaddingTop(3).Text($"Total: {facturas.Count}").FontSize(8);
+                        statsCol.Item().Text($"Aprobadas: {facturas.Count(f => f.EstadoDian == "Aprobada")}")
+                            .FontSize(8).FontColor("#10b981");
+                    });
+                });
+            });
+
+            // Línea divisoria
+            column.Item().PaddingTop(15).PaddingBottom(10).LineHorizontal(2).LineColor("#e2e8f0");
+        });
+    }
+
+    private void ComposeContent(IContainer container, List<FacturaDTO> facturasExportar)
+    {
+        container.PaddingTop(10).Column(column =>
+        {
+            // Resumen ejecutivo
+            column.Item().PaddingBottom(15).Background("#f8fafc").Padding(12).Row(row =>
+            {
+                row.RelativeItem().Column(col =>
+                {
+                    col.Item().Text("RESUMEN FINANCIERO").FontSize(11).Bold().FontColor("#0f172a");
+                    col.Item().PaddingTop(5).Row(summaryRow =>
+                    {
+                        summaryRow.RelativeItem().Column(c =>
+                        {
+                            c.Item().Text("Subtotal Acumulado").FontSize(8).FontColor("#64748b");
+                            c.Item().Text($"${facturas.Sum(f => f.Subtotal):N2}")
+                                .FontSize(12).Bold().FontColor("#0f172a");
+                        });
+
+                        summaryRow.RelativeItem().Column(c =>
+                        {
+                            c.Item().Text("IVA Total").FontSize(8).FontColor("#64748b");
+                            c.Item().Text($"${facturas.Sum(f => f.Impuesto):N2}")
+                                .FontSize(12).Bold().FontColor("#0f172a");
+                        });
+
+                        summaryRow.RelativeItem().Column(c =>
+                        {
+                            c.Item().Text("Total General").FontSize(8).FontColor("#64748b");
+                            c.Item().Text($"${facturas.Sum(f => f.Total):N2}")
+                                .FontSize(13).Bold().FontColor("#1e40af");
+                        });
+                    });
+                });
+            });
+
+            // Tabla de facturas
+            column.Item().Table(table =>
+            {
+                // Definir columnas
+                table.ColumnsDefinition(columns =>
+                {
+                    columns.ConstantColumn(35);  // ID
+                    columns.RelativeColumn(1.2f); // Número
+                    columns.RelativeColumn(1.2f); // Fecha
+                    columns.RelativeColumn(0.8f); // Pedido
+                    columns.RelativeColumn(0.8f); // Usuario
+                    columns.RelativeColumn(2f);   // CUFE
+                    columns.RelativeColumn(0.9f); // Subtotal
+                    columns.RelativeColumn(0.9f); // IVA
+                    columns.RelativeColumn(1f);   // Total
+                    columns.RelativeColumn(0.9f); // Estado
+                });
+
+                // Header de tabla
+                table.Header(header =>
+                {
+                    header.Cell().Element(CellStyle).Background("#1e40af").Padding(6)
+                        .Text("ID").FontSize(8).Bold().FontColor("#ffffff");
+                    header.Cell().Element(CellStyle).Background("#1e40af").Padding(6)
+                        .Text("N° Factura").FontSize(8).Bold().FontColor("#ffffff");
+                    header.Cell().Element(CellStyle).Background("#1e40af").Padding(6)
+                        .Text("Fecha Emisión").FontSize(8).Bold().FontColor("#ffffff");
+                    header.Cell().Element(CellStyle).Background("#1e40af").Padding(6)
+                        .Text("Pedido").FontSize(8).Bold().FontColor("#ffffff");
+                    header.Cell().Element(CellStyle).Background("#1e40af").Padding(6)
+                        .Text("Usuario").FontSize(8).Bold().FontColor("#ffffff");
+                    header.Cell().Element(CellStyle).Background("#1e40af").Padding(6)
+                        .Text("CUFE").FontSize(8).Bold().FontColor("#ffffff");
+                    header.Cell().Element(CellStyle).Background("#1e40af").Padding(6)
+                        .Text("Subtotal").FontSize(8).Bold().FontColor("#ffffff");
+                    header.Cell().Element(CellStyle).Background("#1e40af").Padding(6)
+                        .Text("IVA").FontSize(8).Bold().FontColor("#ffffff");
+                    header.Cell().Element(CellStyle).Background("#1e40af").Padding(6)
+                        .Text("Total").FontSize(8).Bold().FontColor("#ffffff");
+                    header.Cell().Element(CellStyle).Background("#1e40af").Padding(6)
+                        .Text("Estado").FontSize(8).Bold().FontColor("#ffffff");
+                });
+
+                // Filas de datos
+                var index = 0;
+                foreach (var factura in facturasExportar)
+                {
+                    var backgroundColor = index % 2 == 0 ? "#ffffff" : "#f8fafc";
+
+                    table.Cell().Element(CellStyle).Background(backgroundColor).Padding(6)
+                        .Text($"#{factura.Id}").FontSize(8);
+                    table.Cell().Element(CellStyle).Background(backgroundColor).Padding(6)
+                        .Text(factura.NumeroFactura).FontSize(8).Bold();
+                    table.Cell().Element(CellStyle).Background(backgroundColor).Padding(6)
+                        .Text(factura.FechaEmision.ToString("dd/MM/yyyy HH:mm")).FontSize(7);
+                    table.Cell().Element(CellStyle).Background(backgroundColor).Padding(6)
+                        .Text($"PED-{factura.IdPedido}").FontSize(8);
+                    table.Cell().Element(CellStyle).Background(backgroundColor).Padding(6)
+                        .Text($"{factura.IdUsuario}").FontSize(8);
+                    table.Cell().Element(CellStyle).Background(backgroundColor).Padding(6)
+                        .Text(factura.Cufe?.Length > 35 ? factura.Cufe.Substring(0, 35) + "..." : factura.Cufe ?? "N/A")
+                        .FontSize(6).FontColor("#64748b");
+                    table.Cell().Element(CellStyle).Background(backgroundColor).Padding(6)
+                        .AlignRight().Text($"${factura.Subtotal:N2}").FontSize(8);
+                    table.Cell().Element(CellStyle).Background(backgroundColor).Padding(6)
+                        .AlignRight().Text($"${factura.Impuesto:N2}").FontSize(8);
+                    table.Cell().Element(CellStyle).Background(backgroundColor).Padding(6)
+                        .AlignRight().Text($"${factura.Total:N2}").FontSize(8).Bold();
+
+                    var estadoColor = GetEstadoColor(factura.EstadoDian);
+                    table.Cell().Element(CellStyle).Background(backgroundColor).Padding(6)
+                        .Text(string.IsNullOrEmpty(factura.EstadoDian) ? "Sin estado" : factura.EstadoDian)
+                        .FontSize(7).Bold().FontColor(estadoColor);
+
+                    index++;
+                }
+            });
+        });
+    }
+
+    private void ComposeFooter(IContainer container)
+    {
+        container.AlignBottom().Column(column =>
+        {
+            column.Item().LineHorizontal(1).LineColor("#e2e8f0");
+
+            column.Item().PaddingTop(5).Row(row =>
+            {
+                row.RelativeItem().Text(text =>
+                {
+                    text.Span("Sistema de Facturación Electrónica").FontSize(8).FontColor("#64748b");
+                    text.Span(" | ").FontSize(8).FontColor("#cbd5e1");
+                    text.Span("Generado automáticamente").FontSize(8).FontColor("#64748b");
+                });
+
+                row.RelativeItem().AlignRight().Text(page =>
+                {
+                    page.Span("Página ").FontSize(8).FontColor("#64748b");
+                    page.CurrentPageNumber().FontSize(8).Bold().FontColor("#475569");
+                    page.Span(" de ").FontSize(8).FontColor("#64748b");
+                    page.TotalPages().FontSize(8).Bold().FontColor("#475569");
+                });
+            });
+        });
+    }
+
+    private IContainer CellStyle(IContainer container)
+    {
+        return container.Border(0.5f).BorderColor("#e2e8f0");
+    }
+
+    private string GetEstadoColor(string? estado)
+    {
+        if (string.IsNullOrEmpty(estado))
+            return "#94a3b8";
+
+        return estado.ToLower() switch
+        {
+            "aprobada" => "#10b981",
+            "rechazada" => "#ef4444",
+            "pendiente" => "#f59e0b",
+            _ => "#94a3b8"
+        };
     }
 
     private void MostrarNotificacion(string mensaje, string tipo = "success")

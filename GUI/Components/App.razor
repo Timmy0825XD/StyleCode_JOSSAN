@@ -24,6 +24,21 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.1/chart.min.js"></script>
     <script src="_framework/blazor.web.js"></script>
     <script>
+
+        //PDF
+        window.downloadFile = function(filename, base64) {
+        const link = document.createElement('a');
+        link.href = 'data:application/pdf;base64,' + base64;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        };
+
+
+
+
+
         window.downloadFile = function(filename, base64String) {
             const link = document.createElement('a');
             link.download = filename;

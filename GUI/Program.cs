@@ -41,6 +41,7 @@ builder.Services.AddScoped<IFavoritoDAO>(sp => new FavoritoDAO(connectionString)
 builder.Services.AddScoped<IEstadisticaDAO>(sp => new EstadisticaDAO(connectionString));
 builder.Services.AddScoped<IAlertaDAO>(sp => new AlertaDAO(connectionString));
 builder.Services.AddScoped<ICuponDAO>(sp => new CuponDAO(connectionString));
+builder.Services.AddScoped<IReporteDAO>(sp => new ReporteDAO(connectionString));
 
 // ===== REGISTRAR SERVICIOS DE LA CAPA BLL =====
 builder.Services.AddScoped<IUsuarioService, UsuarioService>();
@@ -54,6 +55,7 @@ builder.Services.AddScoped<IFavoritoService, FavoritoService>();
 builder.Services.AddScoped<IEstadisticaService, EstadisticaService>();
 builder.Services.AddScoped<IAlertaService, AlertaService>();
 builder.Services.AddScoped<ICuponService, CuponService>();
+builder.Services.AddScoped<IReporteService, ReporteService>();
 
 // ===== SERVICIOS AUXILIARES =====
 builder.Services.AddScoped<SesionService>();
