@@ -7,19 +7,18 @@
 @using BLL.Interfaces
 @using ENTITY.Reportes
 @using ENTITY.Utilidades
+@using QuestPDF.Fluent
+@using QuestPDF.Helpers
+@using QuestPDF.Infrastructure
 @inject IReporteService ReporteService
+@inject IJSRuntime JSRuntime
 
 <section style="padding: 24px">
     <div style="margin-bottom: 32px;">
-        <h2 style="font-size: 28px; font-weight: bold; color: #1f2937; margin: 0 0 8px 0;">
-            📊 Reportes y Análisis
-        </h2>
-        <p style="color: #6b7280; font-size: 14px;">
-            Consulta reportes financieros y análisis detallados de tu negocio
-        </p>
+        <h2 style="font-size: 28px; font-weight: bold; color: #1f2937; margin: 0 0 8px 0;"> Reportes y Análisis </h2>
+        <p style="color: #6b7280; font-size: 14px;"> Consulta reportes financieros y análisis detallados de tu negocio </p>
     </div>
 
-    <!-- Filtros de Fecha -->
     <div class="filters-card">
         <div class="filters-content">
             <div class="date-inputs">
@@ -42,31 +41,37 @@
             </div>
             <div class="filter-actions">
                 <button class="btn-secondary" @onclick="() => EstablecerRangoRapido(7)">
-                    📅 Última Semana
+                    <i class="fa-regular fa-calendar"></i> Última Semana
                 </button>
                 <button class="btn-secondary" @onclick="() => EstablecerRangoRapido(30)">
-                    📅 Último Mes
+                    <i class="fa-regular fa-calendar"></i> Último Mes
                 </button>
                 <button class="btn-secondary" @onclick="() => EstablecerRangoRapido(90)">
-                    📅 Últimos 3 Meses
+                    <i class="fa-regular fa-calendar"></i> Últimos 3 Meses
                 </button>
                 <button class="btn-primary" @onclick="GenerarReportes" disabled="@isLoading">
                     @if (isLoading)
                     {
-                        <span>⏳ Generando...</span>
+                        <span> Generando...</span>
                     }
                     else
                     {
-                        <span>🔍 Generar Reportes</span>
+                        <span> Generar Reportes</span>
                     }
                 </button>
+                @if (reportesGenerados)
+                {
+                    <button class="btn-secondary" @onclick="ExportarReportePDF" title="Exportar reporte a PDF">
+                        <Icon Name="IconName.FileDownload" /> Exportar PDF
+                    </button>
+                }
             </div>
         </div>
         @if (reportesGenerados)
         {
             <div style="margin-top: 12px; padding: 12px; background: #f0fdf4; border-radius: 8px; border: 1px solid #86efac;">
                 <span style="color: #15803d; font-size: 14px; font-weight: 500;">
-                    ✅ Reportes del @fechaInicio.ToString("dd/MM/yyyy") al @fechaFin.ToString("dd/MM/yyyy")
+                    Reportes del @fechaInicio.ToString("dd/MM/yyyy") al @fechaFin.ToString("dd/MM/yyyy")
                 </span>
             </div>
         }
@@ -75,7 +80,7 @@
     @if (!string.IsNullOrEmpty(errorMessage))
     {
         <div class="alert alert-danger" role="alert" style="margin-top: 16px;">
-            <strong>⚠️ Error:</strong> @errorMessage
+            <strong> Error:</strong> @errorMessage
         </div>
     }
 
@@ -85,7 +90,7 @@
         @if (resumenFinanciero != null)
         {
             <div style="margin-top: 32px;">
-                <h3 class="section-title">💰 Resumen Financiero</h3>
+                <h3 class="section-title"><i class="fa-brands fa-cash-app"></i> Resumen Financiero</h3>
 
                 <div class="stats-grid">
                     <div class="stat-card">
@@ -195,11 +200,10 @@
             </div>
         }
 
-        <!-- Top Productos -->
         @if (topProductos != null && topProductos.Any())
         {
             <div style="margin-top: 32px;">
-                <h3 class="section-title">🏆 Top 10 Productos Más Vendidos</h3>
+                <h3 class="section-title"><i class="fa-solid fa-trophy"></i> Top 10 Productos Más Vendidos</h3>
 
                 <div class="orders-card">
                     <div class="table-container">
@@ -240,17 +244,16 @@
         else
         {
             <div class="empty-state" style="margin-top: 32px;">
-                <div class="empty-icon">🏆</div>
+                <div class="empty-icon"><i class="fa-solid fa-trophy"></i></div>
                 <h3>No hay productos vendidos</h3>
                 <p>No se encontraron productos vendidos en el período seleccionado</p>
             </div>
         }
 
-        <!-- Detalle de Ventas -->
         @if (detalleVentas != null && detalleVentas.Any())
         {
             <div style="margin-top: 32px;">
-                <h3 class="section-title">📋 Detalle de Ventas (@detalleVentas.Count pedidos)</h3>
+                <h3 class="section-title"><i class="fa-solid fa-folder"></i> Detalle de Ventas (@detalleVentas.Count pedidos)</h3>
 
                 <div class="orders-card">
                     <div class="table-container">
@@ -309,7 +312,7 @@
         @if (resumenCupones != null && resumenCupones.Any())
         {
             <div style="margin-top: 32px; margin-bottom: 32px;">
-                <h3 class="section-title">🎟️ Resumen de Cupones Utilizados</h3>
+                <h3 class="section-title"><i class="fa-solid fa-ticket"></i> Resumen de Cupones Utilizados</h3>
 
                 <div class="orders-card">
                     <div class="table-container">
@@ -359,7 +362,7 @@
     else if (!isLoading)
     {
         <div class="empty-state">
-            <div class="empty-icon">📊</div>
+            <div class="empty-icon"><i class="fa-solid fa-chart-line"></i></div>
             <h3>Genera tu primer reporte</h3>
             <p>Selecciona un rango de fechas y haz clic en "Generar Reportes" para ver los análisis de tu negocio</p>
         </div>
@@ -367,13 +370,13 @@
     else
     {
         <div style="display: flex; justify-content: center; align-items: center; min-height: 400px;">
-            <div class="loading-spinner">⏳ Cargando reportes...</div>
+            <div class="loading-spinner"> Cargando reportes...</div>
         </div>
     }
 </section>
 
 @code {
-    // Usar DateTime directamente en lugar de strings
+
     private DateTime fechaInicio = DateTime.Now.AddMonths(-1);
     private DateTime fechaFin = DateTime.Now;
 
@@ -386,7 +389,11 @@
     private List<DetalleVentaDTO> detalleVentas = new();
     private List<ResumenCuponDTO> resumenCupones = new();
 
-    // Métodos para manejar cambios en las fechas
+    protected override async Task OnInitializedAsync()
+    {
+        QuestPDF.Settings.License = LicenseType.Community;
+    }
+
     private void CambiarFechaInicio(string valor)
     {
         if (!string.IsNullOrEmpty(valor) && DateTime.TryParse(valor, out DateTime nuevaFecha))
@@ -412,14 +419,12 @@
             reportesGenerados = false;
             StateHasChanged();
 
-            // Validaciones
             if (fechaInicio > fechaFin)
             {
                 errorMessage = "La fecha de inicio no puede ser posterior a la fecha fin";
                 return;
             }
 
-            Console.WriteLine($"Generando reportes desde {fechaInicio:yyyy-MM-dd} hasta {fechaFin:yyyy-MM-dd}");
 
             var tasks = new List<Task>
             {
@@ -433,12 +438,10 @@
 
             reportesGenerados = true;
 
-            Console.WriteLine($"Reportes generados - Resumen: {resumenFinanciero != null}, Productos: {topProductos.Count}, Ventas: {detalleVentas.Count}");
         }
         catch (Exception ex)
         {
             errorMessage = $"Error al generar reportes: {ex.Message}";
-            Console.WriteLine($"Error completo: {ex}");
         }
         finally
         {
@@ -450,8 +453,6 @@
     private async Task CargarResumenFinanciero()
     {
         var response = await ReporteService.ObtenerResumenFinancieroAsync(fechaInicio, fechaFin);
-
-        Console.WriteLine($"Response Resumen: Success={response.IsSuccess}, Message={response.Message}");
 
         if (response.IsSuccess && response.Object != null)
         {
@@ -498,6 +499,505 @@
         fechaFin = DateTime.Now;
         fechaInicio = DateTime.Now.AddDays(-dias);
         StateHasChanged();
+    }
+
+    private async Task ExportarReportePDF()
+    {
+        try
+        {
+            if (!reportesGenerados || resumenFinanciero == null)
+            {
+                await JSRuntime.InvokeVoidAsync("alert", "No hay reportes generados para exportar");
+                return;
+            }
+
+            var document = Document.Create(container =>
+            {
+                container.Page(page =>
+                {
+                    page.Size(PageSizes.A4.Landscape());
+                    page.Margin(30);
+                    page.DefaultTextStyle(x => x.FontSize(9).FontFamily("Arial"));
+
+                    page.Header().Element(ComposeHeader);
+                    page.Content().Element(ComposeContent);
+                    page.Footer().Element(ComposeFooter);
+                });
+            });
+
+            var pdfBytes = document.GeneratePdf();
+            var base64 = Convert.ToBase64String(pdfBytes);
+            var fileName = $"Reporte_Financiero_{fechaInicio:yyyyMMdd}_{fechaFin:yyyyMMdd}.pdf";
+
+            await JSRuntime.InvokeVoidAsync("downloadFile", fileName, base64);
+        }
+        catch (Exception ex)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", $"Error al generar PDF: {ex.Message}");
+        }
+    }
+
+    private void ComposeHeader(IContainer container)
+    {
+        container.Column(column =>
+        {
+            column.Item().Row(row =>
+            {
+                row.RelativeItem().Column(col =>
+                {
+                    col.Item().Text("REPORTE FINANCIERO Y DE VENTAS")
+                        .FontSize(22)
+                        .Bold()
+                        .FontColor("#1e40af");
+
+                    col.Item().PaddingTop(5).Text($"Período: {fechaInicio:dd/MM/yyyy} - {fechaFin:dd/MM/yyyy}")
+                        .FontSize(11)
+                        .Bold()
+                        .FontColor("#475569");
+
+                    col.Item().PaddingTop(3).Text($"Generado el {DateTime.Now:dd/MM/yyyy HH:mm:ss}")
+                        .FontSize(8)
+                        .FontColor("#94a3b8");
+                });
+
+                if (resumenFinanciero != null)
+                {
+                    row.ConstantItem(200).Column(col =>
+                    {
+                        col.Item().Background("#f8fafc").Padding(20).Column(statsCol =>
+                        {
+                            statsCol.Item().Text("RESUMEN EJECUTIVO")
+                                .FontSize(9).Bold().FontColor("#64748b");
+
+                            statsCol.Item().PaddingTop(10).Row(r =>
+                            {
+                                r.RelativeItem().Column(c =>
+                                {
+                                    c.Item().Text("Total Ventas")
+                                        .FontSize(7).FontColor("#64748b");
+                                    c.Item().Text($"${resumenFinanciero.TotalVentas:N2}")
+                                        .FontSize(12);
+                                });
+
+                                r.ConstantItem(50).Column(c =>
+                                {
+                                    c.Item().Text("Pedidos")
+                                        .FontSize(7).FontColor("#64748b");
+                                    c.Item().Text($"{resumenFinanciero.TotalPedidos:N0}")
+                                        .FontSize(12);
+                                });
+                            });
+                        });
+                    });
+                }
+            });
+
+            column.Item().PaddingTop(12).PaddingBottom(8).LineHorizontal(2).LineColor("#e2e8f0");
+        });
+    }
+
+    private void ComposeContent(IContainer container)
+    {
+        container.Column(column =>
+        {
+            // Indicadores Financieros
+            if (resumenFinanciero != null)
+            {
+                column.Item().PaddingBottom(15).Element(ComposeIndicadoresFinancieros);
+            }
+
+            // Top 10 Productos
+            if (topProductos != null && topProductos.Any())
+            {
+                column.Item().PaddingTop(10).Element(ComposeTopProductos);
+            }
+
+            // Detalle de Ventas (primeros 15)
+            if (detalleVentas != null && detalleVentas.Any())
+            {
+                column.Item().PageBreak();
+                column.Item().Element(ComposeDetalleVentas);
+            }
+
+            // Resumen de Cupones
+            if (resumenCupones != null && resumenCupones.Any())
+            {
+                column.Item().PaddingTop(15).Element(ComposeResumenCupones);
+            }
+        });
+    }
+
+    private void ComposeIndicadoresFinancieros(IContainer container)
+    {
+        container.Column(column =>
+        {
+            column.Item().PaddingBottom(8).Text("INDICADORES FINANCIEROS")
+                .FontSize(12).Bold().FontColor("#1e40af");
+
+            column.Item().Background("#f8fafc").Padding(12).Row(row =>
+            {
+                // Columna 1
+                row.RelativeItem().Column(col =>
+                {
+                    ComposeIndicador(col, "Total Ventas", $"${resumenFinanciero.TotalVentas:N2}");
+                    col.Item().PaddingTop(8);
+                    ComposeIndicador(col, "Ingresos Netos", $"${resumenFinanciero.IngresosNetos:N2}");
+                });
+
+                // Columna 2
+                row.RelativeItem().PaddingLeft(15).Column(col =>
+                {
+                    ComposeIndicador(col, "Total Pedidos", $"{resumenFinanciero.TotalPedidos:N0}", "#8b5cf6");
+                    col.Item().PaddingTop(8);
+                    ComposeIndicador(col, "Ticket Promedio", $"${resumenFinanciero.TicketPromedio:N2}", "#f59e0b");
+                });
+
+                // Columna 3
+                row.RelativeItem().PaddingLeft(15).Column(col =>
+                {
+                    ComposeIndicador(col, "Total Descuentos", $"${resumenFinanciero.TotalDescuentos:N2}", "#ef4444");
+                    col.Item().PaddingTop(8);
+                    ComposeIndicador(col, "IVA Total", $"${resumenFinanciero.IvaTotal:N2}", "#06b6d4");
+                });
+
+                // Columna 4
+                row.RelativeItem().PaddingLeft(15).Column(col =>
+                {
+                    ComposeIndicador(col, "Subtotal", $"${resumenFinanciero.SubtotalTotal:N2}", "#6366f1");
+                    col.Item().PaddingTop(8);
+                    ComposeIndicador(col, "Clientes Activos", $"{resumenFinanciero.ClientesActivos:N0} ({resumenFinanciero.ClientesNuevos} nuevos)", "#10b981");
+                });
+            });
+        });
+    }
+
+    private void ComposeIndicador(ColumnDescriptor column, string label, string value, string color)
+    {
+        column.Item().Column(col =>
+        {
+            col.Item().Text(label).FontSize(7).FontColor("#64748b");
+            col.Item().PaddingTop(2).Text(value).FontSize(11).Bold().FontColor(color);
+        });
+    }
+
+    private void ComposeTopProductos(IContainer container)
+    {
+        container.Column(column =>
+        {
+            column.Item().PaddingBottom(8).Text("TOP 10 PRODUCTOS MÁS VENDIDOS")
+                .FontSize(12).Bold().FontColor("#1e40af");
+
+            column.Item().Table(table =>
+            {
+                table.ColumnsDefinition(columns =>
+                {
+                    columns.ConstantColumn(30);    // #
+                    columns.RelativeColumn(2.5f);  // Producto
+                    columns.RelativeColumn(1.2f);  // Marca
+                    columns.RelativeColumn(1.2f);  // Cat Tipo
+                    columns.RelativeColumn(1.2f);  // Cat Ocasión
+                    columns.RelativeColumn(0.8f);  // Cantidad
+                    columns.RelativeColumn(1f);    // Ingresos
+                    columns.RelativeColumn(0.9f);  // Precio Prom
+                });
+
+                // Header
+                table.Header(header =>
+                {
+                    header.Cell().Element(CellStyle).Background("#1e40af").Padding(5)
+                        .Text("#").FontSize(7).Bold().FontColor("#ffffff");
+                    header.Cell().Element(CellStyle).Background("#1e40af").Padding(5)
+                        .Text("PRODUCTO").FontSize(7).Bold().FontColor("#ffffff");
+                    header.Cell().Element(CellStyle).Background("#1e40af").Padding(5)
+                        .Text("MARCA").FontSize(7).Bold().FontColor("#ffffff");
+                    header.Cell().Element(CellStyle).Background("#1e40af").Padding(5)
+                        .Text("CAT. TIPO").FontSize(7).Bold().FontColor("#ffffff");
+                    header.Cell().Element(CellStyle).Background("#1e40af").Padding(5)
+                        .Text("CAT. OCASIÓN").FontSize(7).Bold().FontColor("#ffffff");
+                    header.Cell().Element(CellStyle).Background("#1e40af").Padding(5)
+                        .Text("CANT.").FontSize(7).Bold().FontColor("#ffffff");
+                    header.Cell().Element(CellStyle).Background("#1e40af").Padding(5)
+                        .Text("INGRESOS").FontSize(7).Bold().FontColor("#ffffff");
+                    header.Cell().Element(CellStyle).Background("#1e40af").Padding(5)
+                        .Text("PRECIO PROM.").FontSize(7).Bold().FontColor("#ffffff");
+                });
+
+                // Rows
+                var index = 0;
+                foreach (var producto in topProductos.Take(10))
+                {
+                    var backgroundColor = index % 2 == 0 ? "#ffffff" : "#f8fafc";
+
+                    table.Cell().Element(CellStyle).Background(backgroundColor).Padding(5)
+                        .AlignCenter().AlignMiddle().Text($"{index + 1}")
+                        .FontSize(8).Bold().FontColor("#1e40af");
+
+                    table.Cell().Element(CellStyle).Background(backgroundColor).Padding(5)
+                        .AlignMiddle().Text(producto.NombreProducto ?? "N/A")
+                        .FontSize(7.5f).Bold().FontColor("#0f172a");
+
+                    table.Cell().Element(CellStyle).Background(backgroundColor).Padding(5)
+                        .AlignMiddle().Text(producto.Marca ?? "N/A")
+                        .FontSize(7).FontColor("#475569");
+
+                    table.Cell().Element(CellStyle).Background(backgroundColor).Padding(5)
+                        .AlignMiddle().Text(producto.CategoriaTipo ?? "N/A")
+                        .FontSize(7).FontColor("#475569");
+
+                    table.Cell().Element(CellStyle).Background(backgroundColor).Padding(5)
+                        .AlignMiddle().Text(producto.CategoriaOcasion ?? "N/A")
+                        .FontSize(7).FontColor("#475569");
+
+                    table.Cell().Element(CellStyle).Background(backgroundColor).Padding(5)
+                        .AlignCenter().AlignMiddle().Text(producto.CantidadVendida.ToString())
+                        .FontSize(8).Bold().FontColor("#10b981");
+
+                    table.Cell().Element(CellStyle).Background(backgroundColor).Padding(5)
+                        .AlignRight().AlignMiddle().Text($"${producto.IngresosGenerados:N2}")
+                        .FontSize(7.5f).Bold().FontColor("#3b82f6");
+
+                    table.Cell().Element(CellStyle).Background(backgroundColor).Padding(5)
+                        .AlignRight().AlignMiddle().Text($"${producto.PrecioPromedio:N2}")
+                        .FontSize(7).FontColor("#475569");
+
+                    index++;
+                }
+            });
+        });
+    }
+
+    private void ComposeDetalleVentas(IContainer container)
+    {
+        container.Column(column =>
+        {
+            column.Item().PaddingBottom(8).Text($"DETALLE DE VENTAS ({detalleVentas.Count} pedidos)")
+                .FontSize(12).Bold().FontColor("#1e40af");
+
+            column.Item().Text("Mostrando primeros 20 pedidos")
+                .FontSize(7).FontColor("#64748b");
+
+            column.Item().PaddingTop(5).Table(table =>
+            {
+                table.ColumnsDefinition(columns =>
+                {
+                    columns.RelativeColumn(0.8f);  // Número
+                    columns.RelativeColumn(1f);    // Fecha
+                    columns.RelativeColumn(1.5f);  // Cliente
+                    columns.RelativeColumn(1f);    // Método Pago
+                    columns.RelativeColumn(0.8f);  // Subtotal
+                    columns.RelativeColumn(0.7f);  // Impuesto
+                    columns.RelativeColumn(0.7f);  // Descuento
+                    columns.RelativeColumn(0.9f);  // Total
+                    columns.RelativeColumn(0.8f);  // Estado
+                });
+
+                // Header
+                table.Header(header =>
+                {
+                    header.Cell().Element(CellStyle).Background("#1e40af").Padding(4)
+                        .Text("N° PEDIDO").FontSize(6.5f).Bold().FontColor("#ffffff");
+                    header.Cell().Element(CellStyle).Background("#1e40af").Padding(4)
+                        .Text("FECHA").FontSize(6.5f).Bold().FontColor("#ffffff");
+                    header.Cell().Element(CellStyle).Background("#1e40af").Padding(4)
+                        .Text("CLIENTE").FontSize(6.5f).Bold().FontColor("#ffffff");
+                    header.Cell().Element(CellStyle).Background("#1e40af").Padding(4)
+                        .Text("PAGO").FontSize(6.5f).Bold().FontColor("#ffffff");
+                    header.Cell().Element(CellStyle).Background("#1e40af").Padding(4)
+                        .Text("SUBTOTAL").FontSize(6.5f).Bold().FontColor("#ffffff");
+                    header.Cell().Element(CellStyle).Background("#1e40af").Padding(4)
+                        .Text("IMP.").FontSize(6.5f).Bold().FontColor("#ffffff");
+                    header.Cell().Element(CellStyle).Background("#1e40af").Padding(4)
+                        .Text("DESC.").FontSize(6.5f).Bold().FontColor("#ffffff");
+                    header.Cell().Element(CellStyle).Background("#1e40af").Padding(4)
+                        .Text("TOTAL").FontSize(6.5f).Bold().FontColor("#ffffff");
+                    header.Cell().Element(CellStyle).Background("#1e40af").Padding(4)
+                        .Text("ESTADO").FontSize(6.5f).Bold().FontColor("#ffffff");
+                });
+
+                // Rows
+                var index = 0;
+                foreach (var venta in detalleVentas.Take(20))
+                {
+                    var backgroundColor = index % 2 == 0 ? "#ffffff" : "#f8fafc";
+
+                    table.Cell().Element(CellStyle).Background(backgroundColor).Padding(4)
+                        .AlignMiddle().Text(venta.NumeroPedido ?? "N/A")
+                        .FontSize(6.5f).Bold().FontColor("#3b82f6");
+
+                    table.Cell().Element(CellStyle).Background(backgroundColor).Padding(4)
+                        .AlignMiddle().Text(venta.FechaPedido.ToString("dd/MM/yy HH:mm"))
+                        .FontSize(6).FontColor("#475569");
+
+                    var nombreCliente = venta.NombreCliente ?? "N/A";
+                    if (nombreCliente.Length > 25)
+                        nombreCliente = nombreCliente.Substring(0, 22) + "...";
+
+                    table.Cell().Element(CellStyle).Background(backgroundColor).Padding(4)
+                        .AlignMiddle().Text(nombreCliente)
+                        .FontSize(6.5f).FontColor("#0f172a");
+
+                    table.Cell().Element(CellStyle).Background(backgroundColor).Padding(4)
+                        .AlignMiddle().Text(venta.MetodoPago ?? "N/A")
+                        .FontSize(6).FontColor("#475569");
+
+                    table.Cell().Element(CellStyle).Background(backgroundColor).Padding(4)
+                        .AlignRight().AlignMiddle().Text($"${venta.Subtotal:N2}")
+                        .FontSize(6.5f).FontColor("#475569");
+
+                    table.Cell().Element(CellStyle).Background(backgroundColor).Padding(4)
+                        .AlignRight().AlignMiddle().Text($"${venta.Impuesto:N2}")
+                        .FontSize(6.5f).FontColor("#06b6d4");
+
+                    table.Cell().Element(CellStyle).Background(backgroundColor).Padding(4)
+                        .AlignRight().AlignMiddle().Text($"-${venta.Descuento:N2}")
+                        .FontSize(6.5f).FontColor("#ef4444");
+
+                    table.Cell().Element(CellStyle).Background(backgroundColor).Padding(4)
+                        .AlignRight().AlignMiddle().Text($"${venta.Total:N2}")
+                        .FontSize(7).Bold().FontColor("#10b981");
+
+                    var estadoColor = GetStatusColorPDF(venta.Estado);
+                    table.Cell().Element(CellStyle).Background(backgroundColor).Padding(4)
+                        .AlignCenter().AlignMiddle().Text(GetStatusText(venta.Estado))
+                        .FontSize(6).Bold().FontColor(estadoColor);
+
+                    index++;
+                }
+            });
+
+            if (detalleVentas.Count > 20)
+            {
+                column.Item().PaddingTop(5).Text($"* Se muestran los primeros 20 pedidos de {detalleVentas.Count} totales")
+                    .FontSize(7).Italic().FontColor("#64748b");
+            }
+        });
+    }
+
+    private void ComposeResumenCupones(IContainer container)
+    {
+        container.Column(column =>
+        {
+            column.Item().PaddingBottom(8).Text("RESUMEN DE CUPONES UTILIZADOS")
+                .FontSize(12).Bold().FontColor("#1e40af");
+
+            column.Item().Table(table =>
+            {
+                table.ColumnsDefinition(columns =>
+                {
+                    columns.RelativeColumn(1f);    // Código
+                    columns.RelativeColumn(2f);    // Descripción
+                    columns.RelativeColumn(1f);    // Tipo
+                    columns.RelativeColumn(0.9f);  // Valor
+                    columns.RelativeColumn(0.8f);  // Veces Usado
+                    columns.RelativeColumn(1.1f);  // Total Descontado
+                    columns.RelativeColumn(1f);    // Desc. Promedio
+                });
+
+                // Header
+                table.Header(header =>
+                {
+                    header.Cell().Element(CellStyle).Background("#1e40af").Padding(5)
+                        .Text("CÓDIGO").FontSize(7).Bold().FontColor("#ffffff");
+                    header.Cell().Element(CellStyle).Background("#1e40af").Padding(5)
+                        .Text("DESCRIPCIÓN").FontSize(7).Bold().FontColor("#ffffff");
+                    header.Cell().Element(CellStyle).Background("#1e40af").Padding(5)
+                        .Text("TIPO").FontSize(7).Bold().FontColor("#ffffff");
+                    header.Cell().Element(CellStyle).Background("#1e40af").Padding(5)
+                        .Text("VALOR").FontSize(7).Bold().FontColor("#ffffff");
+                    header.Cell().Element(CellStyle).Background("#1e40af").Padding(5)
+                        .Text("USADO").FontSize(7).Bold().FontColor("#ffffff");
+                    header.Cell().Element(CellStyle).Background("#1e40af").Padding(5)
+                        .Text("TOTAL DESC.").FontSize(7).Bold().FontColor("#ffffff");
+                    header.Cell().Element(CellStyle).Background("#1e40af").Padding(5)
+                        .Text("DESC. PROM.").FontSize(7).Bold().FontColor("#ffffff");
+                });
+
+                // Rows
+                var index = 0;
+                foreach (var cupon in resumenCupones)
+                {
+                    var backgroundColor = index % 2 == 0 ? "#ffffff" : "#f8fafc";
+
+                    table.Cell().Element(CellStyle).Background(backgroundColor).Padding(5)
+                        .AlignMiddle().Text(cupon.CodigoCupon ?? "N/A")
+                        .FontSize(7.5f).Bold().FontColor("#8b5cf6");
+
+                    table.Cell().Element(CellStyle).Background(backgroundColor).Padding(5)
+                        .AlignMiddle().Text(cupon.Descripcion ?? "N/A")
+                        .FontSize(7).FontColor("#475569");
+
+                    table.Cell().Element(CellStyle).Background(backgroundColor).Padding(5)
+                        .AlignMiddle().Text(cupon.TipoDescuento ?? "N/A")
+                        .FontSize(7).FontColor("#475569");
+
+                    var valorTexto = cupon.TipoDescuento == "PORCENTAJE"
+                        ? $"{cupon.ValorDescuento}%"
+                        : $"${cupon.ValorDescuento:N2}";
+
+                    table.Cell().Element(CellStyle).Background(backgroundColor).Padding(5)
+                        .AlignRight().AlignMiddle().Text(valorTexto)
+                        .FontSize(7.5f).Bold().FontColor("#f59e0b");
+
+                    table.Cell().Element(CellStyle).Background(backgroundColor).Padding(5)
+                        .AlignCenter().AlignMiddle().Text(cupon.VecesUsado.ToString())
+                        .FontSize(8).Bold().FontColor("#10b981");
+
+                    table.Cell().Element(CellStyle).Background(backgroundColor).Padding(5)
+                        .AlignRight().AlignMiddle().Text($"-${cupon.TotalDescontado:N2}")
+                        .FontSize(7.5f).Bold().FontColor("#ef4444");
+
+                    table.Cell().Element(CellStyle).Background(backgroundColor).Padding(5)
+                        .AlignRight().AlignMiddle().Text($"${cupon.DescuentoPromedio:N2}")
+                        .FontSize(7).FontColor("#475569");
+
+                    index++;
+                }
+            });
+        });
+    }
+
+    private void ComposeFooter(IContainer container)
+    {
+        container.AlignBottom().Column(column =>
+        {
+            column.Item().LineHorizontal(1).LineColor("#e2e8f0");
+
+            column.Item().PaddingTop(8).Row(row =>
+            {
+                row.RelativeItem().Column(col =>
+                {
+                    col.Item().Text("Sistema de Reportes Financieros")
+                        .FontSize(8).Bold().FontColor("#475569");
+                    col.Item().Text("Documento confidencial - Uso interno")
+                        .FontSize(7).FontColor("#94a3b8");
+                });
+
+                row.RelativeItem().AlignRight().Text(page =>
+                {
+                    page.Span("Página ").FontSize(8).FontColor("#64748b");
+                    page.CurrentPageNumber().FontSize(8).Bold().FontColor("#475569");
+                    page.Span(" de ").FontSize(8).FontColor("#64748b");
+                    page.TotalPages().FontSize(8).Bold().FontColor("#475569");
+                });
+            });
+        });
+    }
+
+    private IContainer CellStyle(IContainer container)
+    {
+        return container.Border(0.5f).BorderColor("#e2e8f0");
+    }
+
+    private string GetStatusColorPDF(string status)
+    {
+        return status.ToLower() switch
+        {
+            "completado" or "completed" or "entregado" => "#10b981",
+            "en proceso" or "processing" or "en-proceso" => "#f59e0b",
+            "pendiente" or "pending" => "#3b82f6",
+            "cancelado" or "cancelled" => "#ef4444",
+            _ => "#64748b"
+        };
     }
 
     private string GetStatusClass(string status)
